@@ -1,5 +1,6 @@
 [workspace]
 members = [
     "delta",
+    "examples/slp_binary_classification",
 ]
 resolver = "2"
