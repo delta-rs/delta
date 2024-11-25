@@ -2,3 +2,4 @@
 members = [
     "delta",
 ]
+resolver = "2"
