@@ -37,8 +37,8 @@ jobs:
       - name: Run Clippy
         run: cargo clippy --all-targets --all-features
 
-  delta:
-    name: Delta
+  build:
+    name: Build Workspace
     runs-on: ubuntu-latest
 
     steps:
@@ -58,6 +58,4 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Build Project
-        run: |
-          cd delta
-          cargo build --release
+        run: cargo build --release

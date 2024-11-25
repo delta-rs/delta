@@ -7,11 +7,50 @@ An open source Machine Learning Framework in Rust Δ.
 
 ## Table of Contents <!-- omit in toc -->
 
+- [Desired API Usage](#desired-api-usage)
 - [Getting Help](#getting-help)
 - [Reporting Issues](#reporting-issues)
 - [Contributing](#contributing)
 - [Contributors](#contributors)
 - [License](#license)
+
+## Desired API Usage
+
+This is just a rough idea of what the API could look like. This is not the final API.
+
+```rust
+use delta_tensor::Tensor;
+use delta_nn::layers::{Dense, Relu};
+use delta_nn::models::Sequential;
+use delta_optimizers::Adam;
+
+fn main() {
+    // Create a neural network
+    let mut model = Sequential::new()
+        .add(Dense::new(784, 128))   // Input: 784, Output: 128
+        .add(Relu::new())            // Activation: ReLU
+        .add(Dense::new(128, 10));   // Output: 10 classes
+
+    // Define an optimizer
+    let optimizer = Adam::new(learning_rate: 0.001);
+
+    // Compile the model
+    model.compile(optimizer);
+
+    // Train the model
+    let train_data = delta_datasets::mnist::load_train();
+    let test_data = delta_datasets::mnist::load_test();
+
+    model.fit(train_data, epochs: 10, batch_size: 32);
+
+    // Evaluate the model
+    let accuracy = model.evaluate(test_data);
+    println!("Test Accuracy: {:.2}%", accuracy * 100.0);
+
+    // Save the model
+    model.save("model_path").unwrap();
+}
+```
 
 ## Getting Help
 

@@ -1,15 +1,15 @@
 [package]
-name = "delta"
+name = "delta_tensor"
 version = "0.1.0"
 edition = "2021"
 authors = ["Marcus Cvjeticanin <mjovanc@icloud.com>"]
-description = "An open source Machine Learning Framework in Rust."
+description = "Tensor operations and manipulations."
 license = "BSD-3-Clause"
 documentation = "https://docs.rs/delta/latest/delta/"
 repository = "https://github.com/delta-rs/delta"
 readme = "../README.md"
 rust-version = "1.81.0"
-homepage = "https://github.com/njord-rs"
+homepage = "https://github.com/delta-rs"
 keywords = ["machine-learning", "ml", "framework"]
 
 [badges]
