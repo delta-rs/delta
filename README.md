@@ -1,6 +1,6 @@
 <img align="right" width="128" height="128" alt="delta" src="https://raw.githubusercontent.com/delta-rs/delta/refs/heads/master/resources/logo/delta_transparent_1x1_sm.png">
 
-# <span style="text-decoration: none;">Delta</span> <!-- omit in toc -->
+# <div style="text-decoration: none;">Delta</div> <!-- omit in toc -->
 
 ![build](https://img.shields.io/github/actions/workflow/status/delta-rs/delta/core.yml?branch=master)
 
