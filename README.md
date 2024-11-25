@@ -18,6 +18,8 @@ An open source Machine Learning Framework in Rust Δ.
 
 This is just a rough idea of what the API could look like. This is not the final API.
 
+Example 1:
+
 ```rust
 use delta_tensor::Tensor;
 use delta_nn::layers::{Dense, Relu};
@@ -49,6 +51,85 @@ fn main() {
 
     // Save the model
     model.save("model_path").unwrap();
+}
+```
+
+Example two:
+
+```rust
+use delta_tensor::Tensor;
+use delta_nn::layers::{Dense, Dropout, Relu, Softmax};
+use delta_nn::models::Sequential;
+use delta_optimizers::{Adam, LearningRateScheduler};
+use delta_datasets::mnist::{self, Dataset};
+use delta_callbacks::{EarlyStopping, ModelCheckpoint};
+
+fn main() {
+    // Load and preprocess the dataset
+    let mut train_data = mnist::load_train();
+    let mut test_data = mnist::load_test();
+
+    // Data augmentation (example: normalize and add noise)
+    train_data.normalize(0.0, 1.0); // Normalize to [0, 1]
+    train_data.add_noise(0.05);     // Add Gaussian noise
+    test_data.normalize(0.0, 1.0);
+
+    // Create a neural network
+    let mut model = Sequential::new()
+        .add(Dense::new(784, 128))     // Input: 784, Output: 128
+        .add(Relu::new())              // Activation: ReLU
+        .add(Dropout::new(0.2))        // Dropout with 20% probability
+        .add(Dense::new(128, 64))      // Intermediate layer
+        .add(Relu::new())
+        .add(Dense::new(64, 10))       // Output: 10 classes
+        .add(Softmax::new());          // Output probabilities
+
+    // Define an advanced optimizer with learning rate scheduling
+    let mut optimizer = Adam::new(0.001);
+    let scheduler = LearningRateScheduler::new(
+        |epoch| if epoch < 5 { 0.001 } else { 0.0001 }
+    );
+    optimizer.set_scheduler(scheduler);
+
+    // Compile the model
+    model.compile(optimizer);
+
+    // Define callbacks
+    let early_stopping = EarlyStopping::new()
+        .patience(3) // Stop training if no improvement for 3 epochs
+        .monitor("val_accuracy");
+    let checkpoint = ModelCheckpoint::new("best_model_path")
+        .save_best_only(true) // Save only the best model
+        .monitor("val_accuracy");
+
+    // Train the model using a custom loop
+    for epoch in 1..=10 {
+        println!("Epoch {}/10", epoch);
+
+        // Training step
+        model.train(&train_data, 32);
+
+        // Validation step
+        let val_accuracy = model.validate(&test_data);
+        println!("Validation Accuracy: {:.2}%", val_accuracy * 100.0);
+
+        // Trigger callbacks
+        early_stopping.step(val_accuracy);
+        checkpoint.step(&model, val_accuracy);
+
+        // Check for early stopping
+        if early_stopping.should_stop() {
+            println!("Early stopping triggered.");
+            break;
+        }
+    }
+
+    // Evaluate the final model
+    let test_accuracy = model.evaluate(&test_data);
+    println!("Final Test Accuracy: {:.2}%", test_accuracy * 100.0);
+
+    // Save the final model
+    model.save("final_model_path").unwrap();
 }
 ```
 
