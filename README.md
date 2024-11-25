@@ -133,6 +133,30 @@ fn main() {
 }
 ```
 
+Result of creating a model summary:
+
+```rust
+let model = Sequential::new()
+    .add(Dense::new(784, 128))
+    .add(Relu::new())
+    .add(Dense::new(128, 10));
+
+println!("{:#?}", model.summary());
+```
+
+```text
+Model Summary:
+Layer (type)        Output Shape    Param #
+-------------------------------------------
+Dense               [None, 128]     100,480
+Relu                [None, 128]     0
+Dense               [None, 10]      1,290
+===========================================
+Total params: 101,770
+Trainable params: 101,770
+Non-trainable params: 0
+```
+
 ## Getting Help
 
 Are you having trouble with Delta? We want to help!
