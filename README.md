@@ -1,4 +1,4 @@
-<img align="right" width="128" height="128" alt="delta" src="https://raw.githubusercontent.com/delta-rs/delta/refs/heads/master/resources/logo/delta_transparent_1x1.png">
+<img align="right" width="128" height="128" alt="delta" src="https://raw.githubusercontent.com/delta-rs/delta/refs/heads/master/resources/logo/delta_transparent_1x1_sm.png">
 
 # Delta <!-- omit in toc -->
 
