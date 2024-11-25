@@ -1,8 +1,4 @@
-<img align="right" width="128" height="128" alt="delta" src="https://raw.githubusercontent.com/delta-rs/delta/refs/heads/master/resources/logo/delta_transparent_1x1_sm.png">
-
-# <div style="text-decoration: none; border-bottom: none;">Delta</div> <!-- omit in toc -->
-
-![build](https://img.shields.io/github/actions/workflow/status/delta-rs/delta/core.yml?branch=master)
+# Delta <!-- omit in toc --> ![build](https://img.shields.io/github/actions/workflow/status/delta-rs/delta/core.yml?branch=master)
 
 [//]: # (![crates.io]&#40;https://img.shields.io/crates/v/delta.svg&#41;)
 [//]: # ([![documentation]&#40;https://img.shields.io/badge/docs-delta-blue?logo=rust&#41;]&#40;https://docs.rs/delta/latest/&#41;)
