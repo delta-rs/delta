@@ -1,23 +1,149 @@
 use delta_common::data::DatasetOps;
+use delta_common::tensor_ops::Tensor;
+use delta_common::{Dataset, Shape};
+use flate2::read::GzDecoder;
+use std::fs::File;
+use std::io::{self, Read};
 
-pub struct MnistDataset;
+pub struct MnistDataset {
+    train: Option<Dataset>,
+    test: Option<Dataset>,
+}
 
-impl DatasetOps for MnistDataset {
-    fn load_train() -> Self {
-        // Implement loading training data
-        MnistDataset
+impl MnistDataset {
+    const MNIST_URL: &'static str = "https://storage.googleapis.com/cvdf-datasets/mnist";
+    const MNIST_TRAIN_DATA_FILENAME: &'static str = "train-images-idx3-ubyte.gz";
+    const MNIST_TRAIN_LABELS_FILENAME: &'static str = "train-labels-idx1-ubyte.gz";
+    const MNIST_TEST_DATA_FILENAME: &'static str = "t10k-images-idx3-ubyte.gz";
+    const MNIST_TEST_LABELS_FILENAME: &'static str = "t10k-labels-idx1-ubyte.gz";
+    const MNIST_IMAGE_SIZE: usize = 28;
+    const MNIST_NUM_CLASSES: usize = 10;
+    const TRAIN_EXAMPLES: usize = 60000;
+    const TEST_EXAMPLES: usize = 10000;
+
+    async fn load_data(is_train: bool) -> Dataset {
+        let (data_filename, labels_filename, num_examples) = if is_train {
+            (
+                Self::MNIST_TRAIN_DATA_FILENAME,
+                Self::MNIST_TRAIN_LABELS_FILENAME,
+                Self::TRAIN_EXAMPLES,
+            )
+        } else {
+            (
+                Self::MNIST_TEST_DATA_FILENAME,
+                Self::MNIST_TEST_LABELS_FILENAME,
+                Self::TEST_EXAMPLES,
+            )
+        };
+
+        let data_bytes = Self::get_bytes_data(data_filename).await;
+        let labels_bytes = Self::get_bytes_data(labels_filename).await;
+
+        let data = Self::parse_images(&data_bytes, num_examples);
+        let labels = Self::parse_labels(&labels_bytes, num_examples);
+
+        Dataset::new(data, labels)
     }
 
-    fn load_test() -> Self {
-        // Implement loading test data
-        MnistDataset
+    fn parse_images(data: &[u8], num_images: usize) -> Tensor {
+        let image_data = &data[16..]; // Skip the 16-byte header
+        let num_pixels = Self::MNIST_IMAGE_SIZE * Self::MNIST_IMAGE_SIZE;
+        let mut tensor_data = vec![0.0; num_images * num_pixels];
+
+        for i in 0..num_images {
+            let start = i * num_pixels;
+            let end = start + num_pixels;
+            for (j, &pixel) in image_data[start..end].iter().enumerate() {
+                tensor_data[i * num_pixels + j] = pixel as f32 / 255.0; // Normalize to [0, 1]
+            }
+        }
+
+        Tensor::new(
+            tensor_data,
+            Shape::new(vec![
+                num_images,
+                Self::MNIST_IMAGE_SIZE,
+                Self::MNIST_IMAGE_SIZE,
+                1,
+            ]),
+        )
+    }
+
+    fn parse_labels(data: &[u8], num_labels: usize) -> Tensor {
+        let label_data = &data[8..]; // Skip the 8-byte header
+        let mut tensor_data = vec![0.0; num_labels * Self::MNIST_NUM_CLASSES];
+
+        for (i, &label) in label_data.iter().enumerate() {
+            tensor_data[i * Self::MNIST_NUM_CLASSES + label as usize] = 1.0; // One-hot encoding
+        }
+
+        Tensor::new(
+            tensor_data,
+            Shape::new(vec![num_labels, Self::MNIST_NUM_CLASSES]),
+        )
+    }
+
+    async fn get_bytes_data(name: &str) -> Vec<u8> {
+        let file_path = format!(".cache/data/mnist/{}", name);
+        if std::path::Path::new(&file_path).exists() {
+            return Self::decompress_gz(&file_path).unwrap();
+        }
+
+        let url = format!("{}/{}", Self::MNIST_URL, name);
+        println!("Downloading {}", url);
+
+        let compressed_data = reqwest::get(url)
+            .await
+            .unwrap()
+            .bytes()
+            .await
+            .unwrap()
+            .to_vec();
+
+        std::fs::create_dir_all(".cache/data/mnist").unwrap();
+        std::fs::write(&file_path, &compressed_data).unwrap();
+
+        Self::decompress_gz(&file_path).unwrap()
+    }
+
+    fn decompress_gz(file_path: &str) -> io::Result<Vec<u8>> {
+        let file = File::open(file_path)?;
+        let mut decoder = GzDecoder::new(file);
+        let mut decompressed_data = Vec::new();
+        decoder.read_to_end(&mut decompressed_data)?;
+        Ok(decompressed_data)
+    }
+}
+
+impl DatasetOps for MnistDataset {
+    async fn load_train() -> Self {
+        let train = tokio::runtime::Runtime::new()
+            .unwrap()
+            .block_on(Self::load_data(true));
+        MnistDataset {
+            train: Some(train),
+            test: None,
+        }
+    }
+
+    async fn load_test() -> Self {
+        let test = tokio::runtime::Runtime::new()
+            .unwrap()
+            .block_on(Self::load_data(false));
+        MnistDataset {
+            train: None,
+            test: Some(test),
+        }
     }
 
     fn normalize(&mut self, min: f32, max: f32) {
-        // Implement normalization logic
+        let _ = max;
+        let _ = min;
+        todo!()
     }
 
     fn add_noise(&mut self, noise_level: f32) {
-        // Implement noise addition logic
+        let _ = noise_level;
+        todo!()
     }
 }

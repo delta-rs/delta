@@ -1,15 +1,16 @@
-use delta_data::DatasetOps;
 use delta_data::mnist::MnistDataset;
+use delta_data::DatasetOps;
 use delta_nn::layers::{Dense, Relu};
 use delta_nn::models::Sequential;
 use delta_optimizers::Adam;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     // Create a neural network
     let mut model = Sequential::new()
-        .add(Dense::new(784, 128))   // Input: 784, Output: 128
-        .add(Relu::new())                                // Activation: ReLU
-        .add(Dense::new(128, 10));              // Output: 10 classes
+        .add(Dense::new(784, 128)) // Input: 784, Output: 128
+        .add(Relu::new()) // Activation: ReLU
+        .add(Dense::new(128, 10)); // Output: 10 classes
 
     // Define an optimizer
     let optimizer = Adam::new(0.001);
@@ -18,8 +19,8 @@ fn main() {
     model.compile(optimizer);
 
     // Train the model
-    let train_data = MnistDataset::load_train();
-    let test_data = MnistDataset::load_test();
+    let train_data = MnistDataset::load_train().await;
+    let test_data = MnistDataset::load_test().await;
 
     model.fit(&train_data, 10, 32);
 
