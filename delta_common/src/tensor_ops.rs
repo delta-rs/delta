@@ -68,4 +68,8 @@ impl Tensor {
         // This is a placeholder implementation
         Tensor::new(vec![], self.shape.clone())
     }
+
+    pub fn shape(&self) -> &Shape {
+        &self.shape
+    }
 }

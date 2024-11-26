@@ -34,6 +34,7 @@ pub trait DatasetOps {
     async fn load_test() -> Self;
     fn normalize(&mut self, min: f32, max: f32);
     fn add_noise(&mut self, noise_level: f32);
+    fn len(&self) -> usize;
 }
 
 pub struct Dataset {
