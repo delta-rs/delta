@@ -22,6 +22,9 @@ async fn main() {
     let train_data = MnistDataset::load_train().await;
     let test_data = MnistDataset::load_test().await;
 
+    println!("Training the model...");
+    println!("Train data size: {}", train_data.len());
+
     model.fit(&train_data, 10, 32);
 
     // Evaluate the model
