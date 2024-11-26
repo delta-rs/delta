@@ -38,6 +38,20 @@ impl Shape {
     pub fn len(&self) -> usize {
         self.0.iter().product()
     }
+
+    /// Returns the number of elements in the shape
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use delta_common::shape::Shape;
+    ///
+    /// let shape = Shape::new(vec![2, 3, 4]);
+    /// assert_eq!(shape.size(), 24);
+    /// ```
+    pub fn size(&self) -> usize {
+        self.0.iter().product()
+    }
 }
 
 impl From<(usize, usize)> for Shape {
