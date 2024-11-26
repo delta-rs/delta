@@ -10,3 +10,9 @@ impl Shape {
         self.0.iter().product()
     }
 }
+
+impl From<(usize, usize)> for Shape {
+    fn from(dimensions: (usize, usize)) -> Self {
+        Shape(vec![dimensions.0, dimensions.1])
+    }
+}
