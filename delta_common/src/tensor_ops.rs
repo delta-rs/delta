@@ -1,5 +1,6 @@
 use crate::shape::Shape;
 
+#[derive(Debug)]
 pub struct Tensor {
     pub data: Vec<f32>,
     pub shape: Shape,

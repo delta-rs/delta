@@ -1,6 +1,7 @@
 use delta_common::{Layer, Shape};
 use delta_common::tensor_ops::Tensor;
 
+#[derive(Debug)]
 pub struct Dense {
     weights: Tensor,
     bias: Tensor,
@@ -25,6 +26,7 @@ impl Layer for Dense {
     }
 }
 
+#[derive(Debug)]
 pub struct Relu;
 
 impl Relu {

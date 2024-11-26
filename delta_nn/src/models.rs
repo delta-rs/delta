@@ -1,6 +1,7 @@
 use delta_common::{Dataset, Layer, Optimizer};
 use delta_common::data::DatasetOps;
 
+#[derive(Debug)]
 pub struct Sequential {
     layers: Vec<Box<dyn Layer>>,
     optimizer: Option<Box<dyn Optimizer>>,
@@ -46,4 +47,12 @@ impl Sequential {
     /*pub fn forward(&self, input: &Tensor) -> Tensor {
         self.layers.iter().fold(input.clone(), |acc, layer| layer.forward(&acc))
     }*/
+
+    pub fn summary(&self) -> String {
+        let mut summary = String::new();
+        for (i, layer) in self.layers.iter().enumerate() {
+            summary.push_str(&format!("Layer {}: {:?}\n", i + 1, layer));
+        }
+        summary
+    }
 }
