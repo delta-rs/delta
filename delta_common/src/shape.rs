@@ -35,21 +35,20 @@ impl Shape {
         Shape(dimensions)
     }
 
-    pub fn len(&self) -> usize {
-        self.0.iter().product()
-    }
-
-    /// Returns the number of elements in the shape
+    /// Returns the total number of elements in the shape
+    ///
+    /// # Returns
+    /// The total number of elements
     ///
     /// # Examples
     ///
     /// ```
     /// use delta_common::shape::Shape;
     ///
-    /// let shape = Shape::new(vec![2, 3, 4]);
-    /// assert_eq!(shape.size(), 24);
+    /// let shape = Shape::new(vec![2, 3]);
+    /// assert_eq!(shape.len(), 6);
     /// ```
-    pub fn size(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.0.iter().product()
     }
 }

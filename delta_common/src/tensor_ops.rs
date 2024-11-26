@@ -58,7 +58,7 @@ impl Tensor {
     ///
     /// A tensor filled with zeros
     pub fn zeros(shape: &Shape) -> Self {
-        let size = shape.size();
+        let size = shape.len();
         let data = vec![0.0; size];
 
         Self {
@@ -73,7 +73,7 @@ impl Tensor {
     ///
     /// * `shape` - The shape of the tensor
     pub fn random(shape: &Shape) -> Self {
-        let size = shape.size();
+        let size = shape.len();
         let data = generate_random_data(size);
 
         Self {
