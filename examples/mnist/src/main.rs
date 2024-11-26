@@ -19,6 +19,7 @@ async fn main() {
     model.compile(optimizer);
 
     // Train the model
+    println!("Training...");
     let train_data = MnistDataset::load_train().await;
     let test_data = MnistDataset::load_test().await;
 
