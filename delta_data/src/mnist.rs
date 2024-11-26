@@ -175,4 +175,14 @@ impl DatasetOps for MnistDataset {
         let _ = noise_level;
         todo!()
     }
+
+    fn len(&self) -> usize {
+        if let Some(ref train) = self.train {
+            train.inputs.shape().0[0]
+        } else if let Some(ref test) = self.test {
+            test.inputs.shape().0[0]
+        } else {
+            0
+        }
+    }
 }
