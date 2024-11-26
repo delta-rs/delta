@@ -1,21 +1,23 @@
-pub struct Dataset;
+use delta_core::data::DatasetOps;
 
-impl Dataset {
-    pub fn load_train() -> Self {
+pub struct MnistDataset;
+
+impl DatasetOps for MnistDataset {
+    fn load_train() -> Self {
         // Implement loading training data
-        Dataset
+        MnistDataset
     }
 
-    pub fn load_test() -> Self {
+    fn load_test() -> Self {
         // Implement loading test data
-        Dataset
+        MnistDataset
     }
 
-    pub fn normalize(&mut self, min: f32, max: f32) {
+    fn normalize(&mut self, min: f32, max: f32) {
         // Implement normalization logic
     }
 
-    pub fn add_noise(&mut self, noise_level: f32) {
+    fn add_noise(&mut self, noise_level: f32) {
         // Implement noise addition logic
     }
 }
