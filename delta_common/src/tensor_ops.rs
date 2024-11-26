@@ -27,6 +27,8 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use rand::Rng;
+
 use crate::shape::Shape;
 
 #[derive(Debug)]
@@ -46,12 +48,38 @@ impl Tensor {
         Tensor::new(vec![], self.shape.clone())
     }
 
+    /// Create a tensor filled with zeros
+    ///
+    /// # Arguments
+    ///
+    /// * `shape` - The shape of the tensor
+    ///
+    /// # Returns
+    ///
+    /// A tensor filled with zeros
     pub fn zeros(shape: &Shape) -> Self {
-        todo!("Create a tensor filled with zeros")
+        let size = shape.len();
+        let data = vec![0.0; size];
+
+        Self {
+            data,
+            shape: shape.clone(),
+        }
     }
 
+    /// Create a tensor filled with random values
+    ///
+    /// # Arguments
+    ///
+    /// * `shape` - The shape of the tensor
     pub fn random(shape: &Shape) -> Self {
-        todo!("Create a tensor filled with random values")
+        let size = shape.len();
+        let data = generate_random_data(size);
+
+        Self {
+            data,
+            shape: shape.clone(),
+        }
     }
 
     pub fn matmul(&self, other: &Tensor) -> Tensor {
@@ -72,4 +100,22 @@ impl Tensor {
     pub fn shape(&self) -> &Shape {
         &self.shape
     }
+}
+
+/// Generate a vector of random numbers
+///
+/// # Arguments
+///
+/// * `length` - The length of the vector
+///
+/// # Returns
+///
+/// A vector of random numbers
+fn generate_random_data(length: usize) -> Vec<f32> {
+    let mut random_number_generator = rand::thread_rng();
+    let mut data = Vec::with_capacity(length);
+    for _ in 0..length {
+        data.push(random_number_generator.gen::<f32>());
+    }
+    data
 }
