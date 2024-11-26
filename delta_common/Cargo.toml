@@ -11,6 +11,7 @@ readme = "../README.md"
 rust-version = "1.81.0"
 homepage = "https://github.com/delta-rs"
 keywords = ["machine-learning", "ml", "framework"]
+publish = false
 
 [badges]
 maintenance = { status = "actively-developed" }

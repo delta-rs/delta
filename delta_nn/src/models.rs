@@ -1,5 +1,5 @@
 use delta_common::{Dataset, Layer, Optimizer};
-use delta_common::tensor_ops::Tensor;
+use delta_common::data::DatasetOps;
 
 pub struct Sequential {
     layers: Vec<Box<dyn Layer>>,
@@ -24,12 +24,16 @@ impl Sequential {
         // Implement training logic here
     }
 
+    pub fn fit<D: DatasetOps>(&self, train_data: &D, epochs: i32, batch_size: i32) {
+        // Implement training logic here
+    }
+
     pub fn validate(&self, test_data: &Dataset) -> f32 {
         // Implement validation logic here
         0.0 // Placeholder
     }
 
-    pub fn evaluate(&self, test_data: &Dataset) -> f32 {
+    pub fn evaluate<D: DatasetOps>(&self, test_data: &D) -> f32 {
         // Implement evaluation logic here
         0.0 // Placeholder
     }

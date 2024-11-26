@@ -5,6 +5,6 @@ members = [
     "delta_nn",
     "delta_optimizers",
     "delta_tensor",
-    "examples/slp_binary_classification",
+    "examples/mnist",
 ]
 resolver = "2"

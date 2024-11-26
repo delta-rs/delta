@@ -1,3 +1,6 @@
+use delta_common::Optimizer;
+use delta_common::tensor_ops::Tensor;
+
 pub struct Adam {
     learning_rate: f32,
     scheduler: Option<Box<dyn Fn(usize) -> f32>>,
@@ -13,5 +16,11 @@ impl Adam {
         F: Fn(usize) -> f32 + 'static,
     {
         self.scheduler = Some(Box::new(scheduler));
+    }
+}
+
+impl Optimizer for Adam {
+    fn step(&mut self, gradients: &mut [Tensor]) {
+        todo!()
     }
 }
