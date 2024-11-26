@@ -2,7 +2,7 @@
 name = "delta_tensor"
 version = "0.1.0"
 edition = "2021"
-authors = ["Marcus Cvjeticanin <mjovanc@icloud.com>"]
+authors = ["Marcus Cvjeticanin <mjovanc@icloud.com>", "Chase Willden <chase.willden@gmail.com>"]
 description = "Tensor operations and manipulations."
 license = "BSD-3-Clause"
 documentation = "https://docs.rs/delta/latest/delta/"
