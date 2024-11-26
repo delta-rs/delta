@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "delta_core",
+    "delta_common",
     "delta_data",
     "delta_nn",
     "delta_optimizers",

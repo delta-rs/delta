@@ -1,9 +1,9 @@
 [package]
-name = "delta_core"
+name = "delta_common"
 version = "0.1.0"
 edition = "2021"
 authors = ["Marcus Cvjeticanin <mjovanc@icloud.com>"]
-description = "Core library (shared utilities, abstractions, base ML constructs)."
+description = "Common library (shared utilities, abstractions, base ML constructs)."
 license = "BSD-3-Clause"
 documentation = "https://docs.rs/delta/latest/delta/"
 repository = "https://github.com/delta-rs/delta"

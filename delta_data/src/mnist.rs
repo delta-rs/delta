@@ -1,4 +1,4 @@
-use delta_core::data::DatasetOps;
+use delta_common::data::DatasetOps;
 
 pub struct MnistDataset;
 

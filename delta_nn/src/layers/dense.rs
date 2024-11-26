@@ -1,5 +1,5 @@
-use delta_core::{Layer, Shape};
-use delta_core::tensor_ops::Tensor;
+use delta_common::{Layer, Shape};
+use delta_common::tensor_ops::Tensor;
 
 pub struct Dense {
     weights: Tensor,

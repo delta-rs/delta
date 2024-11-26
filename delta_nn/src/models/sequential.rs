@@ -1,5 +1,5 @@
-use delta_core::{Dataset, Layer, Optimizer};
-use delta_core::tensor_ops::Tensor;
+use delta_common::{Dataset, Layer, Optimizer};
+use delta_common::tensor_ops::Tensor;
 
 pub struct Sequential {
     layers: Vec<Box<dyn Layer>>,

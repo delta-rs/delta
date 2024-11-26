@@ -16,4 +16,4 @@ keywords = ["machine-learning", "ml", "framework"]
 maintenance = { status = "actively-developed" }
 
 [dependencies]
-delta_core = { path = "../delta_core" }
+delta_common = { path = "../delta_common" }
