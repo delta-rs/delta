@@ -42,10 +42,20 @@ impl Loss for MeanSquaredLoss {
     fn calculate_loss(&self, y_true: &Tensor, y_pred: &Tensor) -> f32 {
         // Step 1: Ensure the shapes of y_true and y_pred match
         if y_true.shape != y_pred.shape {
-            panic!("Shape mismatch: y_true and y_pred must have the same shape.");
+            panic!(
+                "Shape mismatch: y_true.shape = {:?}, y_pred.shape = {:?}",
+                y_true.shape, y_pred.shape
+            );
         }
 
-        // Step 2: Compute the squared differences
+        // Step 2: Check for invalid inputs
+        if y_true.data.iter().any(|&x| !x.is_finite())
+            || y_pred.data.iter().any(|&x| !x.is_finite())
+        {
+            panic!("Inputs contain NaN or Infinity values.");
+        }
+
+        // Step 3: Compute the squared differences
         let squared_diff: Vec<f32> = y_true
             .data
             .iter()
@@ -53,9 +63,52 @@ impl Loss for MeanSquaredLoss {
             .map(|(true_val, pred_val)| (true_val - pred_val).powi(2))
             .collect();
 
-        // Step 3: Calculate the mean of the squared differences
-        let mean_squared_error = squared_diff.iter().sum::<f32>() / squared_diff.len() as f32;
+        if squared_diff.is_empty() {
+            panic!("Squared difference array is empty. Check inputs.");
+        }
+
+        // Step 4: Calculate the mean of the squared differences
+        let sum_of_squares = squared_diff.iter().sum::<f32>();
+        let mean_squared_error = sum_of_squares / squared_diff.len() as f32;
+
+        // Debug logs
+        println!("Sum of squares: {}", sum_of_squares);
+        println!("Mean squared error: {}", mean_squared_error);
 
         mean_squared_error
+    }
+}
+
+// Add tests for MeanSquaredLoss
+
+#[cfg(test)]
+mod tests {
+    use delta_common::Shape;
+
+    use super::*;
+
+    #[test]
+    fn test_mean_squared_loss() {
+        let y_true = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], Shape::new(vec![2, 3]));
+        let y_pred = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], Shape::new(vec![2, 3]));
+        let loss = MeanSquaredLoss::new();
+        let result = loss.calculate_loss(&y_true, &y_pred);
+        assert_eq!(result, 0.0);
+    }
+
+    #[test]
+    fn test_mean_squared_loss_with_nan() {
+        let y_true = Tensor::new(vec![1.0, 2.0, f32::NAN, 4.0], Shape::new(vec![2, 2]));
+        let y_pred = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], Shape::new(vec![2, 2]));
+        let loss = MeanSquaredLoss::new();
+
+        let result = std::panic::catch_unwind(|| {
+            loss.calculate_loss(&y_true, &y_pred);
+        });
+
+        assert!(
+            result.is_err(),
+            "Expected a panic due to NaN in inputs, but no panic occurred."
+        );
     }
 }

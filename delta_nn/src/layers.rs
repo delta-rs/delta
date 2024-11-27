@@ -27,8 +27,8 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use delta_common::{Layer, Shape};
 use delta_common::tensor_ops::Tensor;
+use delta_common::{Layer, Shape};
 
 #[derive(Debug)]
 pub struct Dense {
