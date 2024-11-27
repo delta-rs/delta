@@ -3,7 +3,7 @@
 [//]: # (![crates.io]&#40;https://img.shields.io/crates/v/delta.svg&#41;)
 [//]: # ([![documentation]&#40;https://img.shields.io/badge/docs-delta-blue?logo=rust&#41;]&#40;https://docs.rs/delta/latest/&#41;)
 
-An open source Machine Learning Framework in Rust Δ.
+An Open-Source Machine Learning Framework in Rust Δ.
 
 ## Table of Contents <!-- omit in toc -->
 
