@@ -30,6 +30,7 @@
 use delta_common::data::DatasetOps;
 use delta_common::{Dataset, Layer, Loss, Optimizer};
 
+/// A sequential model that contains a list of layers, an optimizer, and a loss function.
 #[derive(Debug)]
 pub struct Sequential {
     layers: Vec<Box<dyn Layer>>,
@@ -38,6 +39,11 @@ pub struct Sequential {
 }
 
 impl Sequential {
+    /// Creates a new sequential model.
+    ///
+    /// # Returns
+    ///
+    /// A new instance of the sequential model.
     pub fn new() -> Self {
         Self {
             layers: Vec::new(),
@@ -60,37 +66,36 @@ impl Sequential {
         self
     }
 
-    /// Compile the model
+    /// Compiles the model with the given optimizer and loss function.
     ///
     /// # Arguments
     ///
-    /// * `optimizer` - The optimizer to use
-    ///
-    /// # Returns
-    ///
-    /// A reference to the model
+    /// * `optimizer` - The optimizer to use.
+    /// * `loss` - The loss function to use.
     pub fn compile<O: Optimizer + 'static, L: Loss + 'static>(&mut self, optimizer: O, loss: L) {
         self.optimizer = Some(Box::new(optimizer));
         self.loss = Some(Box::new(loss));
     }
 
+    /// Trains the model with the given training data and batch size.
+    ///
+    /// # Arguments
+    ///
+    /// * `train_data` - The training data.
+    /// * `batch_size` - The batch size to use.
     pub fn train(&self, train_data: &Dataset, batch_size: usize) {
         let _ = batch_size;
         let _ = train_data;
         // Implement training logic here
     }
 
-    /// Train the model
+    /// Trains the model with the given training data, number of epochs, and batch size.
     ///
     /// # Arguments
     ///
-    /// * `train_data` - The training data
-    /// * `epochs` - The number of epochs to train for
-    /// * `batch_size` - The batch size to use
-    ///
-    /// # Returns
-    ///
-    /// A reference to the model
+    /// * `train_data` - The training data.
+    /// * `epochs` - The number of epochs to train for.
+    /// * `batch_size` - The batch size to use.
     pub fn fit<D: DatasetOps>(&mut self, train_data: &D, epochs: i32, batch_size: usize) {
         // Ensure optimizer is set
         if self.optimizer.is_none() {
@@ -148,18 +153,45 @@ impl Sequential {
         }
     }
 
+    /// Validates the model with the given test data.
+    ///
+    /// # Arguments
+    ///
+    /// * `test_data` - The test data.
+    ///
+    /// # Returns
+    ///
+    /// The validation loss.
     pub fn validate(&self, test_data: &Dataset) -> f32 {
         let _ = test_data;
         // Implement validation logic here
         0.0 // Placeholder
     }
 
+    /// Evaluates the model with the given test data.
+    ///
+    /// # Arguments
+    ///
+    /// * `test_data` - The test data.
+    ///
+    /// # Returns
+    ///
+    /// The evaluation metric.
     pub fn evaluate<D: DatasetOps>(&self, test_data: &D) -> f32 {
         let _ = test_data;
         // Implement evaluation logic here
         0.0 // Placeholder
     }
 
+    /// Saves the model to the specified path.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The path to save the model to.
+    ///
+    /// # Returns
+    ///
+    /// A result indicating success or failure.
     pub fn save(&self, path: &str) -> Result<(), std::io::Error> {
         let _ = path;
         // Implement model saving logic here
@@ -170,6 +202,11 @@ impl Sequential {
         self.layers.iter().fold(input.clone(), |acc, layer| layer.forward(&acc))
     }*/
 
+    /// Returns a summary of the model.
+    ///
+    /// # Returns
+    ///
+    /// A string containing the summary of the model.
     pub fn summary(&self) -> String {
         let mut summary = String::new();
         for (i, layer) in self.layers.iter().enumerate() {
