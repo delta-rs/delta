@@ -29,10 +29,20 @@
 
 use delta_common::Activation;
 
+/// A struct representing the Softmax activation function.
 #[derive(Debug)]
 pub struct SoftmaxActivation;
 
 impl SoftmaxActivation {
+    /// Creates a new instance of `SoftmaxActivation`.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use delta_activations::SoftmaxActivation;
+    ///
+    /// let softmax = SoftmaxActivation::new();
+    /// ```
     pub fn new() -> Self {
         Self
     }
