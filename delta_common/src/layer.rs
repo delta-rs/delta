@@ -31,7 +31,7 @@ use crate::tensor_ops::Tensor;
 use std::fmt::Debug;
 
 pub trait Layer: Debug {
-    fn forward(&self, input: &Tensor) -> Tensor;
+    fn forward(&mut self, input: &Tensor) -> Tensor;
     fn backward(&mut self, grad: &Tensor) -> Tensor;
 }
 

@@ -116,7 +116,7 @@ impl Sequential {
 
                 // Forward pass
                 let mut outputs = inputs.clone();
-                for layer in &self.layers {
+                for layer in &mut self.layers {
                     outputs = layer.forward(&outputs);
                 }
 

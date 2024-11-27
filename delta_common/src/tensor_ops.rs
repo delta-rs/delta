@@ -146,12 +146,13 @@ impl Tensor {
 
     pub fn map<F>(&self, f: F) -> Tensor
     where
-        F: Fn(f64) -> f64,
+        F: Fn(f32) -> f32,
     {
-        let _ = f;
-        // Implement map logic here
-        // This is a placeholder implementation
-        Tensor::new(vec![], self.shape.clone())
+        let new_data = self.data.iter().map(|&x| f(x)).collect();
+        Tensor {
+            data: new_data,
+            shape: self.shape.clone(),
+        }
     }
 
     /// Get the shape of the tensor
@@ -268,6 +269,7 @@ impl Tensor {
 
         // Ensure the inner dimensions match for matrix multiplication
         if self_inner != other_inner {
+            println!("self_inner: {}, other_inner: {}", self_inner, other_inner);
             panic!("Inner dimensions do not match for matrix multiplication");
         }
 
@@ -325,6 +327,44 @@ impl Tensor {
         Tensor {
             data: result_data,
             shape: Shape(result_shape),
+        }
+    }
+
+    /// Perform element-wise operation between two tensors using a custom function
+    ///
+    /// # Arguments
+    ///
+    /// * `other` - The other tensor
+    /// * `f` - The function to apply to corresponding elements of the tensors
+    ///
+    /// # Returns
+    ///
+    /// A new tensor with the result of applying the function
+    ///
+    /// # Panics
+    ///
+    /// Panics if the tensors are not broadcastable.
+    pub fn zip_map<F>(&self, other: &Tensor, f: F) -> Tensor
+    where
+        F: Fn(f32, f32) -> f32,
+    {
+        // Get the target shape that both tensors will be broadcast to
+        let target_shape = self.get_broadcast_shape(other);
+
+        // Broadcast both tensors to the target shape
+        let self_data = self.broadcast_and_flatten(&target_shape);
+        let other_data = other.broadcast_and_flatten(&target_shape);
+
+        // Perform the operation
+        let result_data: Vec<f32> = self_data
+            .iter()
+            .zip(other_data.iter())
+            .map(|(a, b)| f(*a, *b))
+            .collect();
+
+        Tensor {
+            data: result_data,
+            shape: Shape(target_shape),
         }
     }
 

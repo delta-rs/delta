@@ -46,7 +46,7 @@ impl Dense {
 }
 
 impl Layer for Dense {
-    fn forward(&self, input: &Tensor) -> Tensor {
+    fn forward(&mut self, input: &Tensor) -> Tensor {
         input.matmul(&self.weights).add(&self.bias)
     }
 
@@ -57,22 +57,31 @@ impl Layer for Dense {
 }
 
 #[derive(Debug)]
-pub struct Relu;
+pub struct Relu {
+    input: Option<Tensor>,
+}
 
 impl Relu {
     pub fn new() -> Self {
-        Self
+        Self { input: None }
     }
 }
 
 impl Layer for Relu {
-    fn forward(&self, input: &Tensor) -> Tensor {
-        input.map(|x| x.max(0.0))
+    fn forward(&mut self, input: &Tensor) -> Tensor {
+        let result = input.map(|x| x.max(0.0));
+        self.input = Some(input.clone());
+        result
     }
 
     fn backward(&mut self, grad: &Tensor) -> Tensor {
-        let _ = grad;
-        todo!()
+        if let Some(input) = &self.input {
+            let result = grad.zip_map(input, |g, x| if x > 0.0 { g } else { 0.0 });
+            self.input = None;
+            result
+        } else {
+            panic!("No input tensor found for ReLU backward pass");
+        }
     }
 }
 
@@ -88,13 +97,39 @@ impl Flatten {
 }
 
 impl Layer for Flatten {
-    fn forward(&self, input: &Tensor) -> Tensor {
+    fn forward(&mut self, input: &Tensor) -> Tensor {
         // Flatten the input tensor by reshaping it to a 1D vector
-        Tensor::new(input.data.clone(), Shape::new(vec![input.shape.len()]))
+        Tensor::new(input.data.clone(), Shape::new(vec![1, input.shape.len()]))
     }
 
     fn backward(&mut self, grad: &Tensor) -> Tensor {
         // Reshape the gradient back to the original input shape
         grad.reshape(self.input_shape.clone())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_flatten_layer() {
+        let input = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], Shape::new(vec![2, 3]));
+        let mut flatten_layer = Flatten::new(Shape::new(vec![2, 3]));
+        let output = flatten_layer.forward(&input);
+        assert_eq!(output.data, vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        assert_eq!(output.shape.0, vec![1, 6]);
+    }
+
+    #[test]
+    fn test_relu_layer() {
+        let input = Tensor::new(
+            vec![-1.0, 2.0, -3.0, 4.0, -5.0, 6.0],
+            Shape::new(vec![2, 3]),
+        );
+        let mut relu_layer = Relu::new();
+        let output = relu_layer.forward(&input);
+        assert_eq!(output.data, vec![0.0, 2.0, 0.0, 4.0, 0.0, 6.0]);
+        assert_eq!(output.shape.0, vec![2, 3]);
     }
 }
