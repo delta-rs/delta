@@ -30,11 +30,19 @@
 use std::fmt::Debug;
 use crate::tensor_ops::Tensor;
 
+/// A trait representing an optimizer for training neural networks.
 pub trait Optimizer: Debug {
+    /// Performs a single optimization step.
+    ///
+    /// # Arguments
+    ///
+    /// * `gradients` - A mutable slice of tensors representing the gradients.
     fn step(&mut self, gradients: &mut [Tensor]);
 }
 
+/// A struct representing the configuration for an optimizer.
 #[derive(Debug)]
 pub struct OptimizerConfig {
+    /// The learning rate for the optimizer.
     pub learning_rate: f32,
 }
