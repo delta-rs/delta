@@ -27,11 +27,16 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+/// An enumeration of possible core errors.
 #[derive(Debug)]
 pub enum CoreError {
+    /// Indicates an invalid shape error.
     InvalidShape,
+    /// Indicates a gradient mismatch error.
     GradientMismatch,
+    /// Represents other types of errors with a message.
     Other(String),
 }
 
+/// A type alias for results returned by core operations.
 pub type Result<T> = std::result::Result<T, CoreError>;
