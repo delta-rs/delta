@@ -17,3 +17,4 @@ maintenance = { status = "actively-developed" }
 
 [dependencies]
 delta_common = { path = "../delta_common" }
+delta_activations = { path = "../delta_activations" }

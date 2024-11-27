@@ -65,14 +65,11 @@ impl Tensor {
     ///
     /// A new tensor containing the result of the addition.
     pub fn add(&self, other: &Tensor) -> Tensor {
-        // Get the target shape that both tensors will be broadcast to
         let target_shape = self.get_broadcast_shape(other);
 
-        // Broadcast both tensors to the target shape
         let self_data = self.broadcast_and_flatten(&target_shape);
         let other_data = other.broadcast_and_flatten(&target_shape);
 
-        // Perform element-wise addition
         let result_data: Vec<f32> = self_data
             .iter()
             .zip(other_data.iter())
@@ -448,36 +445,42 @@ impl Tensor {
     ///
     /// A vector containing the flattened and broadcasted data
     fn broadcast_and_flatten(&self, target_shape: &[usize]) -> Vec<f32> {
-        let mut expanded_shape = vec![1; target_shape.len()];
-        let offset = target_shape.len() - self.shape.0.len();
-        expanded_shape[offset..].copy_from_slice(&self.shape.0);
+        let expanded_shape = {
+            let mut expanded = vec![1; target_shape.len()];
+            let offset = target_shape.len() - self.shape.0.len();
+            expanded[offset..].copy_from_slice(&self.shape.0);
+            expanded
+        };
 
-        // Check for broadcast compatibility
+        // Check compatibility
         for (dim, target_dim) in expanded_shape.iter().zip(target_shape.iter()) {
             if *dim != *target_dim && *dim != 1 {
                 panic!("Tensors are not broadcastable to the target shape");
             }
         }
 
-        // Generate the flattened and broadcasted data
+        // Generate broadcasted data
         let mut result = Vec::new();
         let strides: Vec<usize> = expanded_shape
             .iter()
+            .rev()
             .scan(1, |stride, &dim| {
                 let current = *stride;
                 *stride *= dim;
                 Some(current)
             })
+            .collect::<Vec<_>>()
+            .into_iter()
+            .rev()
             .collect();
 
         for idx in 0..target_shape.iter().product::<usize>() {
             let mut src_idx = 0;
             let mut remaining = idx;
-            for (dim, stride) in expanded_shape.iter().zip(&strides) {
-                let pos = remaining / stride;
-                remaining %= stride;
+            for (&dim, &stride) in expanded_shape.iter().zip(&strides) {
+                let pos = (remaining / stride) % dim;
                 src_idx *= dim;
-                src_idx += pos.min(*dim - 1); // Handle broadcasting
+                src_idx += pos.min(dim - 1);
             }
             result.push(self.data[src_idx]);
         }
