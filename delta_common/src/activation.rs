@@ -30,6 +30,16 @@
 use crate::tensor_ops::Tensor;
 use std::fmt::Debug;
 
+/// A trait representing an activation function.
 pub trait Activation: Debug {
+    /// Applies the activation function to the input tensor.
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - The input tensor.
+    ///
+    /// # Returns
+    ///
+    /// The output tensor after applying the activation function.
     fn activate(&self, input: &Tensor) -> Tensor;
 }
