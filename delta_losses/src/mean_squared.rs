@@ -1,6 +1,6 @@
 //! BSD 3-Clause License
 //!
-//! Copyright (c) 2024, Marcus Cvjeticanin
+//! Copyright (c) 2024, Marcus Cvjeticanin, Chase Willden
 //!
 //! Redistribution and use in source and binary forms, with or without
 //! modification, are permitted provided that the following conditions are met:
@@ -27,17 +27,35 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-pub mod data;
-pub mod errors;
-pub mod layer;
-pub mod loss;
-pub mod optimizer;
-pub mod shape;
-pub mod tensor_ops;
-pub mod utils;
+use delta_common::{tensor_ops::Tensor, Loss};
 
-pub use data::Dataset;
-pub use layer::Layer;
-pub use loss::Loss;
-pub use optimizer::Optimizer;
-pub use shape::Shape;
+#[derive(Debug)]
+pub struct MeanSquaredLoss;
+
+impl MeanSquaredLoss {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl Loss for MeanSquaredLoss {
+    fn calculate_loss(&self, y_true: &Tensor, y_pred: &Tensor) -> f32 {
+        // Step 1: Ensure the shapes of y_true and y_pred match
+        if y_true.shape != y_pred.shape {
+            panic!("Shape mismatch: y_true and y_pred must have the same shape.");
+        }
+
+        // Step 2: Compute the squared differences
+        let squared_diff: Vec<f32> = y_true
+            .data
+            .iter()
+            .zip(y_pred.data.iter())
+            .map(|(true_val, pred_val)| (true_val - pred_val).powi(2))
+            .collect();
+
+        // Step 3: Calculate the mean of the squared differences
+        let mean_squared_error = squared_diff.iter().sum::<f32>() / squared_diff.len() as f32;
+
+        mean_squared_error
+    }
+}

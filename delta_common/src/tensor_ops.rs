@@ -67,6 +67,19 @@ impl Tensor {
         }
     }
 
+    /// Calculate the mean of the tensor
+    ///
+    /// # Returns
+    ///
+    /// The mean of the tensor
+    pub fn reduce_mean(&self) -> f32 {
+        if self.data.is_empty() {
+            return 0.0; // Handle empty tensor case
+        }
+        let sum: f32 = self.data.iter().sum();
+        sum / self.data.len() as f32
+    }
+
     /// Create a tensor filled with random values
     ///
     /// # Arguments
@@ -97,6 +110,11 @@ impl Tensor {
         Tensor::new(vec![], self.shape.clone())
     }
 
+    /// Get the shape of the tensor
+    ///
+    /// # Returns
+    ///
+    /// The shape of the tensor
     pub fn shape(&self) -> &Shape {
         &self.shape
     }

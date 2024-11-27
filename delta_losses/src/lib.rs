@@ -27,17 +27,6 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-pub mod data;
-pub mod errors;
-pub mod layer;
-pub mod loss;
-pub mod optimizer;
-pub mod shape;
-pub mod tensor_ops;
-pub mod utils;
+pub mod mean_squared;
 
-pub use data::Dataset;
-pub use layer::Layer;
-pub use loss::Loss;
-pub use optimizer::Optimizer;
-pub use shape::Shape;
+pub use mean_squared::MeanSquaredLoss;

@@ -1,5 +1,6 @@
 use delta_data::mnist::MnistDataset;
 use delta_data::DatasetOps;
+use delta_losses::MeanSquaredLoss;
 use delta_nn::layers::{Dense, Relu};
 use delta_nn::models::Sequential;
 use delta_optimizers::Adam;
@@ -16,7 +17,7 @@ async fn main() {
     let optimizer = Adam::new(0.001);
 
     // Compile the model
-    model.compile(optimizer);
+    model.compile(optimizer, MeanSquaredLoss::new());
 
     // Train the model
     println!("Training...");

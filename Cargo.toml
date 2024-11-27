@@ -4,6 +4,7 @@ members = [
     "delta_data",
     "delta_nn",
     "delta_optimizers",
+    "delta_losses",
     "delta_tensor",
     "examples/mnist",
 ]
