@@ -1,6 +1,6 @@
 //! BSD 3-Clause License
 //!
-//! Copyright (c) 2024, Marcus Cvjeticanin
+//! Copyright (c) 2024, Marcus Cvjeticanin, Chase Willden
 //!
 //! Redistribution and use in source and binary forms, with or without
 //! modification, are permitted provided that the following conditions are met:
@@ -27,19 +27,33 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-pub mod activation;
-pub mod data;
-pub mod errors;
-pub mod layer;
-pub mod loss;
-pub mod optimizer;
-pub mod shape;
-pub mod tensor_ops;
-pub mod utils;
+use delta_common::Activation;
 
-pub use activation::Activation;
-pub use data::Dataset;
-pub use layer::Layer;
-pub use loss::Loss;
-pub use optimizer::Optimizer;
-pub use shape::Shape;
+#[derive(Debug)]
+pub struct SoftmaxActivation;
+
+impl SoftmaxActivation {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl Activation for SoftmaxActivation {
+    /// Applies the Softmax activation function to the input tensor.
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - The input tensor.
+    ///
+    /// # Returns
+    ///
+    /// The output tensor after applying the Softmax activation function.
+    fn activate(
+        &self,
+        input: &delta_common::tensor_ops::Tensor,
+    ) -> delta_common::tensor_ops::Tensor {
+        let exps = input.map(|x| x.exp());
+        let sum = exps.sum();
+        exps.map(|x| x / sum)
+    }
+}

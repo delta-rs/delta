@@ -164,6 +164,15 @@ impl Tensor {
         &self.shape
     }
 
+    /// Calculate the sum of the tensor
+    ///
+    /// # Returns
+    ///
+    /// The sum of the tensor
+    pub fn sum(&self) -> f32 {
+        self.data.iter().sum()
+    }
+
     /// Slice the tensor along the specified indices
     ///
     /// # Arguments

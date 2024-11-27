@@ -1,6 +1,6 @@
 //! BSD 3-Clause License
 //!
-//! Copyright (c) 2024, Marcus Cvjeticanin
+//! Copyright (c) 2024, Marcus Cvjeticanin, Chase Willden
 //!
 //! Redistribution and use in source and binary forms, with or without
 //! modification, are permitted provided that the following conditions are met:
@@ -27,19 +27,9 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-pub mod activation;
-pub mod data;
-pub mod errors;
-pub mod layer;
-pub mod loss;
-pub mod optimizer;
-pub mod shape;
-pub mod tensor_ops;
-pub mod utils;
+use crate::tensor_ops::Tensor;
+use std::fmt::Debug;
 
-pub use activation::Activation;
-pub use data::Dataset;
-pub use layer::Layer;
-pub use loss::Loss;
-pub use optimizer::Optimizer;
-pub use shape::Shape;
+pub trait Activation: Debug {
+    fn activate(&self, input: &Tensor) -> Tensor;
+}

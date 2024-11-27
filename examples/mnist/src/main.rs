@@ -1,8 +1,10 @@
+use delta_activations::softmax::SoftmaxActivation;
+use delta_activations::ReluActivation;
 use delta_common::Shape;
 use delta_data::mnist::MnistDataset;
 use delta_data::DatasetOps;
 use delta_losses::MeanSquaredLoss;
-use delta_nn::layers::{Dense, Flatten, Relu};
+use delta_nn::layers::{Dense, Flatten};
 use delta_nn::models::Sequential;
 use delta_optimizers::Adam;
 
@@ -11,9 +13,8 @@ async fn main() {
     // Create a neural network
     let mut model = Sequential::new()
         .add(Flatten::new(Shape::new(vec![28, 28]))) // Input: 28x28, Output: 784
-        .add(Dense::new(784, 128)) // Input: 784, Output: 128
-        .add(Relu::new()) // Activation: ReLU
-        .add(Dense::new(128, 10)); // Output: 10 classes
+        .add(Dense::new(128, ReluActivation::new())) // Input: 784, Output: 128
+        .add(Dense::new(10, SoftmaxActivation::new())); // Output: 10 classes
 
     // Define an optimizer
     let optimizer = Adam::new(0.001);

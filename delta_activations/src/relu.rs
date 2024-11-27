@@ -1,6 +1,6 @@
 //! BSD 3-Clause License
 //!
-//! Copyright (c) 2024, Marcus Cvjeticanin
+//! Copyright (c) 2024, Marcus Cvjeticanin, Chase Willden
 //!
 //! Redistribution and use in source and binary forms, with or without
 //! modification, are permitted provided that the following conditions are met:
@@ -27,19 +27,42 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-pub mod activation;
-pub mod data;
-pub mod errors;
-pub mod layer;
-pub mod loss;
-pub mod optimizer;
-pub mod shape;
-pub mod tensor_ops;
-pub mod utils;
+use delta_common::{tensor_ops::Tensor, Activation};
 
-pub use activation::Activation;
-pub use data::Dataset;
-pub use layer::Layer;
-pub use loss::Loss;
-pub use optimizer::Optimizer;
-pub use shape::Shape;
+#[derive(Debug)]
+pub struct ReluActivation;
+
+impl ReluActivation {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl Activation for ReluActivation {
+    /// Applies the Rectified Linear Unit (ReLU) activation function to the input tensor.
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - The input tensor.
+    ///
+    /// # Returns
+    ///
+    /// The output tensor after applying the ReLU activation function.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use delta_activations::relu::ReluActivation;
+    /// use delta_common::tensor_ops::Tensor;
+    ///
+    /// let input = Tensor::new(vec![1.0, -2.0, 3.0, -4.0], Shape::new(vec![2, 2]));
+    /// let relu = ReluActivation::new();
+    /// let output = relu.activate(&input);
+    ///
+    /// assert_eq!(output.data, vec![1.0, 0.0, 3.0, 0.0]);
+    /// assert_eq!(output.shape.0, vec![2, 2]);
+    /// ```
+    fn activate(&self, input: &Tensor) -> Tensor {
+        input.map(|x| x.max(0.0))
+    }
+}

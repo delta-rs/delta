@@ -1,0 +1,19 @@
+[package]
+name = "delta_activations"
+version = "0.1.0"
+edition = "2021"
+authors = ["Marcus Cvjeticanin <mjovanc@icloud.com>", "Chase Willden <chase.willden@gmail.com>"]
+description = "Activation functions."
+license = "BSD-3-Clause"
+documentation = "https://docs.rs/delta/latest/delta/"
+repository = "https://github.com/delta-rs/delta"
+readme = "../README.md"
+rust-version = "1.81.0"
+homepage = "https://github.com/delta-rs"
+keywords = ["machine-learning", "ml", "framework"]
+
+[badges]
+maintenance = { status = "actively-developed" }
+
+[dependencies]
+delta_common = { path = "../delta_common" }

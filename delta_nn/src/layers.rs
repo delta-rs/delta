@@ -28,60 +28,48 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use delta_common::tensor_ops::Tensor;
-use delta_common::{Layer, Shape};
+use delta_common::{Activation, Layer, Shape};
 
 #[derive(Debug)]
 pub struct Dense {
-    weights: Tensor,
-    bias: Tensor,
+    weights: Option<Tensor>,
+    bias: Option<Tensor>,
+    units: usize,
+    activation: Box<dyn Activation>,
 }
 
 impl Dense {
-    pub fn new(input_size: usize, output_size: usize) -> Self {
+    pub fn new<A: Activation + 'static>(units: usize, activation: A) -> Self {
         Self {
-            weights: Tensor::random(&Shape::from((input_size, output_size))),
-            bias: Tensor::zeros(&Shape::new(vec![output_size])),
+            weights: None,
+            bias: None,
+            units,
+            activation: Box::new(activation),
         }
     }
 }
 
 impl Layer for Dense {
+    fn build(&mut self, input_shape: Shape) {
+        self.weights = Some(Tensor::random(&Shape::from((
+            input_shape.len(),
+            self.units,
+        ))));
+
+        self.bias = Some(Tensor::zeros(&Shape::new(vec![self.units])));
+    }
+
     fn forward(&mut self, input: &Tensor) -> Tensor {
-        input.matmul(&self.weights).add(&self.bias)
+        let z = input
+            .matmul(&self.weights.as_ref().unwrap())
+            .add(&self.bias.as_ref().unwrap());
+
+        self.activation.activate(&z)
     }
 
     fn backward(&mut self, grad: &Tensor) -> Tensor {
         let _ = grad;
         todo!()
-    }
-}
-
-#[derive(Debug)]
-pub struct Relu {
-    input: Option<Tensor>,
-}
-
-impl Relu {
-    pub fn new() -> Self {
-        Self { input: None }
-    }
-}
-
-impl Layer for Relu {
-    fn forward(&mut self, input: &Tensor) -> Tensor {
-        let result = input.map(|x| x.max(0.0));
-        self.input = Some(input.clone());
-        result
-    }
-
-    fn backward(&mut self, grad: &Tensor) -> Tensor {
-        if let Some(input) = &self.input {
-            let result = grad.zip_map(input, |g, x| if x > 0.0 { g } else { 0.0 });
-            self.input = None;
-            result
-        } else {
-            panic!("No input tensor found for ReLU backward pass");
-        }
     }
 }
 
@@ -97,6 +85,10 @@ impl Flatten {
 }
 
 impl Layer for Flatten {
+    fn build(&mut self, input_shape: Shape) {
+        self.input_shape = input_shape;
+    }
+
     fn forward(&mut self, input: &Tensor) -> Tensor {
         // Flatten the input tensor by reshaping it to a 1D vector
         Tensor::new(input.data.clone(), Shape::new(vec![1, input.shape.len()]))
@@ -119,17 +111,5 @@ mod tests {
         let output = flatten_layer.forward(&input);
         assert_eq!(output.data, vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
         assert_eq!(output.shape.0, vec![1, 6]);
-    }
-
-    #[test]
-    fn test_relu_layer() {
-        let input = Tensor::new(
-            vec![-1.0, 2.0, -3.0, 4.0, -5.0, 6.0],
-            Shape::new(vec![2, 3]),
-        );
-        let mut relu_layer = Relu::new();
-        let output = relu_layer.forward(&input);
-        assert_eq!(output.data, vec![0.0, 2.0, 0.0, 4.0, 0.0, 6.0]);
-        assert_eq!(output.shape.0, vec![2, 3]);
     }
 }

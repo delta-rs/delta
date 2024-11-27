@@ -11,4 +11,5 @@ delta_nn = { path = "../../delta_nn" }
 delta_tensor = { path = "../../delta_tensor" }
 delta_optimizers = { path = "../../delta_optimizers" }
 delta_losses = { path = "../../delta_losses" }
+delta_activations = { path = "../../delta_activations" }
 tokio = { version = "1.32.0", features = ["full"] }
