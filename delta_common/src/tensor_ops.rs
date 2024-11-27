@@ -31,7 +31,7 @@ use rand::Rng;
 
 use crate::shape::Shape;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Tensor {
     pub data: Vec<f32>,
     pub shape: Shape,
@@ -99,6 +99,62 @@ impl Tensor {
 
     pub fn shape(&self) -> &Shape {
         &self.shape
+    }
+
+    /// Slice the tensor along the specified indices
+    ///
+    /// # Arguments
+    ///
+    /// * `indices` - A vector of tuples, each containing the start and end indices to slice along
+    ///
+    /// # Returns
+    ///
+    /// A new tensor containing the sliced data
+    pub fn slice(&self, indices: Vec<(usize, usize)>) -> Option<Tensor> {
+        // Ensure the number of indices matches the number of dimensions
+        if indices.len() > self.shape.0.len() {
+            return None; // Invalid slicing request
+        }
+
+        // Compute the offset and the new shape
+        let mut offset = 0;
+        let mut new_dimensions = Vec::new();
+        let mut stride = 1;
+
+        // Calculate strides and validate indices
+        for (i, &(start, end)) in indices.iter().enumerate().rev() {
+            if i < indices.len() {
+                // If an index is provided, check validity
+                let dim_size = self.shape.0[i];
+                if start >= dim_size || end > dim_size {
+                    return None; // Index out of bounds
+                }
+                offset += start * stride;
+                new_dimensions.push(end - start);
+            } else {
+                // If no index is provided, keep this dimension
+                new_dimensions.push(self.shape.0[i]);
+            }
+            stride *= self.shape.0[i];
+        }
+        new_dimensions.reverse();
+
+        // Extract data for the sliced tensor
+        let new_size = new_dimensions.iter().product();
+        let mut new_data = Vec::with_capacity(new_size);
+        let mut current_offset = offset;
+        let current_stride = stride / self.shape.0[0];
+
+        // Collect the data for the new tensor
+        for _ in 0..new_size {
+            new_data.push(self.data[current_offset]);
+            current_offset += current_stride;
+        }
+
+        Some(Tensor {
+            data: new_data,
+            shape: Shape(new_dimensions),
+        })
     }
 }
 

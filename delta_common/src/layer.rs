@@ -27,8 +27,8 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use std::fmt::Debug;
 use crate::tensor_ops::Tensor;
+use std::fmt::Debug;
 
 pub trait Layer: Debug {
     fn forward(&self, input: &Tensor) -> Tensor;

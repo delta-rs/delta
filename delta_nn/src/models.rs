@@ -27,8 +27,8 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use delta_common::{Dataset, Layer, Optimizer};
 use delta_common::data::DatasetOps;
+use delta_common::{Dataset, Layer, Optimizer};
 
 #[derive(Debug)]
 pub struct Sequential {
@@ -38,7 +38,10 @@ pub struct Sequential {
 
 impl Sequential {
     pub fn new() -> Self {
-        Self { layers: Vec::new(), optimizer: None }
+        Self {
+            layers: Vec::new(),
+            optimizer: None,
+        }
     }
 
     pub fn add<L: Layer + 'static>(mut self, layer: L) -> Self {
@@ -54,8 +57,56 @@ impl Sequential {
         // Implement training logic here
     }
 
-    pub fn fit<D: DatasetOps>(&self, train_data: &D, epochs: i32, batch_size: i32) {
-        // Implement training logic here
+    pub fn fit<D: DatasetOps>(&mut self, train_data: &D, epochs: i32, batch_size: usize) {
+        // Ensure optimizer is set
+        if self.optimizer.is_none() {
+            panic!("Optimizer must be set before training");
+        }
+
+        let optimizer = self.optimizer.as_mut().unwrap();
+
+        for epoch in 0..epochs {
+            println!("Epoch {}/{}", epoch + 1, epochs);
+
+            // Shuffle dataset if necessary
+            let mut dataset = train_data.clone();
+            // dataset.shuffle();
+
+            let num_batches = dataset.len() / batch_size;
+            let mut epoch_loss = 0.0;
+
+            for batch_idx in 0..num_batches {
+                // Fetch batch
+                let (inputs, targets) = dataset.get_batch(batch_idx, batch_size);
+
+                // Forward pass
+                let mut outputs = inputs.clone();
+                for layer in &self.layers {
+                    outputs = layer.forward(&outputs);
+                }
+
+                // Compute loss
+                let loss = train_data.loss(&outputs, &targets);
+                epoch_loss += loss;
+
+                // Backward pass
+                // let mut grad = train_data.loss_grad(&outputs, &targets);
+                // for layer in self.layers.iter().rev() {
+                //     grad = layer.backward(&grad);
+                // }
+
+                // Update weights
+                // for layer in &mut self.layers {
+                //     layer.update(optimizer);
+                // }
+            }
+
+            println!(
+                "Epoch {} completed. Average Loss: {:.4}",
+                epoch + 1,
+                epoch_loss / num_batches as f32
+            );
+        }
     }
 
     pub fn validate(&self, test_data: &Dataset) -> f32 {

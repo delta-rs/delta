@@ -26,7 +26,10 @@ async fn main() {
     println!("Training the model...");
     println!("Train data size: {}", train_data.len());
 
-    model.fit(&train_data, 10, 32);
+    let epoch = 10;
+    let batch_size = 32;
+
+    model.fit(&train_data, epoch, batch_size);
 
     // Evaluate the model
     let accuracy = model.evaluate(&test_data);

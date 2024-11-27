@@ -246,4 +246,51 @@ impl DatasetOps for MnistDataset {
             0
         }
     }
+
+    /// Get a batch of data from the dataset
+    ///
+    /// # Arguments
+    ///
+    /// * `batch_idx` - The index of the batch to get
+    /// * `batch_size` - The size of the batch to get
+    ///
+    /// # Returns
+    ///
+    /// A tuple containing the input and label tensors for the batch
+    fn get_batch(&self, batch_idx: usize, batch_size: usize) -> (Tensor, Tensor) {
+        let dataset = if let Some(ref train) = self.train {
+            train
+        } else if let Some(ref test) = self.test {
+            test
+        } else {
+            panic!("Dataset not loaded!");
+        };
+
+        let start_idx = batch_idx * batch_size;
+        let end_idx = (start_idx + batch_size).min(dataset.inputs.shape().0[0]);
+
+        if start_idx >= dataset.inputs.shape().0[0] {
+            panic!("Batch index out of range!");
+        }
+
+        let inputs_batch = dataset
+            .inputs
+            .slice(vec![(start_idx, end_idx)])
+            .expect("Failed to slice input tensors");
+
+        let labels_batch = dataset
+            .labels
+            .slice(vec![(start_idx, end_idx)])
+            .expect("Failed to slice label tensors");
+
+        (inputs_batch, labels_batch)
+    }
+
+    fn loss(&self, outputs: &Tensor, targets: &Tensor) -> f32 {
+        todo!()
+    }
+
+    fn loss_grad(&self, outputs: &Tensor, targets: &Tensor) -> Tensor {
+        todo!()
+    }
 }
