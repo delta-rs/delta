@@ -22,8 +22,7 @@ async fn main() {
     // Compile the model
     model.compile(optimizer, MeanSquaredLoss::new());
 
-    // Train the model
-    println!("Training...");
+    // Loading the train and test data
     let train_data = MnistDataset::load_train().await;
     let test_data = MnistDataset::load_test().await;
 
