@@ -30,6 +30,17 @@
 use crate::tensor_ops::Tensor;
 use std::fmt::Debug;
 
+/// A trait representing a loss function.
 pub trait Loss: Debug {
+    /// Calculates the loss between the output and the target tensors.
+    ///
+    /// # Arguments
+    ///
+    /// * `output` - The output tensor from the model.
+    /// * `target` - The target tensor.
+    ///
+    /// # Returns
+    ///
+    /// The calculated loss as a `f32` value.
     fn calculate_loss(&self, output: &Tensor, target: &Tensor) -> f32;
 }
