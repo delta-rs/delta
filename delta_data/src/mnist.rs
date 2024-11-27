@@ -36,6 +36,7 @@ use std::future::Future;
 use std::io::{self, Read};
 use std::pin::Pin;
 
+/// A struct representing the MNIST dataset.
 pub struct MnistDataset {
     train: Option<Dataset>,
     test: Option<Dataset>,
@@ -260,12 +261,41 @@ impl DatasetOps for MnistDataset {
         Box::pin(Self::load_test_impl())
     }
 
+    /// Normalizes the dataset to a specified range.
+    ///
+    /// # Arguments
+    ///
+    /// * `min` - The minimum value of the range.
+    /// * `max` - The maximum value of the range.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use delta_common::data::DatasetOps;
+    /// use delta_data::mnist::MnistDataset;
+    /// let mut dataset = MnistDataset::load_train().await;
+    /// dataset.normalize(0.0, 1.0);
+    /// ```
     fn normalize(&mut self, min: f32, max: f32) {
         let _ = max;
         let _ = min;
         todo!()
     }
 
+    /// Adds noise to the dataset.
+    ///
+    /// # Arguments
+    ///
+    /// * `noise_level` - The level of noise to add.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use delta_common::data::DatasetOps;
+    /// use delta_data::mnist::MnistDataset;
+    /// let mut dataset = MnistDataset::load_train().await;
+    /// dataset.add_noise(0.1);
+    /// ```
     fn add_noise(&mut self, noise_level: f32) {
         let _ = noise_level;
         todo!()
@@ -334,12 +364,32 @@ impl DatasetOps for MnistDataset {
         (inputs_batch, labels_batch)
     }
 
+    /// Calculates the loss between the predicted outputs and the true targets.
+    ///
+    /// # Arguments
+    ///
+    /// * `outputs` - The predicted outputs from the model.
+    /// * `targets` - The true target values.
+    ///
+    /// # Returns
+    ///
+    /// The calculated loss as a `f32` value.
     fn loss(&self, outputs: &Tensor, targets: &Tensor) -> f32 {
         let _ = targets;
         let _ = outputs;
         todo!()
     }
 
+    /// Calculates the gradient of the loss with respect to the predicted outputs.
+    ///
+    /// # Arguments
+    ///
+    /// * `outputs` - The predicted outputs from the model.
+    /// * `targets` - The true target values.
+    ///
+    /// # Returns
+    ///
+    /// A `Tensor` containing the gradients of the loss with respect to the outputs.
     fn loss_grad(&self, outputs: &Tensor, targets: &Tensor) -> Tensor {
         let _ = targets;
         let _ = outputs;
