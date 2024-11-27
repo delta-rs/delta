@@ -1,6 +1,6 @@
 //! BSD 3-Clause License
 //!
-//! Copyright (c) 2024, Marcus Cvjeticanin
+//! Copyright (c) 2024, Marcus Cvjeticanin, Chase Willden
 //!
 //! Redistribution and use in source and binary forms, with or without
 //! modification, are permitted provided that the following conditions are met:
@@ -27,46 +27,9 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use delta_common::tensor_ops::Tensor;
-use delta_common::Optimizer;
-use std::fmt;
+use crate::tensor_ops::Tensor;
 use std::fmt::Debug;
 
-#[allow(dead_code)]
-struct DebuggableScheduler(Box<dyn Fn(usize) -> f32>);
-
-impl Debug for DebuggableScheduler {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("DebuggableScheduler")
-    }
-}
-
-#[derive(Debug)]
-pub struct Adam {
-    #[allow(dead_code)]
-    learning_rate: f32,
-    scheduler: Option<DebuggableScheduler>,
-}
-
-impl Adam {
-    pub fn new(learning_rate: f32) -> Self {
-        Self {
-            learning_rate,
-            scheduler: None,
-        }
-    }
-
-    pub fn set_scheduler<F>(&mut self, scheduler: F)
-    where
-        F: Fn(usize) -> f32 + 'static,
-    {
-        self.scheduler = Some(DebuggableScheduler(Box::new(scheduler)));
-    }
-}
-
-impl Optimizer for Adam {
-    fn step(&mut self, gradients: &mut [Tensor]) {
-        let _ = gradients;
-        todo!()
-    }
+pub trait Loss: Debug {
+    fn calculate_loss(&self, output: &Tensor, target: &Tensor) -> f32;
 }

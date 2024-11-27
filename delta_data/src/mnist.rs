@@ -32,7 +32,9 @@ use delta_common::tensor_ops::Tensor;
 use delta_common::{Dataset, Shape};
 use flate2::read::GzDecoder;
 use std::fs::File;
+use std::future::Future;
 use std::io::{self, Read};
+use std::pin::Pin;
 
 pub struct MnistDataset {
     train: Option<Dataset>,
@@ -189,9 +191,7 @@ impl MnistDataset {
         decoder.read_to_end(&mut decompressed_data)?;
         Ok(decompressed_data)
     }
-}
 
-impl DatasetOps for MnistDataset {
     /// Load the training dataset
     ///
     /// # Examples
@@ -201,7 +201,7 @@ impl DatasetOps for MnistDataset {
     ///
     /// let dataset = MnistDataset::load_train().await;
     /// ```
-    async fn load_train() -> Self {
+    async fn load_train_impl() -> Self {
         let train = Self::load_data(true).await;
         MnistDataset {
             train: Some(train),
@@ -218,12 +218,42 @@ impl DatasetOps for MnistDataset {
     ///
     /// let dataset = MnistDataset::load_test().await;
     /// ```
-    async fn load_test() -> Self {
+    async fn load_test_impl() -> Self {
         let test = Self::load_data(false).await;
         MnistDataset {
             train: None,
             test: Some(test),
         }
+    }
+}
+
+impl DatasetOps for MnistDataset {
+    type LoadFuture = Pin<Box<dyn Future<Output = Self> + Send>>;
+
+    /// Load the training dataset
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use delta_data::mnist::MnistDataset;
+    ///
+    /// let dataset = MnistDataset::load_train().await;
+    /// ```
+    fn load_train() -> Self::LoadFuture {
+        Box::pin(Self::load_train_impl())
+    }
+
+    /// Load the test dataset
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use delta_data::mnist::MnistDataset;
+    ///
+    /// let dataset = MnistDataset::load_test().await;
+    /// ```
+    fn load_test() -> Self::LoadFuture {
+        Box::pin(Self::load_test_impl())
     }
 
     fn normalize(&mut self, min: f32, max: f32) {
@@ -237,6 +267,11 @@ impl DatasetOps for MnistDataset {
         todo!()
     }
 
+    /// Get the number of examples in the dataset
+    ///
+    /// # Returns
+    ///
+    /// The number of examples in the dataset
     fn len(&self) -> usize {
         if let Some(ref train) = self.train {
             train.inputs.shape().0[0]
@@ -245,5 +280,65 @@ impl DatasetOps for MnistDataset {
         } else {
             0
         }
+    }
+
+    /// Get a batch of data from the dataset
+    ///
+    /// # Arguments
+    ///
+    /// * `batch_idx` - The index of the batch to get
+    /// * `batch_size` - The size of the batch to get
+    ///
+    /// # Returns
+    ///
+    /// A tuple containing the input and label tensors for the batch
+    fn get_batch(&self, batch_idx: usize, batch_size: usize) -> (Tensor, Tensor) {
+        let dataset = match (self.train.as_ref(), self.test.as_ref()) {
+            (Some(train), _) => train,
+            (_, Some(test)) => test,
+            _ => panic!("Dataset not loaded!"),
+        };
+
+        let total_samples = dataset.inputs.shape().0[0];
+        let start_idx = batch_idx * batch_size;
+        let end_idx = start_idx + batch_size;
+
+        if start_idx >= total_samples {
+            panic!(
+                "Batch index {} out of range. Total samples: {}",
+                batch_idx, total_samples
+            );
+        }
+
+        let adjusted_end_idx = end_idx.min(total_samples);
+
+        let inputs_batch = dataset
+            .inputs
+            .slice(vec![
+                (start_idx, adjusted_end_idx),
+                (0, 28),
+                (0, 28),
+                (0, 1),
+            ])
+            .expect("Failed to slice input tensors");
+
+        let labels_batch = dataset
+            .labels
+            .slice(vec![(start_idx, adjusted_end_idx), (0, 10)])
+            .expect("Failed to slice label tensors");
+
+        (inputs_batch, labels_batch)
+    }
+
+    fn loss(&self, outputs: &Tensor, targets: &Tensor) -> f32 {
+        let _ = targets;
+        let _ = outputs;
+        todo!()
+    }
+
+    fn loss_grad(&self, outputs: &Tensor, targets: &Tensor) -> Tensor {
+        let _ = targets;
+        let _ = outputs;
+        todo!()
     }
 }

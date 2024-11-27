@@ -27,11 +27,12 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use crate::{tensor_ops::Tensor, Shape};
 use std::fmt::Debug;
-use crate::tensor_ops::Tensor;
 
 pub trait Layer: Debug {
-    fn forward(&self, input: &Tensor) -> Tensor;
+    fn build(&mut self, input_shape: Shape);
+    fn forward(&mut self, input: &Tensor) -> Tensor;
     fn backward(&mut self, grad: &Tensor) -> Tensor;
 }
 

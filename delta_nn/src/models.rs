@@ -1,6 +1,6 @@
 //! BSD 3-Clause License
 //!
-//! Copyright (c) 2024, Marcus Cvjeticanin
+//! Copyright (c) 2024, Marcus Cvjeticanin, Chase Willden
 //!
 //! Redistribution and use in source and binary forms, with or without
 //! modification, are permitted provided that the following conditions are met:
@@ -27,48 +27,141 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use delta_common::{Dataset, Layer, Optimizer};
 use delta_common::data::DatasetOps;
+use delta_common::{Dataset, Layer, Loss, Optimizer};
 
 #[derive(Debug)]
 pub struct Sequential {
     layers: Vec<Box<dyn Layer>>,
     optimizer: Option<Box<dyn Optimizer>>,
+    loss: Option<Box<dyn Loss>>,
 }
 
 impl Sequential {
     pub fn new() -> Self {
-        Self { layers: Vec::new(), optimizer: None }
+        Self {
+            layers: Vec::new(),
+            optimizer: None,
+            loss: None,
+        }
     }
 
+    /// Add a layer to the model
+    ///
+    /// # Arguments
+    ///
+    /// * `layer` - The layer to add
+    ///
+    /// # Returns
+    ///
+    /// A reference to the model
     pub fn add<L: Layer + 'static>(mut self, layer: L) -> Self {
         self.layers.push(Box::new(layer));
         self
     }
 
-    pub fn compile<O: Optimizer + 'static>(&mut self, optimizer: O) {
+    /// Compile the model
+    ///
+    /// # Arguments
+    ///
+    /// * `optimizer` - The optimizer to use
+    ///
+    /// # Returns
+    ///
+    /// A reference to the model
+    pub fn compile<O: Optimizer + 'static, L: Loss + 'static>(&mut self, optimizer: O, loss: L) {
         self.optimizer = Some(Box::new(optimizer));
+        self.loss = Some(Box::new(loss));
     }
 
     pub fn train(&self, train_data: &Dataset, batch_size: usize) {
+        let _ = batch_size;
+        let _ = train_data;
         // Implement training logic here
     }
 
-    pub fn fit<D: DatasetOps>(&self, train_data: &D, epochs: i32, batch_size: i32) {
-        // Implement training logic here
+    /// Train the model
+    ///
+    /// # Arguments
+    ///
+    /// * `train_data` - The training data
+    /// * `epochs` - The number of epochs to train for
+    /// * `batch_size` - The batch size to use
+    ///
+    /// # Returns
+    ///
+    /// A reference to the model
+    pub fn fit<D: DatasetOps>(&mut self, train_data: &D, epochs: i32, batch_size: usize) {
+        // Ensure optimizer is set
+        if self.optimizer.is_none() {
+            panic!("Optimizer must be set before training");
+        }
+
+        let _optimizer = self.optimizer.as_mut().unwrap();
+
+        for epoch in 0..epochs {
+            println!("Epoch {}/{}", epoch + 1, epochs);
+
+            // Shuffle dataset if necessary
+            let dataset = train_data;
+            // TODO: Probably should implement a shuffle capability
+            // dataset.shuffle();
+
+            let num_batches = dataset.len() / batch_size;
+            let mut epoch_loss = 0.0;
+
+            for batch_idx in 0..num_batches {
+                // Fetch batch
+                let (inputs, targets) = dataset.get_batch(batch_idx, batch_size);
+
+                // Forward pass
+                let mut outputs = inputs.clone();
+                for layer in &mut self.layers {
+                    outputs = layer.forward(&outputs);
+                }
+
+                // Compute loss
+                if self.loss.is_some() {
+                    let loss = self.loss.as_ref().unwrap();
+                    epoch_loss += loss.calculate_loss(&outputs, &targets);
+                } else {
+                    epoch_loss += 0.0;
+                }
+
+                // Backward pass
+                let mut grad = train_data.loss_grad(&outputs, &targets);
+                for layer in self.layers.iter_mut().rev() {
+                    grad = layer.backward(&grad);
+                }
+
+                // Update weights
+                // for layer in &mut self.layers {
+                //     layer.update(optimizer);
+                // }
+            }
+
+            println!(
+                "Epoch {} completed. Average Loss: {:.4}",
+                epoch + 1,
+                epoch_loss / num_batches as f32
+            );
+        }
     }
 
     pub fn validate(&self, test_data: &Dataset) -> f32 {
+        let _ = test_data;
         // Implement validation logic here
         0.0 // Placeholder
     }
 
     pub fn evaluate<D: DatasetOps>(&self, test_data: &D) -> f32 {
+        let _ = test_data;
         // Implement evaluation logic here
         0.0 // Placeholder
     }
 
     pub fn save(&self, path: &str) -> Result<(), std::io::Error> {
+        let _ = path;
         // Implement model saving logic here
         Ok(())
     }

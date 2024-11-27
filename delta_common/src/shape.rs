@@ -58,3 +58,14 @@ impl From<(usize, usize)> for Shape {
         Shape(vec![dimensions.0, dimensions.1])
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_shape_len() {
+        let shape = Shape::new(vec![2, 3]);
+        assert_eq!(shape.len(), 6);
+    }
+}
