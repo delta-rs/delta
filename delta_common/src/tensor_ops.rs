@@ -43,6 +43,7 @@ impl Tensor {
     }
 
     pub fn add(&self, other: &Tensor) -> Tensor {
+        let _ = other;
         // Implement element-wise addition logic here
         // This is a placeholder implementation
         Tensor::new(vec![], self.shape.clone())
@@ -99,6 +100,7 @@ impl Tensor {
     where
         F: Fn(f64) -> f64,
     {
+        let _ = f;
         // Implement map logic here
         // This is a placeholder implementation
         Tensor::new(vec![], self.shape.clone())

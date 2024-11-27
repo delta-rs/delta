@@ -27,11 +27,15 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use std::future::Future;
+
 use crate::tensor_ops::Tensor;
 
 pub trait DatasetOps {
-    async fn load_train() -> Self;
-    async fn load_test() -> Self;
+    type LoadFuture: Future<Output = Self> + Send;
+
+    fn load_train() -> Self::LoadFuture;
+    fn load_test() -> Self::LoadFuture;
     fn normalize(&mut self, min: f32, max: f32);
     fn add_noise(&mut self, noise_level: f32);
     fn len(&self) -> usize;

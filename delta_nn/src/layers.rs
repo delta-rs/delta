@@ -51,6 +51,7 @@ impl Layer for Dense {
     }
 
     fn backward(&mut self, grad: &Tensor) -> Tensor {
+        let _ = grad;
         todo!()
     }
 }
@@ -70,6 +71,7 @@ impl Layer for Relu {
     }
 
     fn backward(&mut self, grad: &Tensor) -> Tensor {
+        let _ = grad;
         todo!()
     }
 }

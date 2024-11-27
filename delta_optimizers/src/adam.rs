@@ -27,11 +27,12 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use delta_common::tensor_ops::Tensor;
+use delta_common::Optimizer;
 use std::fmt;
 use std::fmt::Debug;
-use delta_common::Optimizer;
-use delta_common::tensor_ops::Tensor;
 
+#[allow(dead_code)]
 struct DebuggableScheduler(Box<dyn Fn(usize) -> f32>);
 
 impl Debug for DebuggableScheduler {
@@ -42,13 +43,17 @@ impl Debug for DebuggableScheduler {
 
 #[derive(Debug)]
 pub struct Adam {
+    #[allow(dead_code)]
     learning_rate: f32,
     scheduler: Option<DebuggableScheduler>,
 }
 
 impl Adam {
     pub fn new(learning_rate: f32) -> Self {
-        Self { learning_rate, scheduler: None }
+        Self {
+            learning_rate,
+            scheduler: None,
+        }
     }
 
     pub fn set_scheduler<F>(&mut self, scheduler: F)
@@ -61,6 +66,7 @@ impl Adam {
 
 impl Optimizer for Adam {
     fn step(&mut self, gradients: &mut [Tensor]) {
+        let _ = gradients;
         todo!()
     }
 }

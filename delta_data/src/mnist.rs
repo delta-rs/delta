@@ -32,7 +32,9 @@ use delta_common::tensor_ops::Tensor;
 use delta_common::{Dataset, Shape};
 use flate2::read::GzDecoder;
 use std::fs::File;
+use std::future::Future;
 use std::io::{self, Read};
+use std::pin::Pin;
 
 pub struct MnistDataset {
     train: Option<Dataset>,
@@ -189,9 +191,7 @@ impl MnistDataset {
         decoder.read_to_end(&mut decompressed_data)?;
         Ok(decompressed_data)
     }
-}
 
-impl DatasetOps for MnistDataset {
     /// Load the training dataset
     ///
     /// # Examples
@@ -201,7 +201,7 @@ impl DatasetOps for MnistDataset {
     ///
     /// let dataset = MnistDataset::load_train().await;
     /// ```
-    async fn load_train() -> Self {
+    async fn load_train_impl() -> Self {
         let train = Self::load_data(true).await;
         MnistDataset {
             train: Some(train),
@@ -218,12 +218,42 @@ impl DatasetOps for MnistDataset {
     ///
     /// let dataset = MnistDataset::load_test().await;
     /// ```
-    async fn load_test() -> Self {
+    async fn load_test_impl() -> Self {
         let test = Self::load_data(false).await;
         MnistDataset {
             train: None,
             test: Some(test),
         }
+    }
+}
+
+impl DatasetOps for MnistDataset {
+    type LoadFuture = Pin<Box<dyn Future<Output = Self> + Send>>;
+
+    /// Load the training dataset
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use delta_data::mnist::MnistDataset;
+    ///
+    /// let dataset = MnistDataset::load_train().await;
+    /// ```
+    fn load_train() -> Self::LoadFuture {
+        Box::pin(Self::load_train_impl())
+    }
+
+    /// Load the test dataset
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use delta_data::mnist::MnistDataset;
+    ///
+    /// let dataset = MnistDataset::load_test().await;
+    /// ```
+    fn load_test() -> Self::LoadFuture {
+        Box::pin(Self::load_test_impl())
     }
 
     fn normalize(&mut self, min: f32, max: f32) {
@@ -287,10 +317,14 @@ impl DatasetOps for MnistDataset {
     }
 
     fn loss(&self, outputs: &Tensor, targets: &Tensor) -> f32 {
+        let _ = targets;
+        let _ = outputs;
         todo!()
     }
 
     fn loss_grad(&self, outputs: &Tensor, targets: &Tensor) -> Tensor {
+        let _ = targets;
+        let _ = outputs;
         todo!()
     }
 }
