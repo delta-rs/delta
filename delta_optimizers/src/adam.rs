@@ -32,6 +32,7 @@ use delta_common::Optimizer;
 use std::fmt;
 use std::fmt::Debug;
 
+/// A wrapper struct for a debuggable scheduler function.
 #[allow(dead_code)]
 struct DebuggableScheduler(Box<dyn Fn(usize) -> f32>);
 
@@ -41,6 +42,7 @@ impl Debug for DebuggableScheduler {
     }
 }
 
+/// The Adam optimizer struct.
 #[derive(Debug)]
 pub struct Adam {
     #[allow(dead_code)]
@@ -49,6 +51,15 @@ pub struct Adam {
 }
 
 impl Adam {
+    /// Creates a new Adam optimizer with the given learning rate.
+    ///
+    /// # Arguments
+    ///
+    /// * `learning_rate` - The learning rate for the optimizer.
+    ///
+    /// # Returns
+    ///
+    /// A new instance of the Adam optimizer.
     pub fn new(learning_rate: f32) -> Self {
         Self {
             learning_rate,
@@ -56,6 +67,19 @@ impl Adam {
         }
     }
 
+    /// Sets the scheduler function for the Adam optimizer.
+    ///
+    /// # Arguments
+    ///
+    /// * `scheduler` - A function that takes an epoch number and returns a learning rate.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use delta_optimizers::Adam;
+    /// let mut optimizer = Adam::new(0.001);
+    /// optimizer.set_scheduler(|epoch| 0.001 * (0.9f32.powi(epoch as i32)));
+    /// ```
     pub fn set_scheduler<F>(&mut self, scheduler: F)
     where
         F: Fn(usize) -> f32 + 'static,
@@ -65,6 +89,11 @@ impl Adam {
 }
 
 impl Optimizer for Adam {
+    /// Performs an optimization step using the given gradients.
+    ///
+    /// # Arguments
+    ///
+    /// * `gradients` - A mutable slice of tensors representing the gradients.
     fn step(&mut self, gradients: &mut [Tensor]) {
         let _ = gradients;
         todo!()
