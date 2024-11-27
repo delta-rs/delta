@@ -197,6 +197,7 @@ impl MnistDataset {
     /// # Examples
     ///
     /// ```rust
+    /// use delta_common::data::DatasetOps;
     /// use delta_data::mnist::MnistDataset;
     ///
     /// let dataset = MnistDataset::load_train().await;
@@ -214,6 +215,7 @@ impl MnistDataset {
     /// # Examples
     ///
     /// ```rust
+    /// use delta_common::data::DatasetOps;
     /// use delta_data::mnist::MnistDataset;
     ///
     /// let dataset = MnistDataset::load_test().await;
@@ -235,6 +237,7 @@ impl DatasetOps for MnistDataset {
     /// # Examples
     ///
     /// ```rust
+    /// use delta_common::data::DatasetOps;
     /// use delta_data::mnist::MnistDataset;
     ///
     /// let dataset = MnistDataset::load_train().await;
@@ -248,6 +251,7 @@ impl DatasetOps for MnistDataset {
     /// # Examples
     ///
     /// ```rust
+    /// use delta_common::data::DatasetOps;
     /// use delta_data::mnist::MnistDataset;
     ///
     /// let dataset = MnistDataset::load_test().await;
