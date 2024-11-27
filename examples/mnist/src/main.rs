@@ -10,7 +10,7 @@ use delta_optimizers::Adam;
 async fn main() {
     // Create a neural network
     let mut model = Sequential::new()
-        .add(Flatten::new(Shape::new(vec![28, 28])))
+        .add(Flatten::new(Shape::new(vec![28, 28]))) // Input: 28x28, Output: 784
         .add(Dense::new(784, 128)) // Input: 784, Output: 128
         .add(Relu::new()) // Activation: ReLU
         .add(Dense::new(128, 10)); // Output: 10 classes
