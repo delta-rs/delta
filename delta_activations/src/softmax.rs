@@ -57,3 +57,22 @@ impl Activation for SoftmaxActivation {
         exps.map(|x| x / sum)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use delta_common::{tensor_ops::Tensor, Shape};
+
+    #[test]
+    fn test_softmax_activation() {
+        let input = Tensor::new(vec![1.0, 2.0, 3.0], Shape::new(vec![1, 3]));
+        let softmax = SoftmaxActivation::new();
+        let output = softmax.activate(&input);
+
+        assert_eq!(
+            output.data,
+            vec![0.09003057317038025, 0.24472847105479776, 0.6652409557758217]
+        );
+        assert_eq!(output.shape.0, vec![1, 3]);
+    }
+}

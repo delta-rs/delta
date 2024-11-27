@@ -66,3 +66,19 @@ impl Activation for ReluActivation {
         input.map(|x| x.max(0.0))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use delta_common::{tensor_ops::Tensor, Shape};
+
+    #[test]
+    fn test_relu_activation() {
+        let input = Tensor::new(vec![1.0, -2.0, 3.0, -4.0], Shape::new(vec![2, 2]));
+        let relu = ReluActivation::new();
+        let output = relu.activate(&input);
+
+        assert_eq!(output.data, vec![1.0, 0.0, 3.0, 0.0]);
+        assert_eq!(output.shape.0, vec![2, 2]);
+    }
+}
