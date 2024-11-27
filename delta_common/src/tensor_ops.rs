@@ -31,17 +31,39 @@ use rand::Rng;
 
 use crate::shape::Shape;
 
+/// A struct representing a tensor.
 #[derive(Debug, Clone)]
 pub struct Tensor {
+    /// The data of the tensor.
     pub data: Vec<f32>,
+    /// The shape of the tensor.
     pub shape: Shape,
 }
 
 impl Tensor {
+    /// Creates a new tensor.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - A vector of data.
+    /// * `shape` - The shape of the tensor.
+    ///
+    /// # Returns
+    ///
+    /// A new `Tensor` instance.
     pub fn new(data: Vec<f32>, shape: Shape) -> Self {
         Self { data, shape }
     }
 
+    /// Adds two tensors element-wise.
+    ///
+    /// # Arguments
+    ///
+    /// * `other` - The other tensor to add.
+    ///
+    /// # Returns
+    ///
+    /// A new tensor containing the result of the addition.
     pub fn add(&self, other: &Tensor) -> Tensor {
         // Get the target shape that both tensors will be broadcast to
         let target_shape = self.get_broadcast_shape(other);
@@ -63,6 +85,15 @@ impl Tensor {
         }
     }
 
+    /// Gets the broadcast shape for two tensors.
+    ///
+    /// # Arguments
+    ///
+    /// * `other` - The other tensor.
+    ///
+    /// # Returns
+    ///
+    /// A vector representing the broadcast shape.
     fn get_broadcast_shape(&self, other: &Tensor) -> Vec<usize> {
         let max_dims = std::cmp::max(self.shape.0.len(), other.shape.0.len());
         let mut result = Vec::with_capacity(max_dims);
@@ -144,6 +175,15 @@ impl Tensor {
         }
     }
 
+    /// Applies a function to each element of the tensor.
+    ///
+    /// # Arguments
+    ///
+    /// * `f` - The function to apply.
+    ///
+    /// # Returns
+    ///
+    /// A new tensor with the result of applying the function.
     pub fn map<F>(&self, f: F) -> Tensor
     where
         F: Fn(f32) -> f32,
