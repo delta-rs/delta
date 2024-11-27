@@ -54,6 +54,23 @@ impl Shape {
 }
 
 impl From<(usize, usize)> for Shape {
+    /// Creates a `Shape` from a tuple of two dimensions.
+    ///
+    /// # Arguments
+    ///
+    /// * `dimensions` - A tuple containing two dimensions.
+    ///
+    /// # Returns
+    ///
+    /// A new `Shape` instance.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use delta_common::shape::Shape;
+    ///
+    /// let shape = Shape::from((2, 3));
+    /// ```
     fn from(dimensions: (usize, usize)) -> Self {
         Shape(vec![dimensions.0, dimensions.1])
     }
