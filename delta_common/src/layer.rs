@@ -30,14 +30,43 @@
 use crate::{tensor_ops::Tensor, Shape};
 use std::fmt::Debug;
 
+/// A trait representing a neural network layer.
 pub trait Layer: Debug {
+    /// Builds the layer with the given input shape.
+    ///
+    /// # Arguments
+    ///
+    /// * `input_shape` - The shape of the input tensor.
     fn build(&mut self, input_shape: Shape);
+
+    /// Performs the forward pass of the layer.
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - The input tensor.
+    ///
+    /// # Returns
+    ///
+    /// The output tensor after applying the layer.
     fn forward(&mut self, input: &Tensor) -> Tensor;
+
+    /// Performs the backward pass of the layer.
+    ///
+    /// # Arguments
+    ///
+    /// * `grad` - The gradient tensor from the next layer.
+    ///
+    /// # Returns
+    ///
+    /// The gradient tensor to be passed to the previous layer.
     fn backward(&mut self, grad: &Tensor) -> Tensor;
 }
 
+/// A struct representing the output of a layer.
 #[derive(Debug)]
 pub struct LayerOutput {
+    /// The output tensor of the layer.
     pub output: Tensor,
+    /// The gradients tensor of the layer.
     pub gradients: Tensor,
 }
