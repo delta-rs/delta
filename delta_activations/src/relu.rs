@@ -29,10 +29,20 @@
 
 use delta_common::{tensor_ops::Tensor, Activation};
 
+/// A struct representing the Rectified Linear Unit (ReLU) activation function.
 #[derive(Debug)]
 pub struct ReluActivation;
 
 impl ReluActivation {
+    /// Creates a new instance of `ReluActivation`.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use delta_activations::ReluActivation;
+    ///
+    /// let relu = ReluActivation::new();
+    /// ```
     pub fn new() -> Self {
         Self
     }
@@ -53,6 +63,7 @@ impl Activation for ReluActivation {
     ///
     /// ```
     /// use delta_activations::relu::ReluActivation;
+    /// use delta_common::{Activation, Shape};
     /// use delta_common::tensor_ops::Tensor;
     ///
     /// let input = Tensor::new(vec![1.0, -2.0, 3.0, -4.0], Shape::new(vec![2, 2]));
