@@ -31,25 +31,113 @@ use std::future::Future;
 
 use crate::tensor_ops::Tensor;
 
+/// A trait representing operations that can be performed on a dataset.
 pub trait DatasetOps {
+    /// The type of future returned by the `load_train` and `load_test` methods.
     type LoadFuture: Future<Output = Self> + Send;
 
+    /// Loads the training dataset.
+    ///
+    /// # Returns
+    ///
+    /// A future that resolves to the training dataset.
     fn load_train() -> Self::LoadFuture;
+
+    /// Loads the test dataset.
+    ///
+    /// # Returns
+    ///
+    /// A future that resolves to the test dataset.
     fn load_test() -> Self::LoadFuture;
+
+    /// Normalizes the dataset.
+    ///
+    /// # Arguments
+    ///
+    /// * `min` - The minimum value for normalization.
+    /// * `max` - The maximum value for normalization.
     fn normalize(&mut self, min: f32, max: f32);
+
+    /// Adds noise to the dataset.
+    ///
+    /// # Arguments
+    ///
+    /// * `noise_level` - The level of noise to add.
     fn add_noise(&mut self, noise_level: f32);
+
+    /// Returns the number of samples in the dataset.
+    ///
+    /// # Returns
+    ///
+    /// The number of samples in the dataset.
     fn len(&self) -> usize;
+
+    /// Gets a batch of data from the dataset.
+    ///
+    /// # Arguments
+    ///
+    /// * `batch_idx` - The index of the batch to retrieve.
+    /// * `batch_size` - The size of the batch to retrieve.
+    ///
+    /// # Returns
+    ///
+    /// A tuple containing the input tensor and the target tensor for the batch.
     fn get_batch(&self, batch_idx: usize, batch_size: usize) -> (Tensor, Tensor);
+
+    /// Calculates the loss between the predicted outputs and the true targets.
+    ///
+    /// # Arguments
+    ///
+    /// * `outputs` - The predicted outputs from the model.
+    /// * `targets` - The true target values.
+    ///
+    /// # Returns
+    ///
+    /// The calculated loss as a `f32` value.
     fn loss(&self, outputs: &Tensor, targets: &Tensor) -> f32;
+
+    /// Calculates the gradient of the loss with respect to the predicted outputs.
+    ///
+    /// # Arguments
+    ///
+    /// * `outputs` - The predicted outputs from the model.
+    /// * `targets` - The true target values.
+    ///
+    /// # Returns
+    ///
+    /// A `Tensor` containing the gradients of the loss with respect to the outputs.
     fn loss_grad(&self, outputs: &Tensor, targets: &Tensor) -> Tensor;
 }
 
+/// A struct representing a dataset.
 pub struct Dataset {
     pub inputs: Tensor,
     pub labels: Tensor,
 }
 
 impl Dataset {
+    /// Creates a new instance of `Dataset`.
+    ///
+    /// # Arguments
+    ///
+    /// * `inputs` - The input tensor.
+    /// * `labels` - The label tensor.
+    ///
+    /// # Returns
+    ///
+    /// A new `Dataset` instance.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use delta_common::tensor_ops::Tensor;
+    /// use delta_common::data::Dataset;
+    /// use delta_common::Shape;
+    ///
+    /// let inputs = Tensor::new(vec![1.0, 2.0, 3.0], Shape::new(vec![1, 3]));
+    /// let labels = Tensor::new(vec![0.0, 1.0, 0.0], Shape::new(vec![1, 3]));
+    /// let dataset = Dataset::new(inputs, labels);
+    /// ```
     pub fn new(inputs: Tensor, labels: Tensor) -> Self {
         Dataset { inputs, labels }
     }
