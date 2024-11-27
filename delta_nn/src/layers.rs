@@ -30,6 +30,7 @@
 use delta_common::tensor_ops::Tensor;
 use delta_common::{Activation, Layer, Shape};
 
+/// A dense (fully connected) layer.
 #[derive(Debug)]
 pub struct Dense {
     weights: Option<Tensor>,
@@ -39,6 +40,16 @@ pub struct Dense {
 }
 
 impl Dense {
+    /// Creates a new dense layer.
+    ///
+    /// # Arguments
+    ///
+    /// * `units` - The number of units in the layer.
+    /// * `activation` - The activation function to use.
+    ///
+    /// # Returns
+    ///
+    /// A new instance of the dense layer.
     pub fn new<A: Activation + 'static>(units: usize, activation: A) -> Self {
         Self {
             weights: None,
@@ -50,6 +61,11 @@ impl Dense {
 }
 
 impl Layer for Dense {
+    /// Builds the layer with the given input shape.
+    ///
+    /// # Arguments
+    ///
+    /// * `input_shape` - The shape of the input tensor.
     fn build(&mut self, input_shape: Shape) {
         self.weights = Some(Tensor::random(&Shape::from((
             input_shape.len(),
@@ -59,6 +75,15 @@ impl Layer for Dense {
         self.bias = Some(Tensor::zeros(&Shape::new(vec![self.units])));
     }
 
+    /// Performs a forward pass through the layer.
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - The input tensor.
+    ///
+    /// # Returns
+    ///
+    /// The output tensor.
     fn forward(&mut self, input: &Tensor) -> Tensor {
         let z = input
             .matmul(&self.weights.as_ref().unwrap())
@@ -67,33 +92,75 @@ impl Layer for Dense {
         self.activation.activate(&z)
     }
 
+    /// Performs a backward pass through the layer.
+    ///
+    /// # Arguments
+    ///
+    /// * `grad` - The gradient tensor.
+    ///
+    /// # Returns
+    ///
+    /// The gradient tensor with respect to the input.
     fn backward(&mut self, grad: &Tensor) -> Tensor {
         let _ = grad;
         todo!()
     }
 }
 
+/// A flatten layer that reshapes the input tensor to a 1D vector.
 #[derive(Debug)]
 pub struct Flatten {
     input_shape: Shape,
 }
 
 impl Flatten {
+    /// Creates a new flatten layer.
+    ///
+    /// # Arguments
+    ///
+    /// * `input_shape` - The shape of the input tensor.
+    ///
+    /// # Returns
+    ///
+    /// A new instance of the flatten layer.
     pub fn new(input_shape: Shape) -> Self {
         Self { input_shape }
     }
 }
 
 impl Layer for Flatten {
+    /// Builds the layer with the given input shape.
+    ///
+    /// # Arguments
+    ///
+    /// * `input_shape` - The shape of the input tensor.
     fn build(&mut self, input_shape: Shape) {
         self.input_shape = input_shape;
     }
 
+    /// Performs a forward pass through the layer.
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - The input tensor.
+    ///
+    /// # Returns
+    ///
+    /// The output tensor.
     fn forward(&mut self, input: &Tensor) -> Tensor {
         // Flatten the input tensor by reshaping it to a 1D vector
         Tensor::new(input.data.clone(), Shape::new(vec![1, input.shape.len()]))
     }
 
+    /// Performs a backward pass through the layer.
+    ///
+    /// # Arguments
+    ///
+    /// * `grad` - The gradient tensor.
+    ///
+    /// # Returns
+    ///
+    /// The gradient tensor with respect to the input.
     fn backward(&mut self, grad: &Tensor) -> Tensor {
         // Reshape the gradient back to the original input shape
         grad.reshape(self.input_shape.clone())
