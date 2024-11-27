@@ -5,6 +5,7 @@ edition = "2021"
 publish = false
 
 [dependencies]
+delta_common = { path = "../../delta_common" }
 delta_data = { path = "../../delta_data" }
 delta_nn = { path = "../../delta_nn" }
 delta_tensor = { path = "../../delta_tensor" }

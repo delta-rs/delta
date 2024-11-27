@@ -43,10 +43,58 @@ impl Tensor {
     }
 
     pub fn add(&self, other: &Tensor) -> Tensor {
-        let _ = other;
-        // Implement element-wise addition logic here
-        // This is a placeholder implementation
-        Tensor::new(vec![], self.shape.clone())
+        // Get the target shape that both tensors will be broadcast to
+        let target_shape = self.get_broadcast_shape(other);
+
+        // Broadcast both tensors to the target shape
+        let self_data = self.broadcast_and_flatten(&target_shape);
+        let other_data = other.broadcast_and_flatten(&target_shape);
+
+        // Perform element-wise addition
+        let result_data: Vec<f32> = self_data
+            .iter()
+            .zip(other_data.iter())
+            .map(|(a, b)| a + b)
+            .collect();
+
+        Tensor {
+            data: result_data,
+            shape: Shape(target_shape),
+        }
+    }
+
+    fn get_broadcast_shape(&self, other: &Tensor) -> Vec<usize> {
+        let max_dims = std::cmp::max(self.shape.0.len(), other.shape.0.len());
+        let mut result = Vec::with_capacity(max_dims);
+
+        // Pad shorter shape with leading 1s
+        let self_padded = {
+            let pad_len = max_dims - self.shape.0.len();
+            let mut padded = vec![1; pad_len];
+            padded.extend(&self.shape.0);
+            padded
+        };
+
+        let other_padded = {
+            let pad_len = max_dims - other.shape.0.len();
+            let mut padded = vec![1; pad_len];
+            padded.extend(&other.shape.0);
+            padded
+        };
+
+        // For each dimension, take the maximum of the two shapes
+        for i in 0..max_dims {
+            let dim1 = self_padded[i];
+            let dim2 = other_padded[i];
+
+            if dim1 != dim2 && dim1 != 1 && dim2 != 1 {
+                panic!("Tensors are not broadcastable");
+            }
+
+            result.push(std::cmp::max(dim1, dim2));
+        }
+
+        result
     }
 
     /// Create a tensor filled with zeros
@@ -125,45 +173,72 @@ impl Tensor {
     ///
     /// A new tensor containing the sliced data
     pub fn slice(&self, indices: Vec<(usize, usize)>) -> Option<Tensor> {
-        // Ensure the number of indices matches the number of dimensions
-        if indices.len() > self.shape.0.len() {
-            return None; // Invalid slicing request
+        if indices.len() != self.shape.0.len() {
+            println!(
+                "slice indices: {:?}, self.shape.0.len(): {}",
+                indices,
+                self.shape.0.len()
+            );
+            return None; // Ensure indices match dimensions
         }
 
-        // Compute the offset and the new shape
-        let mut offset = 0;
         let mut new_dimensions = Vec::new();
-        let mut stride = 1;
-
-        // Calculate strides and validate indices
-        for (i, &(start, end)) in indices.iter().enumerate().rev() {
-            if i < indices.len() {
-                // If an index is provided, check validity
-                let dim_size = self.shape.0[i];
-                if start >= dim_size || end > dim_size {
-                    return None; // Index out of bounds
-                }
-                offset += start * stride;
-                new_dimensions.push(end - start);
-            } else {
-                // If no index is provided, keep this dimension
-                new_dimensions.push(self.shape.0[i]);
+        let mut start_offsets = Vec::new();
+        for (dim_size, &(start, end)) in self.shape.0.iter().zip(&indices) {
+            if start >= *dim_size || end > *dim_size || start >= end {
+                println!("start: {}, end: {}, dim_size: {}", start, end, dim_size);
+                return None; // Out-of-bounds or invalid range
             }
-            stride *= self.shape.0[i];
+            new_dimensions.push(end - start);
+            start_offsets.push(start);
         }
-        new_dimensions.reverse();
 
-        // Extract data for the sliced tensor
-        let new_size = new_dimensions.iter().product();
-        let mut new_data = Vec::with_capacity(new_size);
-        let mut current_offset = offset;
-        let current_stride = stride / self.shape.0[0];
+        // Correct stride calculation
+        let strides = {
+            let mut strides = vec![1; self.shape.0.len()];
+            for i in (0..self.shape.0.len() - 1).rev() {
+                strides[i] = strides[i + 1] * self.shape.0[i + 1];
+            }
+            strides
+        };
 
-        // Collect the data for the new tensor
-        for _ in 0..new_size {
-            new_data.push(self.data[current_offset]);
-            current_offset += current_stride;
+        fn collect_data(
+            data: &[f32],
+            dims: &[usize],
+            strides: &[usize],
+            offsets: &[usize],
+            current_offset: usize,
+            depth: usize,
+            output: &mut Vec<f32>,
+        ) {
+            if depth == dims.len() {
+                // Add the current element to the output
+                output.push(data[current_offset]);
+            } else {
+                // Iterate over the specified slice range for the current dimension
+                for i in 0..dims[depth] {
+                    let next_offset = current_offset + (offsets[depth] + i) * strides[depth];
+                    if next_offset >= data.len() {
+                        panic!(
+                            "Offset out of bounds: next_offset={}, data_len={}, depth={}, i={}, offsets={:?}",
+                            next_offset, data.len(), depth, i, offsets
+                        );
+                    }
+                    collect_data(data, dims, strides, offsets, next_offset, depth + 1, output);
+                }
+            }
         }
+
+        let mut new_data = Vec::with_capacity(new_dimensions.iter().product());
+        collect_data(
+            &self.data,
+            &new_dimensions,
+            &strides,
+            &start_offsets,
+            0,
+            0,
+            &mut new_data,
+        );
 
         Some(Tensor {
             data: new_data,
@@ -253,6 +328,27 @@ impl Tensor {
         }
     }
 
+    /// Reshape the tensor to a new shape
+    ///
+    /// # Arguments
+    ///
+    /// * `new_shape` - The new shape for the tensor
+    ///
+    /// # Returns
+    ///
+    /// A new tensor with the same data but different shape
+    pub fn reshape(&self, new_shape: Shape) -> Tensor {
+        let new_size: usize = new_shape.0.iter().product();
+        if new_size != self.data.len() {
+            panic!("New shape must have the same number of elements as the original tensor");
+        }
+
+        Tensor {
+            data: self.data.clone(),
+            shape: new_shape,
+        }
+    }
+
     /// Broadcast and flatten the tensor to the target shape
     ///
     /// # Arguments
@@ -317,4 +413,35 @@ fn generate_random_data(length: usize) -> Vec<f32> {
         data.push(random_number_generator.gen::<f32>());
     }
     data
+}
+
+// Create unit test for slice
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_slice() {
+        let tensor = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], Shape::new(vec![2, 3]));
+        let sliced = tensor.slice(vec![(0, 1), (1, 3)]).unwrap();
+        assert_eq!(sliced.data, vec![2.0, 3.0]);
+        assert_eq!(sliced.shape.0, vec![1, 2]);
+    }
+
+    #[test]
+    fn test_multi_dimensional_slice() {
+        let tensor = Tensor::new(
+            vec![1.0; 60000 * 28 * 28 * 1],
+            Shape::new(vec![60000, 28, 28, 1]),
+        );
+
+        // Slice a smaller range for debugging
+        let sliced = tensor
+            .slice(vec![(0, 10), (0, 28), (0, 28), (0, 1)])
+            .expect("Failed to slice tensor");
+
+        assert_eq!(sliced.shape.0, vec![10, 28, 28, 1]);
+        assert_eq!(sliced.data.len(), 10 * 28 * 28 * 1);
+    }
 }

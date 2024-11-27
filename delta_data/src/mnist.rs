@@ -267,6 +267,11 @@ impl DatasetOps for MnistDataset {
         todo!()
     }
 
+    /// Get the number of examples in the dataset
+    ///
+    /// # Returns
+    ///
+    /// The number of examples in the dataset
     fn len(&self) -> usize {
         if let Some(ref train) = self.train {
             train.inputs.shape().0[0]
@@ -288,29 +293,38 @@ impl DatasetOps for MnistDataset {
     ///
     /// A tuple containing the input and label tensors for the batch
     fn get_batch(&self, batch_idx: usize, batch_size: usize) -> (Tensor, Tensor) {
-        let dataset = if let Some(ref train) = self.train {
-            train
-        } else if let Some(ref test) = self.test {
-            test
-        } else {
-            panic!("Dataset not loaded!");
+        let dataset = match (self.train.as_ref(), self.test.as_ref()) {
+            (Some(train), _) => train,
+            (_, Some(test)) => test,
+            _ => panic!("Dataset not loaded!"),
         };
 
+        let total_samples = dataset.inputs.shape().0[0];
         let start_idx = batch_idx * batch_size;
-        let end_idx = (start_idx + batch_size).min(dataset.inputs.shape().0[0]);
+        let end_idx = start_idx + batch_size;
 
-        if start_idx >= dataset.inputs.shape().0[0] {
-            panic!("Batch index out of range!");
+        if start_idx >= total_samples {
+            panic!(
+                "Batch index {} out of range. Total samples: {}",
+                batch_idx, total_samples
+            );
         }
+
+        let adjusted_end_idx = end_idx.min(total_samples);
 
         let inputs_batch = dataset
             .inputs
-            .slice(vec![(start_idx, end_idx)])
+            .slice(vec![
+                (start_idx, adjusted_end_idx),
+                (0, 28),
+                (0, 28),
+                (0, 1),
+            ])
             .expect("Failed to slice input tensors");
 
         let labels_batch = dataset
             .labels
-            .slice(vec![(start_idx, end_idx)])
+            .slice(vec![(start_idx, adjusted_end_idx), (0, 10)])
             .expect("Failed to slice label tensors");
 
         (inputs_batch, labels_batch)

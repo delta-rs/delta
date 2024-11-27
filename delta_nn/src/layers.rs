@@ -1,6 +1,6 @@
 //! BSD 3-Clause License
 //!
-//! Copyright (c) 2024, Marcus Cvjeticanin
+//! Copyright (c) 2024, Marcus Cvjeticanin, Chase Willden
 //!
 //! Redistribution and use in source and binary forms, with or without
 //! modification, are permitted provided that the following conditions are met:
@@ -73,5 +73,28 @@ impl Layer for Relu {
     fn backward(&mut self, grad: &Tensor) -> Tensor {
         let _ = grad;
         todo!()
+    }
+}
+
+#[derive(Debug)]
+pub struct Flatten {
+    input_shape: Shape,
+}
+
+impl Flatten {
+    pub fn new(input_shape: Shape) -> Self {
+        Self { input_shape }
+    }
+}
+
+impl Layer for Flatten {
+    fn forward(&self, input: &Tensor) -> Tensor {
+        // Flatten the input tensor by reshaping it to a 1D vector
+        Tensor::new(input.data.clone(), Shape::new(vec![input.shape.len()]))
+    }
+
+    fn backward(&mut self, grad: &Tensor) -> Tensor {
+        // Reshape the gradient back to the original input shape
+        grad.reshape(self.input_shape.clone())
     }
 }

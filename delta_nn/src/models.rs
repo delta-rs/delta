@@ -128,12 +128,11 @@ impl Sequential {
                     epoch_loss += 0.0;
                 }
 
-                // Need to figure out how to handle this properly
                 // Backward pass
-                // let mut grad = train_data.loss_grad(&outputs, &targets);
-                // for layer in self.layers.iter().rev() {
-                //     grad = layer.backward(&grad);
-                // }
+                let mut grad = train_data.loss_grad(&outputs, &targets);
+                for layer in self.layers.iter_mut().rev() {
+                    grad = layer.backward(&grad);
+                }
 
                 // Update weights
                 // for layer in &mut self.layers {
