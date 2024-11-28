@@ -33,6 +33,7 @@ use delta_common::{Activation, Layer, Shape};
 /// A dense (fully connected) layer.
 #[derive(Debug)]
 pub struct Dense {
+    name: String,
     weights: Option<Tensor>,
     bias: Option<Tensor>,
     units: usize,
@@ -52,6 +53,7 @@ impl Dense {
     /// A new instance of the dense layer.
     pub fn new<A: Activation + 'static>(units: usize, activation: A) -> Self {
         Self {
+            name: format!("Dense_{}", units),
             weights: None,
             bias: None,
             units,
@@ -110,11 +112,50 @@ impl Layer for Dense {
         let _ = grad;
         todo!()
     }
+
+    /// Returns the output shape of the layer.
+    ///
+    /// # Returns
+    ///
+    /// A `Shape` representing the output shape of the layer.
+    fn output_shape(&self) -> Shape {
+        Shape::new(vec![self.units])
+    }
+
+    /// Returns the number of parameters in the layer.
+    ///
+    /// # Returns
+    ///
+    /// A `usize` representing the number of parameters in the layer.
+    fn param_count(&self) -> usize {
+        let weights_count = self.weights.as_ref().map_or(0, |w| w.data.len());
+        let bias_count = self.bias.as_ref().map_or(0, |b| b.data.len());
+        weights_count + bias_count
+    }
+
+    /// Returns the name of the layer.
+    ///
+    /// # Returns
+    ///
+    /// A `&str` representing the name of the layer.
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    /// Returns the number of units in the layer.
+    ///
+    /// # Returns
+    ///
+    /// A `usize` representing the number of units in the layer.
+    fn units(&self) -> usize {
+        self.units
+    }
 }
 
 /// A flatten layer that reshapes the input tensor to a 1D vector.
 #[derive(Debug)]
 pub struct Flatten {
+    name: String,
     input_shape: Shape,
 }
 
@@ -129,7 +170,10 @@ impl Flatten {
     ///
     /// A new instance of the flatten layer.
     pub fn new(input_shape: Shape) -> Self {
-        Self { input_shape }
+        Self {
+            name: "Flatten".to_string(),
+            input_shape
+        }
     }
 }
 
@@ -169,6 +213,33 @@ impl Layer for Flatten {
     fn backward(&mut self, grad: &Tensor) -> Tensor {
         // Reshape the gradient back to the original input shape
         grad.reshape(self.input_shape.clone())
+    }
+
+    /// Returns the output shape of the layer.
+    ///
+    /// # Returns
+    ///
+    /// A `Shape` representing the output shape of the layer.
+    fn output_shape(&self) -> Shape {
+        Shape::new(vec![self.input_shape.0.iter().product()])
+    }
+
+    /// Returns the number of parameters in the layer.
+    ///
+    /// # Returns
+    ///
+    /// A `usize` representing the number of parameters in the layer.
+    fn param_count(&self) -> usize {
+        0
+    }
+
+    /// Returns the name of the layer.
+    ///
+    /// # Returns
+    ///
+    /// A `&str` representing the name of the layer.
+    fn name(&self) -> &str {
+        &self.name
     }
 }
 
