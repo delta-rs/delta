@@ -34,6 +34,7 @@ use delta_common::{Dataset, Layer, Loss, Optimizer};
 #[derive(Debug)]
 pub struct Sequential {
     layers: Vec<Box<dyn Layer>>,
+    layer_names: Vec<String>,
     optimizer: Option<Box<dyn Optimizer>>,
     loss: Option<Box<dyn Loss>>,
 }
@@ -47,6 +48,7 @@ impl Sequential {
     pub fn new() -> Self {
         Self {
             layers: Vec::new(),
+            layer_names: Vec::new(),
             optimizer: None,
             loss: None,
         }
@@ -62,7 +64,13 @@ impl Sequential {
     ///
     /// A reference to the model
     pub fn add<L: Layer + 'static>(mut self, layer: L) -> Self {
+        let layer_type = std::any::type_name::<L>().split("::").last().unwrap();
+        let layer_name = match layer_type {
+            "Dense" => format!("{}_{}_{}", layer_type, layer.units(), self.layers.len()),
+            _ => format!("{}_{}", layer_type, self.layers.len()),
+        };
         self.layers.push(Box::new(layer));
+        self.layer_names.push(layer_name);
         self
     }
 
@@ -202,16 +210,27 @@ impl Sequential {
         self.layers.iter().fold(input.clone(), |acc, layer| layer.forward(&acc))
     }*/
 
-    /// Returns a summary of the model.
-    ///
-    /// # Returns
-    ///
-    /// A string containing the summary of the model.
-    pub fn summary(&self) -> String {
-        let mut summary = String::new();
+    /// Prints a summary of the model.
+    pub fn summary(&self) {
+        println!("Model Summary:");
+        println!("{:<30} {:<25} {:<10}", "Layer (type)", "Output Shape", "Param #");
+        println!("{:-<65}", "");
+
+        let mut total_params = 0;
         for (i, layer) in self.layers.iter().enumerate() {
-            summary.push_str(&format!("Layer {}: {:?}\n", i + 1, layer));
+            let layer_type = &self.layer_names[i];
+            let layer_type_only = layer_type.split('_').next().unwrap();
+            let display_name = format!("{} ({})", layer_type, layer_type_only);
+            let output_shape = format!("{:?}", layer.output_shape());
+            let param_count = layer.param_count();
+            total_params += param_count;
+            println!("{:<30} {:<25} {:<10}", display_name, output_shape, param_count);
         }
-        summary
+
+        println!("{:-<65}", "");
+        println!("Total params: {}", total_params);
+        println!("Trainable params: {}", total_params);
+        println!("Non-trainable params: 0");
+        println!("{:-<65}", "");
     }
 }
