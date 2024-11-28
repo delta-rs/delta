@@ -60,6 +60,34 @@ pub trait Layer: Debug {
     ///
     /// The gradient tensor to be passed to the previous layer.
     fn backward(&mut self, grad: &Tensor) -> Tensor;
+
+    /// Returns the output shape of the layer.
+    ///
+    /// # Returns
+    ///
+    /// A `Shape` representing the output shape of the layer.
+    fn output_shape(&self) -> Shape;
+
+    /// Returns the number of parameters in the layer.
+    ///
+    /// # Returns
+    ///
+    /// A `usize` representing the number of parameters in the layer.
+    fn param_count(&self) -> usize;
+
+    /// Returns the name of the layer.
+    ///
+    /// # Returns
+    ///
+    /// A `&str` representing the name of the layer.
+    fn name(&self) -> &str;
+
+    /// Returns the number of units in the layer.
+    ///
+    /// # Returns
+    ///
+    /// A `usize` representing the number of units in the layer. Default is 0.
+    fn units(&self) -> usize { 0 }
 }
 
 /// A struct representing the output of a layer.
