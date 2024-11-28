@@ -16,6 +16,9 @@ async fn main() {
         .add(Dense::new(128, ReluActivation::new())) // Input: 784, Output: 128
         .add(Dense::new(10, SoftmaxActivation::new())); // Output: 10 classes
 
+    // Display the model summary
+    model.summary();
+
     // Define an optimizer
     let optimizer = Adam::new(0.001);
 
