@@ -72,8 +72,8 @@ pub trait Layer: Debug {
     ///
     /// # Returns
     ///
-    /// A `usize` representing the number of parameters in the layer.
-    fn param_count(&self) -> usize;
+    /// A tuple `(usize, usize)` representing the number of trainable and non-trainable parameters in the layer.
+    fn param_count(&self) -> (usize, usize);
 
     /// Returns the name of the layer.
     ///
