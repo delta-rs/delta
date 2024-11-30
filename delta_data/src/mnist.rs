@@ -368,31 +368,58 @@ impl DatasetOps for MnistDataset {
     ///
     /// # Arguments
     ///
-    /// * `outputs` - The predicted outputs from the model.
-    /// * `targets` - The true target values.
+    /// * `outputs` - The predicted outputs from the model (logits or probabilities).
+    /// * `targets` - The true target values (one-hot encoded).
     ///
     /// # Returns
     ///
     /// The calculated loss as a `f32` value.
     fn loss(&self, outputs: &Tensor, targets: &Tensor) -> f32 {
-        let _ = targets;
-        let _ = outputs;
-        todo!()
+        let outputs_data = outputs.data.clone();
+        let targets_data = targets.data.clone();
+
+        let batch_size = targets.shape().0[0];
+        let num_classes = targets.shape().0[1];
+
+        let mut loss = 0.0;
+
+        for i in 0..batch_size {
+            for j in 0..num_classes {
+                let target = targets_data[i * num_classes + j];
+                let predicted = outputs_data[i * num_classes + j].max(1e-15); // Avoid log(0)
+                loss -= target * predicted.ln(); // Cross-entropy loss
+            }
+        }
+
+        loss / batch_size as f32
     }
 
     /// Calculates the gradient of the loss with respect to the predicted outputs.
     ///
     /// # Arguments
     ///
-    /// * `outputs` - The predicted outputs from the model.
-    /// * `targets` - The true target values.
+    /// * `outputs` - The predicted outputs from the model (probabilities).
+    /// * `targets` - The true target values (one-hot encoded).
     ///
     /// # Returns
     ///
     /// A `Tensor` containing the gradients of the loss with respect to the outputs.
     fn loss_grad(&self, outputs: &Tensor, targets: &Tensor) -> Tensor {
-        let _ = targets;
-        let _ = outputs;
-        todo!()
+        let outputs_data = outputs.data.clone();
+        let targets_data = targets.data.clone();
+
+        let batch_size = targets.shape().0[0];
+        let num_classes = targets.shape().0[1];
+        let mut grad_data = vec![0.0; batch_size * num_classes];
+
+        for i in 0..batch_size {
+            for j in 0..num_classes {
+                let target = targets_data[i * num_classes + j];
+                let predicted = outputs_data[i * num_classes + j];
+                grad_data[i * num_classes + j] = (predicted - target) / batch_size as f32;
+            }
+        }
+
+        Tensor::new(grad_data, outputs.shape().clone())
     }
 }

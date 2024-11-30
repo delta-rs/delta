@@ -27,7 +27,7 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use delta_common::{tensor_ops::Tensor, Activation};
+use delta_common::{tensor_ops::Tensor, Activation, Shape};
 
 /// A struct representing the Softmax activation function.
 #[derive(Debug)]
@@ -74,6 +74,44 @@ impl Activation for SoftmaxActivation {
         // Normalize to get the softmax probabilities
         exps.map(|x| x / sum)
     }
+
+    /// Computes the Jacobian of the Softmax function.
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - The input tensor.
+    ///
+    /// # Returns
+    ///
+    /// A tensor representing the Jacobian matrix of the Softmax function.
+    fn derivative(&self, input: &Tensor) -> Tensor {
+        // Apply the softmax activation to get the probabilities
+        let softmax_output = self.activate(input);
+
+        // Get the number of elements in the input tensor
+        let n = softmax_output.data.len();
+
+        // Initialize the Jacobian matrix
+        let mut jacobian_data = vec![0.0; n * n];
+
+        // Compute the Jacobian matrix
+        for i in 0..n {
+            for j in 0..n {
+                let idx = i * n + j; // Map 2D indices to a 1D vector
+                if i == j {
+                    jacobian_data[idx] = softmax_output.data[i] * (1.0 - softmax_output.data[i]);
+                } else {
+                    jacobian_data[idx] = -softmax_output.data[i] * softmax_output.data[j];
+                }
+            }
+        }
+
+        // Create the Jacobian tensor
+        Tensor {
+            data: jacobian_data,
+            shape: Shape::new(vec![n, n]),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -92,5 +130,22 @@ mod tests {
             vec![0.09003057317038025, 0.24472847105479776, 0.6652409557758217]
         );
         assert_eq!(output.shape.0, vec![1, 3]);
+    }
+
+    #[test]
+    fn test_softmax_derivative() {
+        let input = Tensor::new(vec![1.0, 2.0, 3.0], Shape::new(vec![1, 3]));
+        let softmax = SoftmaxActivation::new();
+        let derivative = softmax.derivative(&input);
+
+        assert_eq!(
+            derivative.data,
+            vec![
+                -0.09003057317038025,
+                -0.24472847105479776,
+                -0.6652409557758217
+            ]
+        );
+        assert_eq!(derivative.shape.0, vec![1, 3]);
     }
 }

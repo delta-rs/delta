@@ -76,6 +76,34 @@ impl Activation for ReluActivation {
     fn activate(&self, input: &Tensor) -> Tensor {
         input.map(|x| x.max(0.0))
     }
+
+    /// Computes the derivative of the ReLU activation function for the input tensor.
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - The input tensor.
+    ///
+    /// # Returns
+    ///
+    /// A tensor representing the derivative of the ReLU activation.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use delta_activations::relu::ReluActivation;
+    /// use delta_common::{Activation, Shape};
+    /// use delta_common::tensor_ops::Tensor;
+    ///
+    /// let input = Tensor::new(vec![1.0, -2.0, 3.0, -4.0], Shape::new(vec![2, 2]));
+    /// let relu = ReluActivation::new();
+    /// let derivative = relu.derivative(&input);
+    ///
+    /// assert_eq!(derivative.data, vec![1.0, 0.0, 1.0, 0.0]);
+    /// assert_eq!(derivative.shape.0, vec![2, 2]);
+    /// ```
+    fn derivative(&self, input: &Tensor) -> Tensor {
+        input.map(|x| if x > 0.0 { 1.0 } else { 0.0 })
+    }
 }
 
 #[cfg(test)]
@@ -91,5 +119,15 @@ mod tests {
 
         assert_eq!(output.data, vec![1.0, 0.0, 3.0, 0.0]);
         assert_eq!(output.shape.0, vec![2, 2]);
+    }
+
+    #[test]
+    fn test_relu_derivative() {
+        let input = Tensor::new(vec![1.0, -2.0, 3.0, -4.0], Shape::new(vec![2, 2]));
+        let relu = ReluActivation::new();
+        let derivative = relu.derivative(&input);
+
+        assert_eq!(derivative.data, vec![1.0, 0.0, 1.0, 0.0]);
+        assert_eq!(derivative.shape.0, vec![2, 2]);
     }
 }

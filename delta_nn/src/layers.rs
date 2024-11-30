@@ -39,6 +39,9 @@ pub struct Dense {
     units: usize,
     activation: Box<dyn Activation>,
     trainable: bool,
+    weights_grad: Option<Tensor>,
+    bias_grad: Option<Tensor>,
+    input: Option<Tensor>,
 }
 
 impl Dense {
@@ -60,6 +63,9 @@ impl Dense {
             units,
             activation: Box::new(activation),
             trainable,
+            weights_grad: None,
+            bias_grad: None,
+            input: None,
         }
     }
 }
@@ -95,6 +101,9 @@ impl Layer for Dense {
             "Input shape does not match Dense layer weight dimensions"
         );
 
+        // Store the input tensor for use in backward pass
+        self.input = Some(input.clone());
+
         let z = input.matmul(&self.weights.as_ref().unwrap()).zip_map(
             &self
                 .bias
@@ -117,8 +126,35 @@ impl Layer for Dense {
     ///
     /// The gradient tensor with respect to the input.
     fn backward(&mut self, grad: &Tensor) -> Tensor {
-        let _ = grad;
-        todo!()
+        // Ensure the layer was built and the weights/bias exist
+        assert!(
+            self.weights.is_some() && self.bias.is_some(),
+            "Dense layer must be built before performing backward pass"
+        );
+
+        // Extract the weights and bias tensors
+        let weights = self.weights.as_ref().unwrap();
+
+        // 1. Gradient of the activation function applied to the pre-activation output
+        let activation_grad = self.activation.derivative(&grad);
+
+        // 2. Compute the gradient for weights: input.T dot activation_grad
+        let input_transposed = self.input.as_ref().unwrap().transpose();
+        let weight_grad = input_transposed.matmul(&activation_grad);
+
+        // 3. Compute the gradient for bias: sum of activation_grad along batch dimension
+        let bias_grad = Tensor::new(vec![activation_grad.sum()], Shape::new(vec![self.units]));
+
+        // 4. Compute the gradient for the input to propagate to the previous layer
+        let input_grad = activation_grad.matmul(&weights.transpose());
+
+        // Update weights and bias gradients if trainable
+        if self.trainable {
+            self.weights_grad = Some(weight_grad);
+            self.bias_grad = Some(bias_grad);
+        }
+
+        input_grad
     }
 
     /// Returns the output shape of the layer.

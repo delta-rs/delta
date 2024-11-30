@@ -495,6 +495,20 @@ impl Tensor {
         }
     }
 
+    /// Transpose the tensor
+    ///
+    /// # Returns
+    ///
+    /// A new tensor with the same data but different shape
+    pub fn transpose(&self) -> Tensor {
+        let mut new_shape = self.shape.0.clone();
+        new_shape.reverse();
+        Tensor {
+            data: self.data.clone(),
+            shape: Shape(new_shape),
+        }
+    }
+
     /// Broadcast and flatten the tensor to the target shape
     ///
     /// # Arguments

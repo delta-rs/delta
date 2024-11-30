@@ -42,4 +42,15 @@ pub trait Activation: Debug {
     ///
     /// The output tensor after applying the activation function.
     fn activate(&self, input: &Tensor) -> Tensor;
+
+    /// Computes the derivative of the activation function.
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - The input tensor.
+    ///
+    /// # Returns
+    ///
+    /// The derivative tensor of the activation function.
+    fn derivative(&self, input: &Tensor) -> Tensor;
 }
