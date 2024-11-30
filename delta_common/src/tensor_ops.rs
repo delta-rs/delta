@@ -305,66 +305,63 @@ impl Tensor {
     pub fn matmul(&self, other: &Tensor) -> Tensor {
         // Ensure tensors have at least 2 dimensions
         if self.shape.0.len() < 2 || other.shape.0.len() < 2 {
-            println!("{:#?}", self.shape.0);
-            println!("{:#?}", other.shape.0);
             panic!("Both tensors must have at least 2 dimensions for matmul");
         }
 
-        let self_inner = self.shape.0[self.shape.0.len() - 1];
-        let other_inner = other.shape.0[other.shape.0.len() - 2];
+        // Get the batch shapes and matrix dimensions
+        let self_batch_shape = &self.shape.0[..self.shape.0.len() - 2];
+        let other_batch_shape = &other.shape.0[..other.shape.0.len() - 2];
 
-        // Ensure the inner dimensions match for matrix multiplication
-        if self_inner != other_inner {
-            println!("self_inner: {}, other_inner: {}", self_inner, other_inner);
+        // Compute the broadcasted batch shape
+        let batch_shape = Tensor::get_broadcast_shape_tensors(self_batch_shape, other_batch_shape);
+
+        // Get matrix dimensions
+        let m = self.shape.0[self.shape.0.len() - 2];
+        let k_self = self.shape.0[self.shape.0.len() - 1];
+
+        let k_other = other.shape.0[other.shape.0.len() - 2];
+        let n = other.shape.0[other.shape.0.len() - 1];
+
+        // Ensure inner dimensions match
+        if k_self != k_other {
             panic!("Inner dimensions do not match for matrix multiplication");
         }
 
-        let mut result_shape = Vec::new();
+        // Compute the result shape
+        let mut result_shape = batch_shape.clone();
+        result_shape.push(m);
+        result_shape.push(n);
 
-        // Determine the broadcasted shape for all dimensions except the last two
-        let max_dims = std::cmp::max(self.shape.0.len(), other.shape.0.len()) - 2;
-        for i in 0..max_dims {
-            let dim_self = self.shape.0.get(i).copied().unwrap_or(1); // Treat missing dimensions as 1
-            let dim_other = other.shape.0.get(i).copied().unwrap_or(1); // Treat missing dimensions as 1
+        // Broadcast self and other to the broadcasted batch shape
+        let self_broadcasted = self.broadcast_to(&[batch_shape.clone(), vec![m, k_self]].concat());
+        let other_broadcasted =
+            other.broadcast_to(&[batch_shape.clone(), vec![k_other, n]].concat());
 
-            if dim_self != dim_other && dim_self != 1 && dim_other != 1 {
-                panic!("Incompatible broadcast dimensions");
-            }
-            result_shape.push(std::cmp::max(dim_self, dim_other));
-        }
+        // Now, perform matmul over the batch dimensions
+        let batch_size = batch_shape.iter().product::<usize>();
 
-        // Add the output matrix dimensions
-        let self_outer = self.shape.0[self.shape.0.len() - 2];
-        let other_outer = other.shape.0[other.shape.0.len() - 1];
-        result_shape.push(self_outer);
-        result_shape.push(other_outer);
+        let mut result_data = vec![0.0; result_shape.iter().product()];
 
-        // Flatten input tensors for easier iteration
-        let self_data = self.broadcast_and_flatten(&result_shape);
-        let other_data = other.broadcast_and_flatten(&result_shape);
-
-        // Compute the result data
-        let batch_size = result_shape[..result_shape.len() - 2]
-            .iter()
-            .product::<usize>();
-        let self_inner_size = self_inner;
-        let other_inner_size = other_outer;
-        let result_inner_size = self_outer * other_outer;
-
-        let mut result_data = vec![0.0; batch_size * result_inner_size];
+        let matrix_size = m * n;
+        let self_matrix_size = m * k_self;
+        let other_matrix_size = k_other * n;
 
         for batch_idx in 0..batch_size {
-            for i in 0..self_outer {
-                for j in 0..other_outer {
+            // Compute the starting indices for self, other, and result
+            let self_offset = batch_idx * self_matrix_size;
+            let other_offset = batch_idx * other_matrix_size;
+            let result_offset = batch_idx * matrix_size;
+
+            // Perform matrix multiplication for this batch
+            for i in 0..m {
+                for j in 0..n {
                     let mut sum = 0.0;
-                    for k in 0..self_inner_size {
-                        let self_idx =
-                            batch_idx * self_outer * self_inner_size + i * self_inner_size + k;
-                        let other_idx =
-                            batch_idx * other_inner_size * other_outer + k * other_outer + j;
-                        sum += self_data[self_idx] * other_data[other_idx];
+                    for k in 0..k_self {
+                        let self_idx = self_offset + i * k_self + k;
+                        let other_idx = other_offset + k * n + j;
+                        sum += self_broadcasted.data[self_idx] * other_broadcasted.data[other_idx];
                     }
-                    let result_idx = batch_idx * result_inner_size + i * other_outer + j;
+                    let result_idx = result_offset + i * n + j;
                     result_data[result_idx] = sum;
                 }
             }
@@ -373,6 +370,39 @@ impl Tensor {
         Tensor {
             data: result_data,
             shape: Shape(result_shape),
+        }
+    }
+
+    /// Compute the broadcasted shape for two tensors
+    fn get_broadcast_shape_tensors(shape1: &[usize], shape2: &[usize]) -> Vec<usize> {
+        let mut result = Vec::new();
+        let max_dims = std::cmp::max(shape1.len(), shape2.len());
+        for i in 0..max_dims {
+            let dim1 = shape1
+                .get(shape1.len().saturating_sub(i + 1))
+                .copied()
+                .unwrap_or(1);
+            let dim2 = shape2
+                .get(shape2.len().saturating_sub(i + 1))
+                .copied()
+                .unwrap_or(1);
+
+            if dim1 != dim2 && dim1 != 1 && dim2 != 1 {
+                panic!("Shapes are not broadcastable for matmul");
+            }
+
+            result.push(std::cmp::max(dim1, dim2));
+        }
+        result.reverse();
+        result
+    }
+
+    /// Broadcast the tensor to a new shape
+    fn broadcast_to(&self, target_shape: &[usize]) -> Tensor {
+        let data = self.broadcast_and_flatten(target_shape);
+        Tensor {
+            data,
+            shape: Shape(target_shape.to_vec()),
         }
     }
 
@@ -535,5 +565,23 @@ mod tests {
 
         assert_eq!(sliced.shape.0, vec![10, 28, 28, 1]);
         assert_eq!(sliced.data.len(), 10 * 28 * 28 * 1);
+    }
+
+    #[test]
+    fn test_matmul_with_broadcasting() {
+        // Tensor A with shape [2, 3, 4]
+        let a = Tensor::new(
+            (0..24).map(|x| x as f32).collect(),
+            Shape::new(vec![2, 3, 4]),
+        );
+
+        // Tensor B with shape [4, 5]
+        let b = Tensor::new((0..20).map(|x| x as f32).collect(), Shape::new(vec![4, 5]));
+
+        // Perform matmul
+        let result = a.matmul(&b);
+
+        // Expected shape is [2, 3, 5]
+        assert_eq!(result.shape.0, vec![2, 3, 5]);
     }
 }
