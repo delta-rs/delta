@@ -268,7 +268,7 @@ mod tests {
     #[test]
     fn test_dense_layer() {
         let input = Tensor::new(vec![1.0, 2.0, 3.0], Shape::new(vec![1, 3]));
-        let mut dense_layer = Dense::new(2, ReluActivation::new());
+        let mut dense_layer = Dense::new(2, ReluActivation::new(), true);
         dense_layer.build(Shape::new(vec![1, 3]));
 
         let output = dense_layer.forward(&input);
