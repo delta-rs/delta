@@ -27,7 +27,7 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use delta_common::Activation;
+use delta_common::{tensor_ops::Tensor, Activation};
 
 /// A struct representing the Softmax activation function.
 #[derive(Debug)]
@@ -58,12 +58,20 @@ impl Activation for SoftmaxActivation {
     /// # Returns
     ///
     /// The output tensor after applying the Softmax activation function.
-    fn activate(
-        &self,
-        input: &delta_common::tensor_ops::Tensor,
-    ) -> delta_common::tensor_ops::Tensor {
-        let exps = input.map(|x| x.exp());
+    fn activate(&self, input: &Tensor) -> Tensor {
+        // Find the maximum value in the input tensor
+        let max_value = input.max();
+
+        // Subtract the maximum value from each element in the input tensor
+        let stabilized_input = input.map(|x| x - max_value);
+
+        // Compute the exponentials
+        let exps = stabilized_input.map(|x| x.exp());
+
+        // Compute the sum of the exponentials
         let sum = exps.sum();
+
+        // Normalize to get the softmax probabilities
         exps.map(|x| x / sum)
     }
 }

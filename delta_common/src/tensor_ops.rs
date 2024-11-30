@@ -82,6 +82,19 @@ impl Tensor {
         }
     }
 
+    /// Gets the maximum value in the tensor.
+    ///
+    /// # Returns
+    ///
+    /// The maximum value in the tensor.
+    pub fn max(&self) -> f32 {
+        self.data
+            .iter()
+            .max_by(|a, b| a.partial_cmp(b).unwrap())
+            .unwrap()
+            .clone()
+    }
+
     /// Gets the broadcast shape for two tensors.
     ///
     /// # Arguments
@@ -374,6 +387,15 @@ impl Tensor {
     }
 
     /// Compute the broadcasted shape for two tensors
+    ///
+    /// # Arguments
+    ///
+    /// * `shape1` - The first shape
+    /// * `shape2` - The second shape
+    ///
+    /// # Returns
+    ///
+    /// A vector representing the broadcasted shape
     fn get_broadcast_shape_tensors(shape1: &[usize], shape2: &[usize]) -> Vec<usize> {
         let mut result = Vec::new();
         let max_dims = std::cmp::max(shape1.len(), shape2.len());
@@ -398,6 +420,14 @@ impl Tensor {
     }
 
     /// Broadcast the tensor to a new shape
+    ///
+    /// # Arguments
+    ///
+    /// * `target_shape` - The target shape for broadcasting
+    ///
+    /// # Returns
+    ///
+    /// A new tensor with the same data but different shape
     fn broadcast_to(&self, target_shape: &[usize]) -> Tensor {
         let data = self.broadcast_and_flatten(target_shape);
         Tensor {
@@ -506,7 +536,7 @@ impl Tensor {
 
         for idx in 0..target_shape.iter().product::<usize>() {
             let mut src_idx = 0;
-            let mut remaining = idx;
+            let remaining = idx;
             for (&dim, &stride) in expanded_shape.iter().zip(&strides) {
                 let pos = (remaining / stride) % dim;
                 src_idx *= dim;
@@ -583,5 +613,12 @@ mod tests {
 
         // Expected shape is [2, 3, 5]
         assert_eq!(result.shape.0, vec![2, 3, 5]);
+    }
+
+    #[test]
+    fn test_max() {
+        let tensor = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], Shape::new(vec![2, 3]));
+        let max = tensor.max();
+        assert_eq!(max, 6.0);
     }
 }

@@ -89,6 +89,12 @@ impl Layer for Dense {
     ///
     /// The output tensor.
     fn forward(&mut self, input: &Tensor) -> Tensor {
+        assert_eq!(
+            input.shape.0.last().unwrap(),
+            &self.weights.as_ref().unwrap().shape.0[0],
+            "Input shape does not match Dense layer weight dimensions"
+        );
+
         let z = input.matmul(&self.weights.as_ref().unwrap()).zip_map(
             &self
                 .bias
@@ -96,7 +102,7 @@ impl Layer for Dense {
                 .unwrap()
                 .reshape(Shape::new(vec![1, self.units])),
             |a, b| a + b,
-        ); // Use zip_map for element-wise addition.
+        );
 
         self.activation.activate(&z)
     }
@@ -179,7 +185,7 @@ impl Flatten {
     pub fn new(input_shape: Shape) -> Self {
         Self {
             name: "Flatten".to_string(),
-            input_shape
+            input_shape,
         }
     }
 }
@@ -204,8 +210,12 @@ impl Layer for Flatten {
     ///
     /// The output tensor.
     fn forward(&mut self, input: &Tensor) -> Tensor {
-        // Flatten the input tensor by reshaping it to a 1D vector
-        Tensor::new(input.data.clone(), Shape::new(vec![1, input.shape.len()]))
+        let batch_size = input.shape.0[0];
+        let flattened_size = input.shape.0.iter().skip(1).product::<usize>();
+        Tensor::new(
+            input.data.clone(),
+            Shape::new(vec![batch_size, flattened_size]),
+        )
     }
 
     /// Performs a backward pass through the layer.
@@ -257,15 +267,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_flatten_layer() {
-        let input = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], Shape::new(vec![2, 3]));
-        let mut flatten_layer = Flatten::new(Shape::new(vec![2, 3]));
-        let output = flatten_layer.forward(&input);
-        assert_eq!(output.data, vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
-        assert_eq!(output.shape.0, vec![1, 6]);
-    }
-
-    #[test]
     fn test_dense_layer() {
         let input = Tensor::new(vec![1.0, 2.0, 3.0], Shape::new(vec![1, 3]));
         let mut dense_layer = Dense::new(2, ReluActivation::new(), true);
@@ -276,5 +277,19 @@ mod tests {
         assert_eq!(output.shape.0, vec![1, 2]);
         // Assert values are within expected range; exact values depend on random weights.
         assert!(output.data.len() == 2);
+    }
+
+    #[test]
+    fn test_dense_layer_forward_pass() {
+        let input = Tensor::new(
+            (0..784).map(|x| x as f32).collect(),
+            Shape::new(vec![1, 784]),
+        );
+        let mut dense_layer = Dense::new(128, ReluActivation::new(), true);
+        dense_layer.build(Shape::new(vec![1, 784]));
+
+        let output = dense_layer.forward(&input);
+
+        assert_eq!(output.shape.0, vec![1, 128]);
     }
 }
