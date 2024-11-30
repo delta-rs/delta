@@ -38,6 +38,7 @@ pub struct Dense {
     bias: Option<Tensor>,
     units: usize,
     activation: Box<dyn Activation>,
+    trainable: bool,
 }
 
 impl Dense {
@@ -51,13 +52,14 @@ impl Dense {
     /// # Returns
     ///
     /// A new instance of the dense layer.
-    pub fn new<A: Activation + 'static>(units: usize, activation: A) -> Self {
+    pub fn new<A: Activation + 'static>(units: usize, activation: A, trainable: bool) -> Self {
         Self {
             name: format!("Dense_{}", units),
             weights: None,
             bias: None,
             units,
             activation: Box::new(activation),
+            trainable,
         }
     }
 }
@@ -127,10 +129,15 @@ impl Layer for Dense {
     /// # Returns
     ///
     /// A `usize` representing the number of parameters in the layer.
-    fn param_count(&self) -> usize {
+    fn param_count(&self) -> (usize, usize) {
         let weights_count = self.weights.as_ref().map_or(0, |w| w.data.len());
         let bias_count = self.bias.as_ref().map_or(0, |b| b.data.len());
-        weights_count + bias_count
+        let total_params = weights_count + bias_count;
+        if self.trainable {
+            (total_params, 0)
+        } else {
+            (0, total_params)
+        }
     }
 
     /// Returns the name of the layer.
@@ -229,8 +236,8 @@ impl Layer for Flatten {
     /// # Returns
     ///
     /// A `usize` representing the number of parameters in the layer.
-    fn param_count(&self) -> usize {
-        0
+    fn param_count(&self) -> (usize, usize) {
+        (0, 0)
     }
 
     /// Returns the name of the layer.
