@@ -63,12 +63,19 @@ impl Sequential {
     /// # Returns
     ///
     /// A reference to the model
-    pub fn add<L: Layer + 'static>(mut self, layer: L) -> Self {
+    pub fn add<L: Layer + 'static>(mut self, mut layer: L) -> Self {
         let layer_type = std::any::type_name::<L>().split("::").last().unwrap();
         let layer_name = match layer_type {
             "Dense" => format!("{}_{}_{}", layer_type, layer.units(), self.layers.len()),
             _ => format!("{}_{}", layer_type, self.layers.len()),
         };
+
+        // Call the build method to initialize weights and biases
+        if !self.layers.is_empty() {
+            let input_shape = self.layers.last().unwrap().output_shape();
+            layer.build(input_shape);
+        }
+
         self.layers.push(Box::new(layer));
         self.layer_names.push(layer_name);
         self
@@ -217,20 +224,25 @@ impl Sequential {
         println!("{:-<65}", "");
 
         let mut total_params = 0;
+        let mut trainable_params = 0;
+        let mut non_trainable_params = 0;
+
         for (i, layer) in self.layers.iter().enumerate() {
             let layer_type = &self.layer_names[i];
             let layer_type_only = layer_type.split('_').next().unwrap();
             let display_name = format!("{} ({})", layer_type, layer_type_only);
             let output_shape = format!("{:?}", layer.output_shape());
-            let param_count = layer.param_count();
-            total_params += param_count;
-            println!("{:<30} {:<25} {:<10}", display_name, output_shape, param_count);
+            let (trainable, non_trainable) = layer.param_count();
+            total_params += trainable + non_trainable;
+            trainable_params += trainable;
+            non_trainable_params += non_trainable;
+            println!("{:<30} {:<25} {:<10}", display_name, output_shape, trainable + non_trainable);
         }
 
         println!("{:-<65}", "");
         println!("Total params: {}", total_params);
-        println!("Trainable params: {}", total_params);
-        println!("Non-trainable params: 0");
+        println!("Trainable params: {}", trainable_params);
+        println!("Non-trainable params: {}", non_trainable_params);
         println!("{:-<65}", "");
     }
 }
