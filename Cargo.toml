@@ -1,12 +1,6 @@
 [workspace]
 members = [
-    "delta_common",
-    "delta_data",
-    "delta_nn",
-    "delta_optimizers",
-    "delta_activations",
-    "delta_losses",
-    "delta_tensor",
+    "delta",
     "examples/mnist",
 ]
 resolver = "2"
