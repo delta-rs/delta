@@ -51,7 +51,7 @@ pub mod losses {
     pub mod mean_squared;
 }
 
-pub mod nn {
+pub mod neuralnet {
     pub mod layers;
     pub mod models;
 }

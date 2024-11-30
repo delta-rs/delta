@@ -4,8 +4,8 @@ use deltaml::common::data::DatasetOps;
 use deltaml::common::shape::Shape;
 use deltaml::data::mnist::MnistDataset;
 use deltaml::losses::mean_squared::MeanSquaredLoss;
-use deltaml::nn::layers::{Dense, Flatten};
-use deltaml::nn::models::Sequential;
+use deltaml::neuralnet::layers::{Dense, Flatten};
+use deltaml::neuralnet::models::Sequential;
 use deltaml::optimizers::adam::Adam;
 
 #[tokio::main]
