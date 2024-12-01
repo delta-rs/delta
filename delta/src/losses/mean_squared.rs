@@ -50,10 +50,15 @@ impl Loss for MeanSquaredLoss {
             );
         }
 
-        // Step 2: Compute the squared differences
+        // Step 2: Check for NaN values in y_true and y_pred
+        if y_true.data.iter().any(|&x| x.is_nan()) || y_pred.data.iter().any(|&x| x.is_nan()) {
+            panic!("NaN value found in inputs");
+        }
+
+        // Step 3: Compute the squared differences
         let squared_diff = (&y_true.data - &y_pred.data).mapv(|x| x.powi(2));
 
-        // Step 3: Calculate the mean of the squared differences
+        // Step 4: Calculate the mean of the squared differences
         let mean_squared_error = squared_diff.mean().unwrap_or(0.0);
 
         // Debug logs
