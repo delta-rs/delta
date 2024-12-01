@@ -3,7 +3,7 @@
 [//]: # (![crates.io]&#40;https://img.shields.io/crates/v/delta.svg&#41;)
 [//]: # ([![documentation]&#40;https://img.shields.io/badge/docs-delta-blue?logo=rust&#41;]&#40;https://docs.rs/delta/latest/&#41;)
 
-An Open-Source Machine Learning Framework in Rust Δ.
+An open-source machine learning framework in Rust Δ. It is designed to be fast, with APIs that are easy to use while allowing advanced usage to customize and extend functionality. It provides efficient and scalable tools for building and training neural networks. The framework aims to offer a comprehensive set of features, including various neural network layers, activation functions, loss functions, optimizers, and data handling utilities.
 
 ## Table of Contents <!-- omit in toc -->
 
