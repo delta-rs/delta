@@ -59,6 +59,10 @@ impl Cifar10Dataset {
     const TRAIN_EXAMPLES: usize = 50_000;
     const TEST_EXAMPLES: usize = 10_000;
 
+    /// Downloads and extracts the CIFAR-10 dataset.
+    ///
+    /// This function downloads the CIFAR-10 dataset from the specified URL
+    /// and extracts it to the cache directory.
     async fn download_and_extract() {
         let cache_path = ".cache/data/cifar10/";
         let tarball_path = format!("{}cifar-10-binary.tar.gz", cache_path);
@@ -98,6 +102,14 @@ impl Cifar10Dataset {
         }
     }
 
+    /// Parses a CIFAR-10 binary file.
+    ///
+    /// # Arguments
+    /// * `file_path` - The path to the CIFAR-10 binary file.
+    /// * `num_examples` - The number of examples in the file.
+    ///
+    /// # Returns
+    /// A tuple containing the images and labels as vectors of `f32`.
     fn parse_file(file_path: &str, num_examples: usize) -> (Vec<f32>, Vec<f32>) {
         let mut file = File::open(file_path).expect("Failed to open CIFAR-10 file");
         let mut buffer = vec![0u8; 1 + Self::CIFAR10_IMAGE_SIZE * Self::CIFAR10_IMAGE_SIZE * 3];
@@ -117,6 +129,14 @@ impl Cifar10Dataset {
         (images, labels)
     }
 
+    /// Loads the CIFAR-10 dataset.
+    ///
+    /// # Arguments
+    /// * `files` - A slice of file names to load.
+    /// * `total_examples` - The total number of examples to load.
+    ///
+    /// # Returns
+    /// A `Dataset` containing the loaded images and labels.
     fn load_data(files: &[&str], total_examples: usize) -> Dataset {
         let mut images = Vec::new();
         let mut labels = Vec::new();
@@ -137,6 +157,10 @@ impl Cifar10Dataset {
 impl DatasetOps for Cifar10Dataset {
     type LoadFuture = Pin<Box<dyn Future<Output = Self> + Send>>;
 
+    /// Loads the training dataset.
+    ///
+    /// # Returns
+    /// A future that resolves to the `Cifar10Dataset` with the training data loaded.
     fn load_train() -> Self::LoadFuture {
         Box::pin(async {
             Self::download_and_extract().await;
@@ -148,6 +172,10 @@ impl DatasetOps for Cifar10Dataset {
         })
     }
 
+    /// Loads the test dataset.
+    ///
+    /// # Returns
+    /// A future that resolves to the `Cifar10Dataset` with the test data loaded.
     fn load_test() -> Self::LoadFuture {
         Box::pin(async {
             Self::download_and_extract().await;
@@ -159,17 +187,30 @@ impl DatasetOps for Cifar10Dataset {
         })
     }
 
+    /// Normalizes the dataset.
+    ///
+    /// # Arguments
+    /// * `min` - The minimum value for normalization.
+    /// * `max` - The maximum value for normalization.
     fn normalize(&mut self, min: f32, max: f32) {
         let _ = max;
         let _ = min;
         todo!()
     }
 
+    /// Adds noise to the dataset.
+    ///
+    /// # Arguments
+    /// * `noise_level` - The level of noise to add.
     fn add_noise(&mut self, noise_level: f32) {
         let _ = noise_level;
         todo!()
     }
 
+    /// Gets the number of examples in the dataset.
+    ///
+    /// # Returns
+    /// The number of examples in the dataset.
     fn len(&self) -> usize {
         if let Some(ref train) = self.train {
             train.inputs.data.shape()[0]
@@ -180,6 +221,14 @@ impl DatasetOps for Cifar10Dataset {
         }
     }
 
+    /// Gets a batch of data from the dataset.
+    ///
+    /// # Arguments
+    /// * `batch_idx` - The index of the batch to get.
+    /// * `batch_size` - The size of the batch to get.
+    ///
+    /// # Returns
+    /// A tuple containing the input and label tensors for the batch.
     fn get_batch(&self, batch_idx: usize, batch_size: usize) -> (Tensor, Tensor) {
         let dataset = match (self.train.as_ref(), self.test.as_ref()) {
             (Some(train), _) => train,
@@ -215,6 +264,14 @@ impl DatasetOps for Cifar10Dataset {
         (inputs_batch, labels_batch)
     }
 
+    /// Calculates the loss between the predicted outputs and the true targets.
+    ///
+    /// # Arguments
+    /// * `outputs` - The predicted outputs from the model (logits or probabilities).
+    /// * `targets` - The true target values (one-hot encoded).
+    ///
+    /// # Returns
+    /// The calculated loss as a `f32` value.
     fn loss(&self, outputs: &Tensor, targets: &Tensor) -> f32 {
         let outputs_data = outputs.data.clone();
         let targets_data = targets.data.clone();
@@ -235,6 +292,14 @@ impl DatasetOps for Cifar10Dataset {
         loss / batch_size as f32
     }
 
+    /// Calculates the gradient of the loss with respect to the predicted outputs.
+    ///
+    /// # Arguments
+    /// * `outputs` - The predicted outputs from the model (probabilities).
+    /// * `targets` - The true target values (one-hot encoded).
+    ///
+    /// # Returns
+    /// A `Tensor` containing the gradients of the loss with respect to the outputs.
     fn loss_grad(&self, outputs: &Tensor, targets: &Tensor) -> Tensor {
         let outputs_data = outputs.data.iter().cloned().collect::<Vec<f32>>();
         let targets_data = targets.data.iter().cloned().collect::<Vec<f32>>();
@@ -260,8 +325,13 @@ impl DatasetOps for Cifar10Dataset {
         Tensor::new(grad_data, outputs.shape().clone())
     }
 
+    /// Shuffles the dataset.
     fn shuffle(&mut self) {}
 
+    /// Clones the dataset.
+    ///
+    /// # Returns
+    /// A new `Cifar10Dataset` instance with the same data.
     fn clone(&self) -> Self {
         Self {
             train: self.train.clone(),
