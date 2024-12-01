@@ -43,7 +43,7 @@ impl Shape {
     /// # Examples
     ///
     /// ```
-    /// use deltaml::common::shape::Shape;
+    /// use deltaml::common::Shape;
     ///
     /// let shape = Shape::new(vec![2, 3]);
     /// assert_eq!(shape.len(), 6);
@@ -67,7 +67,7 @@ impl From<(usize, usize)> for Shape {
     /// # Examples
     ///
     /// ```
-    /// use deltaml::common::shape::Shape;
+    /// use deltaml::common::Shape;
     ///
     /// let shape = Shape::from((2, 3));
     /// ```
