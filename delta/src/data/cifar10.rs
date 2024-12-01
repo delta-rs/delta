@@ -29,7 +29,6 @@
 
 use std::fs::File;
 use std::future::Future;
-use std::io;
 use std::io::Read;
 use std::pin::Pin;
 use crate::common::{Dataset, DatasetOps, Tensor};
@@ -178,15 +177,15 @@ impl DatasetOps for Cifar10Dataset {
         let adjusted_end_idx = end_idx.min(total_samples);
 
         let inputs_batch = dataset.inputs.slice(vec![
-            (start_idx..adjusted_end_idx),
-            (0..32),
-            (0..32),
-            (0..3),
+            start_idx..adjusted_end_idx,
+            0..32,
+            0..32,
+            0..3,
         ]);
 
         let labels_batch = dataset.labels.slice(vec![
-            (start_idx..adjusted_end_idx),
-            (0..10),
+            start_idx..adjusted_end_idx,
+            0..10,
         ]);
 
         (inputs_batch, labels_batch)
