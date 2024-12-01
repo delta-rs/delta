@@ -4,3 +4,6 @@ members = [
     "examples/mnist",
 ]
 resolver = "2"
+
+[workspace.dependencies]
+tokio = { version = "1.32.0", features = ["full"] }

@@ -6,4 +6,4 @@ publish = false
 
 [dependencies]
 deltaml = { path = "../../delta" }
-tokio = { version = "1.32.0", features = ["full"] }
+tokio = { workspace = true, features = ["full"] }
