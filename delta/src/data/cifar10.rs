@@ -27,7 +27,10 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-pub mod mnist;
-pub mod cifar10;
+use crate::common::Dataset;
 
-pub use mnist::MnistDataset;
+/// A struct representing the CIFAR10 dataset.
+pub struct Cifar10Dataset {
+    train: Option<Dataset>,
+    test: Option<Dataset>,
+}
