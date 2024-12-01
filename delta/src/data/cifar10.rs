@@ -27,10 +27,15 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use std::collections::HashSet;
+use std::fs;
 use std::fs::File;
 use std::future::Future;
 use std::io::Read;
+use std::path::Path;
 use std::pin::Pin;
+use flate2::read::GzDecoder;
+use tar::Archive;
 use crate::common::{Dataset, DatasetOps, Tensor};
 
 /// A struct representing the CIFAR10 dataset.
@@ -58,20 +63,39 @@ impl Cifar10Dataset {
         let cache_path = ".cache/data/cifar10/";
         let tarball_path = format!("{}cifar-10-binary.tar.gz", cache_path);
 
-        if !std::path::Path::new(&tarball_path).exists() {
-            println!("Downloading CIFAR-10 dataset...");
+        if !Path::new(&tarball_path).exists() {
+            println!("Downloading CIFAR-10 dataset from {}", Self::CIFAR10_URL);
             let response = reqwest::get(Self::CIFAR10_URL)
                 .await
                 .expect("Failed to download CIFAR-10");
             let data = response.bytes().await.expect("Failed to read CIFAR-10 data");
-            std::fs::create_dir_all(cache_path).unwrap();
-            std::fs::write(&tarball_path, data).unwrap();
+            fs::create_dir_all(cache_path).unwrap();
+            fs::write(&tarball_path, data).unwrap();
         }
 
         let tar_gz = File::open(&tarball_path).unwrap();
-        let tar = flate2::read::GzDecoder::new(tar_gz);
-        let mut archive = tar::Archive::new(tar);
-        archive.unpack(cache_path).expect("Failed to extract CIFAR-10");
+        let tar = GzDecoder::new(tar_gz);
+        let mut archive = Archive::new(tar);
+        let mut seen_files = HashSet::new();
+
+        for entry in archive.entries().unwrap() {
+            let mut entry = entry.unwrap();
+            let path = entry.path().unwrap().to_owned();
+            let file_name = path.file_name().unwrap().to_string_lossy().to_string();
+
+            if path.is_dir() || !path.extension().map_or(false, |ext| ext == "bin") {
+                continue;
+            }
+
+            if seen_files.insert(file_name.clone()) {
+                let full_path = format!("{}{}", cache_path, file_name);
+                if let Some(parent) = Path::new(&full_path).parent() {
+                    fs::create_dir_all(parent).unwrap();
+                }
+                entry.unpack(&full_path).unwrap();
+                println!("Unarchived file: {}", full_path);
+            }
+        }
     }
 
     fn parse_file(file_path: &str, num_examples: usize) -> (Vec<f32>, Vec<f32>) {
@@ -211,7 +235,6 @@ impl DatasetOps for Cifar10Dataset {
         loss / batch_size as f32
     }
 
-    // TODO : Duplicate, so we can perhaps later refactor this into a common trait
     fn loss_grad(&self, outputs: &Tensor, targets: &Tensor) -> Tensor {
         let outputs_data = outputs.data.iter().cloned().collect::<Vec<f32>>();
         let targets_data = targets.data.iter().cloned().collect::<Vec<f32>>();
