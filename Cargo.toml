@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "delta",
+    "examples/image_classification/cifar10",
     "examples/image_classification/mnist",
 ]
 resolver = "2"
