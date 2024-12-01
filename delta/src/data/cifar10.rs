@@ -27,10 +27,58 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::Dataset;
+use std::io;
+use crate::common::{Dataset, DatasetOps, Tensor};
+use crate::data::MnistDataset;
 
 /// A struct representing the CIFAR10 dataset.
 pub struct Cifar10Dataset {
     train: Option<Dataset>,
     test: Option<Dataset>,
+}
+
+impl Cifar10Dataset {
+    const CIFAR10_URL: &'static str = "https://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz";
+    const CIFAR10_TRAIN_DATA_FILENAME: &'static str = "train-images-idx3-ubyte.gz";
+    const CIFAR10_TRAIN_LABELS_FILENAME: &'static str = "train-labels-idx1-ubyte.gz";
+    const CIFAR10_TEST_DATA_FILENAME: &'static str = "t10k-images-idx3-ubyte.gz";
+    const CIFAR10_TEST_LABELS_FILENAME: &'static str = "t10k-labels-idx1-ubyte.gz";
+    const CIFAR10_IMAGE_SIZE: usize = 28;
+    const CIFAR10_NUM_CLASSES: usize = 10;
+    const TRAIN_EXAMPLES: usize = 60_000;
+    const TEST_EXAMPLES: usize = 10_000;
+
+    async fn load_data(is_train: bool) -> Dataset {}
+
+    fn parse_images(data: &[u8], num_images: usize) -> Tensor {}
+
+    fn parse_labels(data: &[u8], num_labels: usize) -> Tensor {}
+
+    async fn get_bytes_data(filename: &str) -> Vec<u8> {}
+
+    fn decompress_gz(file_path: &str) -> io::Result<Vec<u8>> {}
+}
+
+impl DatasetOps for Cifar10Dataset {
+    type LoadFuture = ();
+
+    fn load_train() -> Self::LoadFuture {}
+
+    fn load_test() -> Self::LoadFuture {}
+
+    fn normalize(&mut self, min: f32, max: f32) {}
+
+    fn add_noise(&mut self, noise_level: f32) {}
+
+    fn len(&self) -> usize {}
+
+    fn get_batch(&self, batch_idx: usize, batch_size: usize) -> (Tensor, Tensor) {}
+
+    fn loss(&self, outputs: &Tensor, targets: &Tensor) -> f32 {}
+
+    fn loss_grad(&self, outputs: &Tensor, targets: &Tensor) -> Tensor {}
+
+    fn shuffle(&mut self) {}
+
+    fn clone(&self) -> Self {}
 }
