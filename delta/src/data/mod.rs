@@ -31,3 +31,4 @@ pub mod mnist;
 pub mod cifar10;
 
 pub use mnist::MnistDataset;
+pub use cifar10::Cifar10Dataset;
