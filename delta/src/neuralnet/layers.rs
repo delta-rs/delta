@@ -114,81 +114,22 @@ impl Layer for Dense {
     ///
     /// The gradient tensor with respect to the input.
     fn backward(&mut self, grad: &Tensor) -> Tensor {
+        // Ensure weights and input are initialized
         let weights = self.weights.as_ref().expect("Weights must be initialized");
+        let input = self.input.as_ref().expect("Input must be initialized");
 
-        // 1. Gradient of the activation function applied to the pre-activation output
-        let mut activation_grad = self.activation.derivative(grad);
+        // Calculate the gradient with respect to weights and bias
+        let weights_grad = input.transpose().matmul(grad);
+        let bias_grad = grad.sum_along_axis(0);
 
-        // Check original shapes for debugging
-        println!("Grad shape: {:?}", grad.shape());
-        println!(
-            "Activation_grad shape before reshape: {:?}",
-            activation_grad.shape()
-        );
-
-        // Ensure activation_grad has the correct shape: [batch_size, output_dim]
-        if activation_grad.shape().len() > 2 {
-            let batch_size = activation_grad.shape()[0];
-            let output_dim = activation_grad.shape()[1..].iter().product::<usize>();
-
-            activation_grad = activation_grad.reshape(vec![batch_size, output_dim]);
-
-            println!(
-                "Activation_grad shape after reshape: {:?}",
-                activation_grad.shape()
-            );
-        }
-
-        // 2. Compute the gradient for weights: input.T dot activation_grad
-        let input = self
-            .input
-            .as_ref()
-            .expect("Input must be stored for backward pass");
-
-        let input_reshaped = input.reshape(vec![input.shape()[0], input.shape()[1]]);
-        let input_transposed = input_reshaped.transpose(); // Shape: [input_features, batch_size]
-
-        println!("Input shape: {:?}", input.shape());
-        println!("Input_transposed shape: {:?}", input_transposed.shape());
-        println!("Activation_grad shape: {:?}", activation_grad.shape());
-
-        // Ensure shapes are compatible for matmul
-        assert_eq!(
-            input_transposed.shape()[1],
-            activation_grad.shape()[0],
-            "Shape mismatch: input_transposed ({:?}) and activation_grad ({:?})",
-            input_transposed.shape(),
-            activation_grad.shape()
-        );
-
-        let weights_grad = input_transposed.matmul(&activation_grad);
-
-        // 3. Compute the gradient for bias: sum along the batch dimension
-        let bias_grad = activation_grad.sum_along_axis(0);
-
-        // 4. Compute the gradient for the input to propagate to the previous layer
-        let weights_transposed = weights.transpose();
-        println!("Weights shape before transpose: {:?}", weights.shape());
-        println!("Weights shape after transpose: {:?}", weights_transposed.shape());
-        println!("Activation grad shape before matmul: {:?}", activation_grad.shape());
-        
-        // Ensure activation_grad has shape [batch_size, output_dim]
-        let activation_grad_reshaped = if activation_grad.shape().len() > 2 {
-            let batch_size = activation_grad.shape()[0];
-            let output_dim = activation_grad.shape()[1..].iter().product::<usize>();
-            activation_grad.reshape(vec![batch_size, output_dim])
-        } else {
-            activation_grad
-        };
-        
-        let input_grad = activation_grad_reshaped.matmul(&weights_transposed);
-        println!("Input grad shape after matmul: {:?}", input_grad.shape());
-
-        // Update weights and bias gradients if trainable
+        // Store the gradients
         if self.trainable {
             self.weights_grad = Some(weights_grad);
             self.bias_grad = Some(bias_grad);
         }
+
+        // Calculate the gradient with respect to the input
+        let input_grad = grad.matmul(&weights.transpose());
 
         input_grad
     }
@@ -283,6 +224,9 @@ impl Layer for Flatten {
     ///
     /// The gradient tensor with respect to the input.
     fn backward(&mut self, grad: &Tensor) -> Tensor {
+        println!("Current shape: {:?}", grad.shape());
+        println!("Target shape: {:?}", self.input_shape.0.clone());
+
         grad.reshape(self.input_shape.0.clone())
     }
 

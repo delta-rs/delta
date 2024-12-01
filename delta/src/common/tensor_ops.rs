@@ -115,7 +115,7 @@ impl Tensor {
                 .data
                 .clone()
                 .into_shape_with_order(shape)
-                .expect("Invalid shape"),
+                .expect("Invalid shape for reshape"),
         }
     }
 
