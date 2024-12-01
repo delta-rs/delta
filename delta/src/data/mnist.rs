@@ -150,7 +150,7 @@ impl MnistDataset {
         }
 
         let url = format!("{}/{}", Self::MNIST_URL, filename);
-        println!("Downloading {}", url);
+        println!("Downloading MNIST dataset from {}", &url);
 
         let compressed_data = reqwest::get(&url)
             .await
@@ -178,6 +178,7 @@ impl MnistDataset {
         let mut decoder = GzDecoder::new(file);
         let mut decompressed_data = Vec::new();
         decoder.read_to_end(&mut decompressed_data)?;
+        println!("Unarchived file: {}", file_path);
         Ok(decompressed_data)
     }
 }
