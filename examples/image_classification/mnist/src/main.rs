@@ -1,5 +1,5 @@
-use deltaml::activations::relu::ReluActivation;
-use deltaml::activations::softmax::SoftmaxActivation;
+use deltaml::activations::ReluActivation;
+use deltaml::activations::SoftmaxActivation;
 use deltaml::common::DatasetOps;
 use deltaml::common::shape::Shape;
 use deltaml::data::MnistDataset;
