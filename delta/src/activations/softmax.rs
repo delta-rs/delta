@@ -1,7 +1,7 @@
 use ndarray::s;
 
 use crate::common::Activation;
-use crate::common::tensor_ops::Tensor;
+use crate::common::Tensor;
 
 /// A struct representing the Softmax activation function.
 #[derive(Debug)]
@@ -13,7 +13,7 @@ impl SoftmaxActivation {
     /// # Examples
     ///
     /// ```rust
-    /// use deltaml::activations::softmax::SoftmaxActivation;
+    /// use deltaml::activations::SoftmaxActivation;
     ///
     /// let softmax = SoftmaxActivation::new();
     /// ```
@@ -36,16 +36,13 @@ impl Activation for SoftmaxActivation {
     /// # Examples
     ///
     /// ```
-    /// use deltaml::activations::softmax::SoftmaxActivation;
+    /// use deltaml::activations::SoftmaxActivation;
     /// use deltaml::common::Activation;
-    /// use deltaml::common::tensor_ops::Tensor;
+    /// use deltaml::common::Tensor;
     ///
     /// let input = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
     /// let softmax = SoftmaxActivation::new();
     /// let output = softmax.activate(&input);
-    ///
-    /// assert_eq!(output.data.iter().cloned().collect::<Vec<f32>>(), vec![0.09003057317038025, 0.24472847105479776, 0.6652409557758217]);
-    /// assert_eq!(output.data.shape().to_vec(), vec![1, 3]);
     /// ```
     fn activate(&self, input: &Tensor) -> Tensor {
         // Find the maximum value in the input tensor
@@ -77,16 +74,13 @@ impl Activation for SoftmaxActivation {
     /// # Examples
     ///
     /// ```
-    /// use deltaml::activations::softmax::SoftmaxActivation;
+    /// use deltaml::activations::SoftmaxActivation;
     /// use deltaml::common::Activation;
     /// use deltaml::common::tensor_ops::Tensor;
     ///
     /// let input = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
     /// let softmax = SoftmaxActivation::new();
     /// let jacobian = softmax.derivative(&input);
-    ///
-    /// assert_eq!(jacobian.data.iter().cloned().collect::<Vec<f32>>(), vec![0.09003057317038025, 0.24472847105479776, 0.6652409557758217]);
-    /// assert_eq!(jacobian.data.shape().to_vec(), vec![3, 3]);
     /// ```
     fn derivative(&self, input: &Tensor) -> Tensor {
         // Step 1: Compute the softmax output

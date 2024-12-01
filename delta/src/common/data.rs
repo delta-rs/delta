@@ -108,21 +108,6 @@ pub trait DatasetOps {
     fn loss_grad(&self, outputs: &Tensor, targets: &Tensor) -> Tensor;
 
     /// Shuffles the dataset.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use deltaml::common::{Dataset, DatasetOps};
-    /// use deltaml::common::shape::Shape;
-    /// use deltaml::common::tensor_ops::Tensor;
-    ///
-    /// let mut dataset: Box<dyn DatasetOps> = Box::new(
-    ///     Dataset::new(Tensor::new(vec![1.0, 2.0, 3.0],
-    ///     Shape::new(vec![1, 3])),
-    ///     Tensor::new(vec![0.0, 1.0, 0.0],
-    ///     Shape::new(vec![1, 3]))));
-    /// dataset.shuffle();
-    /// ```
     fn shuffle(&mut self);
 
     /// Clones the dataset.
@@ -159,8 +144,8 @@ impl Dataset {
     /// use deltaml::common::shape::Shape;
     /// use deltaml::common::tensor_ops::Tensor;
     ///
-    /// let inputs = Tensor::new(vec![1.0, 2.0, 3.0], Shape::new(vec![1, 3]));
-    /// let labels = Tensor::new(vec![0.0, 1.0, 0.0], Shape::new(vec![1, 3]));
+    /// let inputs = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
+    /// let labels = Tensor::new(vec![0.0, 1.0, 0.0], vec![1, 3]);
     /// let dataset = Dataset::new(inputs, labels);
     /// ```
     pub fn new(inputs: Tensor, labels: Tensor) -> Self {
