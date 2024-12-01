@@ -10,8 +10,10 @@ on:
     paths-ignore:
       - "**/README.md"
       - "**/LICENSE"
+      - "**/CONTRIBUTING.md"
       - "**/.gitignore"
       - "**/.github/ISSUE_TEMPLATE/**"
+      - "**/.config/**"
 
 jobs:
   clippy:
