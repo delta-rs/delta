@@ -82,7 +82,7 @@ impl Adam {
     /// # Examples
     ///
     /// ```
-    /// use deltaml::adam::Adam;
+    /// use deltaml::optimizers::Adam;
     ///
     /// let mut optimizer = Adam::new(0.001);
     /// optimizer.set_scheduler(|epoch| 0.001 * (0.9f32.powi(epoch as i32)));
