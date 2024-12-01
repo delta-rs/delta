@@ -226,12 +226,21 @@ impl DatasetOps for MnistDataset {
         }
     }
 
+    /// Normalizes the dataset.
+    ///
+    /// # Arguments
+    /// * `min` - The minimum value for normalization.
+    /// * `max` - The maximum value for normalization.
     fn normalize(&mut self, min: f32, max: f32) {
         let _ = max;
         let _ = min;
         todo!()
     }
 
+    /// Adds noise to the dataset.
+    ///
+    /// # Arguments
+    /// * `noise_level` - The level of noise to add.
     fn add_noise(&mut self, noise_level: f32) {
         let _ = noise_level;
         todo!()
@@ -273,16 +282,16 @@ impl DatasetOps for MnistDataset {
 
         // Slice the input tensor for the batch
         let inputs_batch = dataset.inputs.slice(vec![
-            (start_idx..adjusted_end_idx), // Batch range along the sample dimension
-            (0..28),                       // Full range for the image height
-            (0..28),                       // Full range for the image width
-            (0..1),                        // Full range for the channels (grayscale)
+            start_idx..adjusted_end_idx, // Batch range along the sample dimension
+            0..28,                       // Full range for the image height
+            0..28,                       // Full range for the image width
+            0..1,                        // Full range for the channels (grayscale)
         ]);
 
         // Slice the label tensor for the batch
         let labels_batch = dataset.labels.slice(vec![
-            (start_idx..adjusted_end_idx), // Batch range along the sample dimension
-            (0..10),                       // Full range for the classes (one-hot encoding)
+            start_idx..adjusted_end_idx, // Batch range along the sample dimension
+            0..10,                       // Full range for the classes (one-hot encoding)
         ]);
 
         // Return the inputs and labels for the batch
