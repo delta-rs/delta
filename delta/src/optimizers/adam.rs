@@ -102,7 +102,7 @@ impl Optimizer for Adam {
     ///
     /// * `weights` - A mutable reference to the weights tensor.
     /// * `gradients` - A reference to the gradients tensor.
-    fn step(&mut self, weights: &mut Tensor, gradients: &Tensor) {
+    fn step(&mut self, _weights: &mut Tensor, _gradients: &Tensor) {
         // self.timestep += 1;
 
         // // Ensure m and v are initialized with the correct shape
