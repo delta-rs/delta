@@ -112,10 +112,15 @@ pub trait DatasetOps {
     /// # Examples
     ///
     /// ```rust
-    /// use deltaml::common::data::DatasetOps;
+    /// use deltaml::common::data::{Dataset, DatasetOps};
+    /// use deltaml::common::shape::Shape;
     /// use deltaml::common::tensor_ops::Tensor;
     ///
-    /// let mut dataset: Box<dyn DatasetOps> = Box::new(Dataset::new(Tensor::new(vec![1.0, 2.0, 3.0], Shape::new(vec![1, 3])), Tensor::new(vec![0.0, 1.0, 0.0], Shape::new(vec![1, 3]))));
+    /// let mut dataset: Box<dyn DatasetOps> = Box::new(
+    ///     Dataset::new(Tensor::new(vec![1.0, 2.0, 3.0],
+    ///     Shape::new(vec![1, 3])),
+    ///     Tensor::new(vec![0.0, 1.0, 0.0],
+    ///     Shape::new(vec![1, 3]))));
     /// dataset.shuffle();
     /// ```
     fn shuffle(&mut self);
