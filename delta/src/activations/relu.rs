@@ -25,8 +25,9 @@ impl Activation for ReluActivation {
     /// # Examples
     ///
     /// ```
-    /// use delta::activations::ReluActivation;
-    /// use delta::tensor_ops::Tensor;
+    /// use deltaml::activations::relu::ReluActivation;
+    /// use deltaml::common::activation::Activation;
+    /// use deltaml::common::tensor_ops::Tensor;
     ///
     /// let input = Tensor::new(vec![1.0, -2.0, 3.0, -4.0], vec![2, 2]);
     /// let relu = ReluActivation::new();
@@ -52,8 +53,9 @@ impl Activation for ReluActivation {
     /// # Examples
     ///
     /// ```
-    /// use delta::activations::ReluActivation;
-    /// use delta::tensor_ops::Tensor;
+    /// use deltaml::activations::relu::ReluActivation;
+    /// use deltaml::common::activation::Activation;
+    /// use deltaml::common::tensor_ops::Tensor;
     ///
     /// let input = Tensor::new(vec![1.0, -2.0, 3.0, -4.0], vec![2, 2]);
     /// let relu = ReluActivation::new();

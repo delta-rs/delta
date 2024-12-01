@@ -36,8 +36,9 @@ impl Activation for SoftmaxActivation {
     /// # Examples
     ///
     /// ```
-    /// use delta::activations::softmax::SoftmaxActivation;
-    /// use delta::tensor_ops::Tensor;
+    /// use deltaml::activations::softmax::SoftmaxActivation;
+    /// use deltaml::common::activation::Activation;
+    /// use deltaml::common::tensor_ops::Tensor;
     ///
     /// let input = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
     /// let softmax = SoftmaxActivation::new();
@@ -76,8 +77,9 @@ impl Activation for SoftmaxActivation {
     /// # Examples
     ///
     /// ```
-    /// use delta::activations::softmax::SoftmaxActivation;
-    /// use delta::tensor_ops::Tensor;
+    /// use deltaml::activations::softmax::SoftmaxActivation;
+    /// use deltaml::common::activation::Activation;
+    /// use deltaml::common::tensor_ops::Tensor;
     ///
     /// let input = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
     /// let softmax = SoftmaxActivation::new();
