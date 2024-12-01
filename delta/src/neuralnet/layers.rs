@@ -224,10 +224,13 @@ impl Layer for Flatten {
     ///
     /// The gradient tensor with respect to the input.
     fn backward(&mut self, grad: &Tensor) -> Tensor {
-        println!("Current shape: {:?}", grad.shape());
-        println!("Target shape: {:?}", self.input_shape.0.clone());
-
-        grad.reshape(self.input_shape.0.clone())
+        let batch_size = grad.shape()[0];
+        let new_shape = [batch_size]
+            .iter()
+            .chain(self.input_shape.0.iter())
+            .cloned()
+            .collect::<Vec<_>>();
+        grad.reshape(new_shape)
     }
 
     /// Returns the output shape of the layer.
