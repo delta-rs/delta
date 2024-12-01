@@ -21,3 +21,5 @@ flate2 = "1.0.35"
 log = "0.4.22"
 reqwest = "0.12.9"
 tokio = { version = "1.32.0", features = ["full"] }
+ndarray = "0.16.1"
+approx = "0.5.1"

@@ -27,8 +27,8 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use std::future::Future;
 use crate::common::tensor_ops::Tensor;
+use std::future::Future;
 
 /// A trait representing operations that can be performed on a dataset.
 pub trait DatasetOps {
@@ -106,9 +106,30 @@ pub trait DatasetOps {
     ///
     /// A `Tensor` containing the gradients of the loss with respect to the outputs.
     fn loss_grad(&self, outputs: &Tensor, targets: &Tensor) -> Tensor;
+
+    /// Shuffles the dataset.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use deltaml::common::data::DatasetOps;
+    /// use deltaml::common::tensor_ops::Tensor;
+    ///
+    /// let mut dataset: Box<dyn DatasetOps> = Box::new(Dataset::new(Tensor::new(vec![1.0, 2.0, 3.0], Shape::new(vec![1, 3])), Tensor::new(vec![0.0, 1.0, 0.0], Shape::new(vec![1, 3]))));
+    /// dataset.shuffle();
+    /// ```
+    fn shuffle(&mut self);
+
+    /// Clones the dataset.
+    ///
+    /// # Returns
+    ///
+    /// A new instance of the dataset.
+    fn clone(&self) -> Self;
 }
 
 /// A struct representing a dataset.
+#[derive(Debug, Clone)]
 pub struct Dataset {
     pub inputs: Tensor,
     pub labels: Tensor,

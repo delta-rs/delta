@@ -113,7 +113,7 @@ impl Sequential {
     /// * `train_data` - The training data.
     /// * `epochs` - The number of epochs to train for.
     /// * `batch_size` - The batch size to use.
-    pub fn fit<D: DatasetOps>(&mut self, train_data: &D, epochs: i32, batch_size: usize) {
+    pub fn fit<D: DatasetOps>(&mut self, train_data: &mut D, epochs: i32, batch_size: usize) {
         // Ensure optimizer is set
         if self.optimizer.is_none() {
             panic!("Optimizer must be set before training");
@@ -125,7 +125,8 @@ impl Sequential {
             println!("Epoch {}/{}", epoch + 1, epochs);
 
             // Shuffle dataset if necessary
-            let dataset = train_data;
+            let dataset = train_data.clone();
+
             // TODO: Probably should implement a shuffle capability
             // dataset.shuffle();
 
@@ -222,7 +223,10 @@ impl Sequential {
     /// Prints a summary of the model.
     pub fn summary(&self) {
         println!("Model Summary:");
-        println!("{:<30} {:<25} {:<10}", "Layer (type)", "Output Shape", "Param #");
+        println!(
+            "{:<30} {:<25} {:<10}",
+            "Layer (type)", "Output Shape", "Param #"
+        );
         println!("{:-<65}", "");
 
         let mut total_params = 0;
@@ -238,7 +242,12 @@ impl Sequential {
             total_params += trainable + non_trainable;
             trainable_params += trainable;
             non_trainable_params += non_trainable;
-            println!("{:<30} {:<25} {:<10}", display_name, output_shape, trainable + non_trainable);
+            println!(
+                "{:<30} {:<25} {:<10}",
+                display_name,
+                output_shape,
+                trainable + non_trainable
+            );
         }
 
         println!("{:-<65}", "");

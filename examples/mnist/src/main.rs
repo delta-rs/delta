@@ -26,7 +26,7 @@ async fn main() {
     model.compile(optimizer, MeanSquaredLoss::new());
 
     // Loading the train and test data
-    let train_data = MnistDataset::load_train().await;
+    let mut train_data = MnistDataset::load_train().await;
     let test_data = MnistDataset::load_test().await;
 
     println!("Training the model...");
@@ -35,7 +35,7 @@ async fn main() {
     let epoch = 10;
     let batch_size = 32;
 
-    model.fit(&train_data, epoch, batch_size);
+    model.fit(&mut train_data, epoch, batch_size);
 
     // Evaluate the model
     let accuracy = model.evaluate(&test_data);

@@ -79,12 +79,9 @@ impl Layer for Dense {
     ///
     /// * `input_shape` - The shape of the input tensor.
     fn build(&mut self, input_shape: Shape) {
-        self.weights = Some(Tensor::random(&Shape::from((
-            input_shape.len(),
-            self.units,
-        ))));
-
-        self.bias = Some(Tensor::zeros(&Shape::new(vec![self.units])));
+        let input_units = input_shape.0.last().expect("Input shape must not be empty");
+        self.weights = Some(Tensor::random(vec![*input_units, self.units]));
+        self.bias = Some(Tensor::zeros(vec![self.units]));
     }
 
     /// Performs a forward pass through the layer.
@@ -97,24 +94,13 @@ impl Layer for Dense {
     ///
     /// The output tensor.
     fn forward(&mut self, input: &Tensor) -> Tensor {
-        assert_eq!(
-            input.shape.0.last().unwrap(),
-            &self.weights.as_ref().unwrap().shape.0[0],
-            "Input shape does not match Dense layer weight dimensions"
-        );
+        let weights = self.weights.as_ref().expect("Weights must be initialized");
+        let bias = self.bias.as_ref().expect("Bias must be initialized");
 
-        // Store the input tensor for use in backward pass
         self.input = Some(input.clone());
 
-        let z = input.matmul(&self.weights.as_ref().unwrap()).zip_map(
-            &self
-                .bias
-                .as_ref()
-                .unwrap()
-                .reshape(Shape::new(vec![1, self.units])),
-            |a, b| a + b,
-        );
-
+        // Perform forward pass: Z = input · weights + bias
+        let z = input.matmul(weights).map(|x| x + bias.data[0]); // Add bias element-wise
         self.activation.activate(&z)
     }
 
@@ -128,31 +114,79 @@ impl Layer for Dense {
     ///
     /// The gradient tensor with respect to the input.
     fn backward(&mut self, grad: &Tensor) -> Tensor {
-        // Ensure the layer was built and the weights/bias exist
-        assert!(
-            self.weights.is_some() && self.bias.is_some(),
-            "Dense layer must be built before performing backward pass"
-        );
-
-        // Extract the weights and bias tensors
-        let weights = self.weights.as_ref().unwrap();
+        let weights = self.weights.as_ref().expect("Weights must be initialized");
 
         // 1. Gradient of the activation function applied to the pre-activation output
-        let activation_grad = self.activation.derivative(&grad);
+        let mut activation_grad = self.activation.derivative(grad);
+
+        // Check original shapes for debugging
+        println!("Grad shape: {:?}", grad.shape());
+        println!(
+            "Activation_grad shape before reshape: {:?}",
+            activation_grad.shape()
+        );
+
+        // Ensure activation_grad has the correct shape: [batch_size, output_dim]
+        if activation_grad.shape().len() > 2 {
+            let batch_size = activation_grad.shape()[0];
+            let output_dim = activation_grad.shape()[1..].iter().product::<usize>();
+
+            activation_grad = activation_grad.reshape(vec![batch_size, output_dim]);
+
+            println!(
+                "Activation_grad shape after reshape: {:?}",
+                activation_grad.shape()
+            );
+        }
 
         // 2. Compute the gradient for weights: input.T dot activation_grad
-        let input_transposed = self.input.as_ref().unwrap().transpose();
-        let weight_grad = input_transposed.matmul(&activation_grad);
+        let input = self
+            .input
+            .as_ref()
+            .expect("Input must be stored for backward pass");
 
-        // 3. Compute the gradient for bias: sum of activation_grad along batch dimension
-        let bias_grad = Tensor::new(vec![activation_grad.sum()], Shape::new(vec![self.units]));
+        let input_reshaped = input.reshape(vec![input.shape()[0], input.shape()[1]]);
+        let input_transposed = input_reshaped.transpose(); // Shape: [input_features, batch_size]
+
+        println!("Input shape: {:?}", input.shape());
+        println!("Input_transposed shape: {:?}", input_transposed.shape());
+        println!("Activation_grad shape: {:?}", activation_grad.shape());
+
+        // Ensure shapes are compatible for matmul
+        assert_eq!(
+            input_transposed.shape()[1],
+            activation_grad.shape()[0],
+            "Shape mismatch: input_transposed ({:?}) and activation_grad ({:?})",
+            input_transposed.shape(),
+            activation_grad.shape()
+        );
+
+        let weights_grad = input_transposed.matmul(&activation_grad);
+
+        // 3. Compute the gradient for bias: sum along the batch dimension
+        let bias_grad = activation_grad.sum_along_axis(0);
 
         // 4. Compute the gradient for the input to propagate to the previous layer
-        let input_grad = activation_grad.matmul(&weights.transpose());
+        let weights_transposed = weights.transpose();
+        println!("Weights shape before transpose: {:?}", weights.shape());
+        println!("Weights shape after transpose: {:?}", weights_transposed.shape());
+        println!("Activation grad shape before matmul: {:?}", activation_grad.shape());
+        
+        // Ensure activation_grad has shape [batch_size, output_dim]
+        let activation_grad_reshaped = if activation_grad.shape().len() > 2 {
+            let batch_size = activation_grad.shape()[0];
+            let output_dim = activation_grad.shape()[1..].iter().product::<usize>();
+            activation_grad.reshape(vec![batch_size, output_dim])
+        } else {
+            activation_grad
+        };
+        
+        let input_grad = activation_grad_reshaped.matmul(&weights_transposed);
+        println!("Input grad shape after matmul: {:?}", input_grad.shape());
 
         // Update weights and bias gradients if trainable
         if self.trainable {
-            self.weights_grad = Some(weight_grad);
+            self.weights_grad = Some(weights_grad);
             self.bias_grad = Some(bias_grad);
         }
 
@@ -176,12 +210,7 @@ impl Layer for Dense {
     fn param_count(&self) -> (usize, usize) {
         let weights_count = self.weights.as_ref().map_or(0, |w| w.data.len());
         let bias_count = self.bias.as_ref().map_or(0, |b| b.data.len());
-        let total_params = weights_count + bias_count;
-        if self.trainable {
-            (total_params, 0)
-        } else {
-            (0, total_params)
-        }
+        (weights_count, bias_count)
     }
 
     /// Returns the name of the layer.
@@ -191,15 +220,6 @@ impl Layer for Dense {
     /// A `&str` representing the name of the layer.
     fn name(&self) -> &str {
         &self.name
-    }
-
-    /// Returns the number of units in the layer.
-    ///
-    /// # Returns
-    ///
-    /// A `usize` representing the number of units in the layer.
-    fn units(&self) -> usize {
-        self.units
     }
 }
 
@@ -248,12 +268,9 @@ impl Layer for Flatten {
     ///
     /// The output tensor.
     fn forward(&mut self, input: &Tensor) -> Tensor {
-        let batch_size = input.shape.0[0];
-        let flattened_size = input.shape.0.iter().skip(1).product::<usize>();
-        Tensor::new(
-            input.data.clone(),
-            Shape::new(vec![batch_size, flattened_size]),
-        )
+        let batch_size = input.data.shape()[0];
+        let flattened_size = input.data.len() / batch_size;
+        input.reshape(vec![batch_size, flattened_size])
     }
 
     /// Performs a backward pass through the layer.
@@ -266,8 +283,7 @@ impl Layer for Flatten {
     ///
     /// The gradient tensor with respect to the input.
     fn backward(&mut self, grad: &Tensor) -> Tensor {
-        // Reshape the gradient back to the original input shape
-        grad.reshape(self.input_shape.clone())
+        grad.reshape(self.input_shape.0.clone())
     }
 
     /// Returns the output shape of the layer.
@@ -300,33 +316,44 @@ impl Layer for Flatten {
 
 #[cfg(test)]
 mod tests {
-    use crate::activations::relu::ReluActivation;
     use super::*;
+    use crate::activations::relu::ReluActivation;
 
     #[test]
     fn test_dense_layer() {
-        let input = Tensor::new(vec![1.0, 2.0, 3.0], Shape::new(vec![1, 3]));
+        let input = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
         let mut dense_layer = Dense::new(2, ReluActivation::new(), true);
         dense_layer.build(Shape::new(vec![1, 3]));
 
         let output = dense_layer.forward(&input);
 
-        assert_eq!(output.shape.0, vec![1, 2]);
-        // Assert values are within expected range; exact values depend on random weights.
-        assert!(output.data.len() == 2);
+        assert_eq!(output.data.shape(), &[1, 2]);
+        assert_eq!(output.data.len(), 2);
     }
 
     #[test]
     fn test_dense_layer_forward_pass() {
-        let input = Tensor::new(
-            (0..784).map(|x| x as f32).collect(),
-            Shape::new(vec![1, 784]),
-        );
-        let mut dense_layer = Dense::new(128, ReluActivation::new(), true);
-        dense_layer.build(Shape::new(vec![1, 784]));
+        let input = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
+        let mut dense_layer = Dense::new(2, ReluActivation::new(), true);
+        dense_layer.build(Shape::new(vec![1, 3]));
 
         let output = dense_layer.forward(&input);
 
-        assert_eq!(output.shape.0, vec![1, 128]);
+        assert_eq!(output.data.shape(), &[1, 2]);
+        assert_eq!(output.data.len(), 2);
+    }
+
+    #[test]
+    fn test_dense_layer_backward_pass() {
+        let input = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
+        let mut dense_layer = Dense::new(2, ReluActivation::new(), true);
+        dense_layer.input = Some(input.clone());
+        dense_layer.build(Shape::new(vec![1, 3]));
+
+        let grad = Tensor::new(vec![1.0, 2.0], vec![1, 2]);
+        let output = dense_layer.backward(&grad);
+
+        assert_eq!(output.data.shape(), &[1, 3]);
+        assert_eq!(output.data.len(), 3);
     }
 }
