@@ -1,12 +1,12 @@
 use deltaml::activations::relu::ReluActivation;
 use deltaml::activations::softmax::SoftmaxActivation;
-use deltaml::common::data::DatasetOps;
+use deltaml::common::DatasetOps;
 use deltaml::common::shape::Shape;
-use deltaml::data::mnist::MnistDataset;
-use deltaml::losses::mean_squared::MeanSquaredLoss;
-use deltaml::neuralnet::layers::{Dense, Flatten};
-use deltaml::neuralnet::models::Sequential;
-use deltaml::optimizers::adam::Adam;
+use deltaml::data::MnistDataset;
+use deltaml::losses::MeanSquaredLoss;
+use deltaml::neuralnet::{Dense, Flatten};
+use deltaml::neuralnet::Sequential;
+use deltaml::optimizers::Adam;
 
 #[tokio::main]
 async fn main() {

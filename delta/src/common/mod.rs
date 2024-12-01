@@ -27,9 +27,20 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-pub mod activations;
-pub mod common;
+pub mod activation;
 pub mod data;
-pub mod losses;
-pub mod neuralnet;
-pub mod optimizers;
+pub mod errors;
+pub mod layer;
+pub mod loss;
+pub mod optimizer;
+pub mod shape;
+pub mod tensor_ops;
+
+pub use activation::Activation;
+pub use data::{Dataset, DatasetOps};
+pub use errors::{CoreError, Result};
+pub use layer::{Layer, LayerOutput};
+pub use loss::Loss;
+pub use optimizer::{Optimizer, OptimizerConfig};
+pub use shape::Shape;
+pub use tensor_ops::Tensor;

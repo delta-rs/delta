@@ -112,7 +112,7 @@ pub trait DatasetOps {
     /// # Examples
     ///
     /// ```rust
-    /// use deltaml::common::data::{Dataset, DatasetOps};
+    /// use deltaml::common::{Dataset, DatasetOps};
     /// use deltaml::common::shape::Shape;
     /// use deltaml::common::tensor_ops::Tensor;
     ///
@@ -155,7 +155,7 @@ impl Dataset {
     /// # Examples
     ///
     /// ```rust
-    /// use deltaml::common::data::Dataset;
+    /// use deltaml::common::Dataset;
     /// use deltaml::common::shape::Shape;
     /// use deltaml::common::tensor_ops::Tensor;
     ///

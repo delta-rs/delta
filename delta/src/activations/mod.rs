@@ -27,9 +27,8 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-pub mod activations;
-pub mod common;
-pub mod data;
-pub mod losses;
-pub mod neuralnet;
-pub mod optimizers;
+pub mod softmax;
+pub mod relu;
+
+pub use softmax::SoftmaxActivation;
+pub use relu::ReluActivation;

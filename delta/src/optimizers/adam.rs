@@ -27,8 +27,8 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::optimizer::Optimizer;
-use crate::common::tensor_ops::Tensor;
+use crate::common::Optimizer;
+use crate::common::Tensor;
 use std::fmt;
 use std::fmt::Debug;
 
@@ -82,7 +82,7 @@ impl Adam {
     /// # Examples
     ///
     /// ```
-    /// use deltaml::optimizers::adam::Adam;
+    /// use deltaml::adam::Adam;
     ///
     /// let mut optimizer = Adam::new(0.001);
     /// optimizer.set_scheduler(|epoch| 0.001 * (0.9f32.powi(epoch as i32)));
