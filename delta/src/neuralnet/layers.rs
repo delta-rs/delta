@@ -162,6 +162,26 @@ impl Layer for Dense {
     fn name(&self) -> &str {
         &self.name
     }
+
+    /// Updates the weights of the layer using the given gradient and optimizer.
+    ///
+    /// # Arguments
+    ///
+    /// * `grad` - The gradient tensor.
+    /// * `optimizer` - The optimizer to use.
+    fn update_weights(
+        &mut self,
+        grad: &Tensor,
+        optimizer: &mut Box<dyn crate::common::optimizer::Optimizer>,
+    ) {
+        // Ensure weights and bias are initialized
+        let weights = self.weights.as_mut().expect("Weights must be initialized");
+        let bias = self.bias.as_mut().expect("Bias must be initialized");
+
+        // Update weights and bias using the optimizer
+        optimizer.step(weights, grad);
+        optimizer.step(bias, &grad.sum_along_axis(0));
+    }
 }
 
 /// A flatten layer that reshapes the input tensor to a 1D vector.
@@ -258,6 +278,22 @@ impl Layer for Flatten {
     /// A `&str` representing the name of the layer.
     fn name(&self) -> &str {
         &self.name
+    }
+
+    /// Updates the weights of the layer using the given gradient and optimizer.
+    ///
+    /// # Arguments
+    ///
+    /// * `grad` - The gradient tensor.
+    /// * `optimizer` - The optimizer to use.
+    fn update_weights(
+        &mut self,
+        grad: &Tensor,
+        optimizer: &mut Box<dyn crate::common::optimizer::Optimizer>,
+    ) {
+        let _ = optimizer;
+        let _ = grad;
+        // Do nothing
     }
 }
 

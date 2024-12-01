@@ -1,4 +1,4 @@
-use std::ops::Range;
+use std::ops::{Range, SubAssign};
 
 use ndarray::{Array, ArrayD, Axis, IxDyn};
 use ndarray::{Dimension, Ix2};
@@ -73,8 +73,10 @@ impl Tensor {
     ///
     /// A new tensor containing the result of the addition.
     pub fn add(&self, other: &Tensor) -> Tensor {
-        let result = &self.data + &other.data;
-        Tensor { data: result }
+        // Perform element-wise addition of the two tensors' data
+        let result_data = &self.data + &other.data;
+        // Return a new Tensor with the resulting data
+        Tensor { data: result_data }
     }
 
     /// Gets the maximum value in the tensor.
@@ -237,8 +239,107 @@ impl Tensor {
         }
     }
 
+    /// Sums the tensor along the specified axis.
+    ///
+    /// # Arguments
+    ///
+    /// * `axis` - The axis to sum along.
+    ///
+    /// # Returns
+    ///
+    /// A new tensor containing the summed data.
     pub fn sum_along_axis(&self, axis: usize) -> Tensor {
         let sum = self.data.sum_axis(Axis(axis));
         Tensor { data: sum }
+    }
+
+    /// Multiplies the tensor by a scalar value.
+    ///
+    /// # Arguments
+    ///
+    /// * `amount` - The scalar value to multiply the tensor by.
+    pub fn mul_scalar(&self, amount: f32) -> Tensor {
+        self.map(|x| x * amount)
+    }
+
+    /// Raises the tensor to a power.
+    ///
+    /// # Arguments
+    ///
+    /// * `amount` - The power to raise the tensor to.
+    pub fn pow(&self, amount: f32) -> Tensor {
+        self.map(|x| x.powf(amount))
+    }
+
+    /// Divides the tensor by a scalar value.
+    ///
+    /// # Arguments
+    ///
+    /// * `amount` - The scalar value to divide the tensor by.
+    pub fn div_scalar(&self, amount: f32) -> Tensor {
+        self.map(|x| x / amount)
+    }
+
+    /// Computes the square root of each element in the tensor.
+    ///
+    /// # Returns
+    ///
+    /// A new tensor containing the square roots of the elements.
+    pub fn sqrt(&self) -> Tensor {
+        self.map(|x| x.sqrt())
+    }
+
+    /// Adds a scalar value to each element in the tensor.
+    ///
+    /// # Arguments
+    ///
+    /// * `amount` - The scalar value to add to each element.
+    ///
+    pub fn add_scalar(&self, amount: f32) -> Tensor {
+        self.map(|x| x + amount)
+    }
+
+    /// Divides each element in the tensor by a scalar value.
+    ///
+    /// # Arguments
+    ///
+    /// * `amount` - The scalar value to divide each element by.
+    pub fn div(&self, other: &Tensor) -> Tensor {
+        self.map(|x| x / other.data[0])
+    }
+
+    /// Flattens the tensor into a 1D array.
+    ///
+    /// # Returns
+    ///
+    /// A new tensor containing the flattened data.
+    pub fn flatten(&self) -> Tensor {
+        let shape = IxDyn(&[self.data.len()]);
+        Tensor {
+            data: self.data.clone().into_shape_with_order(shape).unwrap(),
+        }
+    }
+
+    /// Computes the mean along the specified axis.
+    ///
+    /// # Arguments
+    ///
+    /// * `axis` - The axis to compute the mean along.
+    ///
+    /// # Returns
+    ///
+    /// A new tensor containing the mean data.
+    pub fn mean_axis(&self, axis: usize) -> Tensor {
+        let mean = self
+            .data
+            .mean_axis(Axis(axis))
+            .expect("Failed to calculate mean");
+        Tensor { data: mean }
+    }
+}
+
+impl SubAssign for Tensor {
+    fn sub_assign(&mut self, rhs: Self) {
+        self.data -= &rhs.data;
     }
 }

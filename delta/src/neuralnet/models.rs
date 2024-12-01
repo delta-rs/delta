@@ -119,7 +119,7 @@ impl Sequential {
             panic!("Optimizer must be set before training");
         }
 
-        let _optimizer = self.optimizer.as_mut().unwrap();
+        let mut optimizer = self.optimizer.as_mut().unwrap();
 
         for epoch in 0..epochs {
             println!("Epoch {}/{}", epoch + 1, epochs);
@@ -158,9 +158,9 @@ impl Sequential {
                 }
 
                 // Update weights
-                // for layer in &mut self.layers {
-                //     layer.update(optimizer);
-                // }
+                for layer in &mut self.layers {
+                    layer.update_weights(&grad, &mut optimizer);
+                }
             }
 
             println!(

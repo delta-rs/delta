@@ -27,17 +27,18 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use std::fmt::Debug;
 use crate::common::tensor_ops::Tensor;
+use std::fmt::Debug;
 
 /// A trait representing an optimizer for training neural networks.
 pub trait Optimizer: Debug {
-    /// Performs a single optimization step.
+    /// Performs an optimization step using the given weights and gradients.
     ///
     /// # Arguments
     ///
-    /// * `gradients` - A mutable slice of tensors representing the gradients.
-    fn step(&mut self, gradients: &mut [Tensor]);
+    /// * `weights` - A mutable reference to the weights tensor.
+    /// * `gradients` - A reference to the gradients tensor.
+    fn step(&mut self, weights: &mut Tensor, gradients: &Tensor);
 }
 
 /// A struct representing the configuration for an optimizer.

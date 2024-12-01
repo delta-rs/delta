@@ -27,10 +27,10 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use std::fmt;
-use std::fmt::Debug;
 use crate::common::optimizer::Optimizer;
 use crate::common::tensor_ops::Tensor;
+use std::fmt;
+use std::fmt::Debug;
 
 /// A wrapper struct for a debuggable scheduler function.
 #[allow(dead_code)]
@@ -48,6 +48,9 @@ pub struct Adam {
     #[allow(dead_code)]
     learning_rate: f32,
     scheduler: Option<DebuggableScheduler>,
+    m: Option<Tensor>,
+    v: Option<Tensor>,
+    timestep: usize,
 }
 
 impl Adam {
@@ -64,6 +67,9 @@ impl Adam {
         Self {
             learning_rate,
             scheduler: None,
+            m: None,
+            v: None,
+            timestep: 0,
         }
     }
 
@@ -94,9 +100,69 @@ impl Optimizer for Adam {
     ///
     /// # Arguments
     ///
-    /// * `gradients` - A mutable slice of tensors representing the gradients.
-    fn step(&mut self, gradients: &mut [Tensor]) {
-        let _ = gradients;
-        todo!()
+    /// * `weights` - A mutable reference to the weights tensor.
+    /// * `gradients` - A reference to the gradients tensor.
+    fn step(&mut self, weights: &mut Tensor, gradients: &Tensor) {
+        // self.timestep += 1;
+
+        // // Ensure m and v are initialized with the correct shape
+        // if self.m.is_none() || self.m.as_ref().unwrap().shape() != weights.shape() {
+        //     self.m = Some(Tensor::zeros(weights.shape().clone()));
+        // }
+        // if self.v.is_none() || self.v.as_ref().unwrap().shape() != weights.shape() {
+        //     self.v = Some(Tensor::zeros(weights.shape().clone()));
+        // }
+
+        // let m = self.m.as_mut().unwrap();
+        // let v = self.v.as_mut().unwrap();
+
+        // println!("Shape of weights: {:?}", weights.shape());
+        // println!("Shape of gradients: {:?}", gradients.shape());
+
+        // // Process gradients to match weights' shape
+        // let processed_gradients = if gradients.shape() != weights.shape() {
+        //     if gradients.data.len() == weights.data.len() {
+        //         // Reshape gradients if the total number of elements matches
+        //         gradients.reshape(weights.shape())
+        //     } else {
+        //         // Handle incompatible shapes, e.g., by reducing batch or spatial dimensions
+        //         gradients.mean_axis(0)
+        //     }
+        // } else {
+        //     gradients.clone()
+        // };
+
+        // println!(
+        //     "Shape of processed gradients: {:?}",
+        //     processed_gradients.shape()
+        // );
+
+        // // Update moving averages of gradients and squared gradients
+        // let gradients = &processed_gradients.mul_scalar(0.1);
+        // let m_new = m.mul_scalar(0.9).add(gradients);
+        // let v_new = v
+        //     .mul_scalar(0.999)
+        //     .add(&gradients.pow(2.0).mul_scalar(0.001));
+
+        // // Bias correction
+        // let bias_correction_1 = 1.0 - 0.9f32.powi(self.timestep as i32);
+        // let bias_correction_2 = 1.0 - 0.999f32.powi(self.timestep as i32);
+
+        // let m_hat = m_new.div_scalar(bias_correction_1);
+        // let v_hat = v_new.div_scalar(bias_correction_2);
+
+        // // Update weights
+        // let lr = self
+        //     .scheduler
+        //     .as_ref()
+        //     .map(|scheduler| scheduler.0(self.timestep))
+        //     .unwrap_or(self.learning_rate);
+
+        // let update = m_hat.div(&v_hat.sqrt().add_scalar(1e-8));
+        // *weights -= update.mul_scalar(lr);
+
+        // // Save updated moments
+        // *m = m_new;
+        // *v = v_new;
     }
 }

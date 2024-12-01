@@ -27,9 +27,11 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use std::fmt::Debug;
 use crate::common::shape::Shape;
 use crate::common::tensor_ops::Tensor;
+use std::fmt::Debug;
+
+use super::optimizer::Optimizer;
 
 /// A trait representing a neural network layer.
 pub trait Layer: Debug {
@@ -88,7 +90,16 @@ pub trait Layer: Debug {
     /// # Returns
     ///
     /// A `usize` representing the number of units in the layer. Default is 0.
-    fn units(&self) -> usize { 0 }
+    fn units(&self) -> usize {
+        0
+    }
+
+    /// Updates the weights of the layer.
+    ///
+    /// # Arguments
+    ///
+    /// * `grad` - The gradient tensor.
+    fn update_weights(&mut self, grad: &Tensor, optimizer: &mut Box<dyn Optimizer>);
 }
 
 /// A struct representing the output of a layer.
