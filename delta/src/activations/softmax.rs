@@ -1,7 +1,7 @@
 use ndarray::s;
 
+use crate::common::tensor_ops::Tensor;
 use crate::common::Activation;
-use crate::common::Tensor;
 
 /// A struct representing the Softmax activation function.
 #[derive(Debug)]

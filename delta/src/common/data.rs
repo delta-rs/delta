@@ -140,8 +140,7 @@ impl Dataset {
     /// # Examples
     ///
     /// ```rust
-    /// use deltaml::common::Dataset;
-    /// use deltaml::common::shape::Shape;
+    /// use deltaml::common::data::Dataset;
     /// use deltaml::common::tensor_ops::Tensor;
     ///
     /// let inputs = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);

@@ -79,6 +79,10 @@ impl Layer for Dense {
     ///
     /// * `input_shape` - The shape of the input tensor.
     fn build(&mut self, input_shape: Shape) {
+        println!(
+            "Building Dense layer with input shape: {:?} and units: {}",
+            input_shape, self.units
+        );
         let input_units = input_shape.0.last().expect("Input shape must not be empty");
         self.weights = Some(Tensor::random(vec![*input_units, self.units]));
         self.bias = Some(Tensor::zeros(vec![self.units]));
@@ -100,7 +104,7 @@ impl Layer for Dense {
         self.input = Some(input.clone());
 
         // Perform forward pass: Z = input · weights + bias
-        let z = input.matmul(weights).map(|x| x + bias.data[0]); // Add bias element-wise
+        let z = input.matmul(weights).add(bias);
         self.activation.activate(&z)
     }
 
@@ -169,18 +173,24 @@ impl Layer for Dense {
     ///
     /// * `grad` - The gradient tensor.
     /// * `optimizer` - The optimizer to use.
-    fn update_weights(
-        &mut self,
-        grad: &Tensor,
-        optimizer: &mut Box<dyn crate::common::optimizer::Optimizer>,
-    ) {
-        // Ensure weights and bias are initialized
-        let weights = self.weights.as_mut().expect("Weights must be initialized");
-        let bias = self.bias.as_mut().expect("Bias must be initialized");
+    fn update_weights(&mut self, optimizer: &mut Box<dyn crate::common::optimizer::Optimizer>) {
+        if !self.trainable {
+            return;
+        }
 
-        // Update weights and bias using the optimizer
-        optimizer.step(weights, grad);
-        optimizer.step(bias, &grad.sum_along_axis(0));
+        // Update weights
+        if let Some(ref weights_grad) = self.weights_grad {
+            optimizer.step(self.weights.as_mut().unwrap(), weights_grad);
+        }
+
+        // Update bias
+        if let Some(ref bias_grad) = self.bias_grad {
+            optimizer.step(self.bias.as_mut().unwrap(), bias_grad);
+        }
+
+        // Clear gradients after update
+        self.weights_grad = None;
+        self.bias_grad = None;
     }
 }
 
@@ -284,15 +294,9 @@ impl Layer for Flatten {
     ///
     /// # Arguments
     ///
-    /// * `grad` - The gradient tensor.
     /// * `optimizer` - The optimizer to use.
-    fn update_weights(
-        &mut self,
-        grad: &Tensor,
-        optimizer: &mut Box<dyn crate::common::optimizer::Optimizer>,
-    ) {
+    fn update_weights(&mut self, optimizer: &mut Box<dyn crate::common::optimizer::Optimizer>) {
         let _ = optimizer;
-        let _ = grad;
         // Do nothing
     }
 }

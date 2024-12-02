@@ -66,6 +66,32 @@ impl Loss for MeanSquaredLoss {
 
         mean_squared_error
     }
+
+    /// Calculates the gradient of the loss with respect to the output tensor.
+    ///
+    /// # Arguments
+    ///
+    /// * `output` - The output tensor from the model.
+    /// * `target` - The target tensor.
+    ///
+    /// # Returns
+    ///
+    /// A `Tensor` containing the gradient of the loss with respect to the output tensor.
+    fn calculate_loss_grad(&self, output: &Tensor, target: &Tensor) -> Tensor {
+        // Step 1: Ensure the shapes of output and target match
+        if output.data.shape() != target.data.shape() {
+            panic!(
+                "Shape mismatch: output.shape = {:?}, target.shape = {:?}",
+                output.data.shape(),
+                target.data.shape()
+            );
+        }
+
+        // Step 2: Calculate the gradient of the loss with respect to the output tensor
+        let gradient = &output.data - &target.data;
+
+        Tensor { data: gradient }
+    }
 }
 
 #[cfg(test)]
