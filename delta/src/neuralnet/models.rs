@@ -124,7 +124,6 @@ impl Sequential {
 
             let num_batches = train_data.len() / batch_size;
             let mut epoch_loss = 0.0;
-            let print_frequency = (num_batches / 10).max(1); // Print every 10% or at least once
 
             for batch_idx in 0..num_batches {
                 // Fetch batch
