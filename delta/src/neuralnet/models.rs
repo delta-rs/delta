@@ -156,22 +156,20 @@ impl Sequential {
                     layer.update_weights(optimizer);
                 }
 
-                // Print progress less frequently
-                if (batch_idx + 1) % print_frequency == 0 {
-                    let progress = (batch_idx + 1) as f32 / num_batches as f32;
-                    let current_avg_loss = epoch_loss / (batch_idx + 1) as f32;
-                    let bar_width = 30;
-                    let filled = (progress * bar_width as f32) as usize;
-                    let bar: String = std::iter::repeat('=')
-                        .take(filled)
-                        .chain(std::iter::repeat(' ').take(bar_width - filled))
-                        .collect();
-                    print!(
-                        "\rProgress: [{}] - Current Average Loss: {:.6}",
-                        bar, current_avg_loss
-                    );
-                    std::io::stdout().flush().unwrap();
-                }
+                // Print progress
+                let progress = (batch_idx + 1) as f32 / num_batches as f32;
+                let current_avg_loss = epoch_loss / (batch_idx + 1) as f32;
+                let bar_width = 30;
+                let filled = (progress * bar_width as f32) as usize;
+                let bar: String = std::iter::repeat('=')
+                    .take(filled)
+                    .chain(std::iter::repeat(' ').take(bar_width - filled))
+                    .collect();
+                print!(
+                    "\rProgress: [{}] - Current Average Loss: {:.6}",
+                    bar, current_avg_loss
+                );
+                std::io::stdout().flush().unwrap();
             }
 
             let final_epoch_loss = epoch_loss / num_batches as f32;

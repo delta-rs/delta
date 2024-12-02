@@ -54,8 +54,8 @@ mod tests {
     fn test_sequential_add() {
         let mut model = Sequential::new();
         model = model.add(Flatten::new(Shape::new(vec![28, 28])));
-        model = model.add(Dense::new(128, ReluActivation::new(), true));
-        model = model.add(Dense::new(10, SoftmaxActivation::new(), false));
+        model = model.add(Dense::new(128, Some(ReluActivation::new()), true));
+        model = model.add(Dense::new(10, None::<SoftmaxActivation>, false));
         assert_eq!(model.layers.len(), 3);
     }
 
@@ -63,8 +63,8 @@ mod tests {
     fn test_sequential_compile() {
         let mut model = Sequential::new();
         model = model.add(Flatten::new(Shape::new(vec![28, 28])));
-        model = model.add(Dense::new(128, ReluActivation::new(), true));
-        model = model.add(Dense::new(10, SoftmaxActivation::new(), false));
+        model = model.add(Dense::new(128, Some(ReluActivation::new()), true));
+        model = model.add(Dense::new(10, None::<SoftmaxActivation>, false));
         model.compile(Adam::new(0.001), MeanSquaredLoss::new());
 
         assert!(model.optimizer.is_some());
