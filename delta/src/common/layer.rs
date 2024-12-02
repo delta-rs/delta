@@ -98,8 +98,8 @@ pub trait Layer: Debug {
     ///
     /// # Arguments
     ///
-    /// * `grad` - The gradient tensor.
-    fn update_weights(&mut self, grad: &Tensor, optimizer: &mut Box<dyn Optimizer>);
+    /// * `optimizer` - The optimizer to use.
+    fn update_weights(&mut self, optimizer: &mut Box<dyn Optimizer>);
 }
 
 /// A struct representing the output of a layer.

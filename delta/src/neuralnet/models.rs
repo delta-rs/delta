@@ -27,18 +27,19 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::{Dataset, DatasetOps};
 use crate::common::layer::Layer;
 use crate::common::loss::Loss;
 use crate::common::optimizer::Optimizer;
+use crate::common::{Dataset, DatasetOps};
 
 /// A sequential model that contains a list of layers, an optimizer, and a loss function.
 #[derive(Debug)]
 pub struct Sequential {
-    layers: Vec<Box<dyn Layer>>,
+    pub layers: Vec<Box<dyn Layer>>,
+    pub optimizer: Option<Box<dyn Optimizer>>,
+    pub loss: Option<Box<dyn Loss>>,
+
     layer_names: Vec<String>,
-    optimizer: Option<Box<dyn Optimizer>>,
-    loss: Option<Box<dyn Loss>>,
 }
 
 impl Sequential {
@@ -94,18 +95,6 @@ impl Sequential {
         self.loss = Some(Box::new(loss));
     }
 
-    /// Trains the model with the given training data and batch size.
-    ///
-    /// # Arguments
-    ///
-    /// * `train_data` - The training data.
-    /// * `batch_size` - The batch size to use.
-    pub fn train(&self, train_data: &Dataset, batch_size: usize) {
-        let _ = batch_size;
-        let _ = train_data;
-        // Implement training logic here
-    }
-
     /// Trains the model with the given training data, number of epochs, and batch size.
     ///
     /// # Arguments
@@ -119,47 +108,54 @@ impl Sequential {
             panic!("Optimizer must be set before training");
         }
 
-        let mut optimizer = self.optimizer.as_mut().unwrap();
+        // Ensure loss function is set
+        if self.loss.is_none() {
+            panic!("Loss function must be set before training");
+        }
 
+        // Get a mutable reference to the optimizer
+        let optimizer = self.optimizer.as_mut().unwrap();
+
+        // Loop over each epoch
         for epoch in 0..epochs {
             println!("Epoch {}/{}", epoch + 1, epochs);
 
-            // Shuffle dataset if necessary
-            let dataset = train_data.clone();
-
             // TODO: Probably should implement a shuffle capability
-            // dataset.shuffle();
+            // train_data.shuffle();
 
-            let num_batches = dataset.len() / batch_size;
+            let num_batches = train_data.len() / batch_size;
+
+            // Set the initial loss to 0
             let mut epoch_loss = 0.0;
 
             for batch_idx in 0..num_batches {
                 // Fetch batch
-                let (inputs, targets) = dataset.get_batch(batch_idx, batch_size);
+                let (inputs, targets) = train_data.get_batch(batch_idx, batch_size);
 
-                // Forward pass
+                // Forward pass, iterate through each layer, then pass the outputs to the next
                 let mut outputs = inputs.clone();
                 for layer in &mut self.layers {
                     outputs = layer.forward(&outputs);
                 }
 
                 // Compute loss
-                if self.loss.is_some() {
-                    let loss = self.loss.as_ref().unwrap();
-                    epoch_loss += loss.calculate_loss(&outputs, &targets);
-                } else {
-                    epoch_loss += 0.0;
+                if let Some(loss_fn) = self.loss.as_ref() {
+                    epoch_loss += loss_fn.calculate_loss(&outputs, &targets);
                 }
 
-                // Backward pass
-                let mut grad = train_data.loss_grad(&outputs, &targets);
+                // Backward pass, passing the outputs from the last layer
+                let mut grad = self
+                    .loss
+                    .as_ref()
+                    .unwrap()
+                    .calculate_loss_grad(&outputs, &targets);
+
+                // Iterate through each layer in reverse
                 for layer in self.layers.iter_mut().rev() {
+                    // Perform backward pass for this layer
                     grad = layer.backward(&grad);
-                }
-
-                // Update weights
-                for layer in &mut self.layers {
-                    layer.update_weights(&grad, &mut optimizer);
+                    // Update weights for this layer using the optimizer
+                    layer.update_weights(optimizer);
                 }
             }
 

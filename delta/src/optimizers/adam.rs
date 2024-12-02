@@ -81,11 +81,11 @@ impl Adam {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust
     /// use deltaml::optimizers::Adam;
     ///
     /// let mut optimizer = Adam::new(0.001);
-    /// optimizer.set_scheduler(|epoch| 0.001 * (0.9f32.powi(epoch as i32)));
+    /// optimizer.set_scheduler(|epoch| 0.1 * (epoch + 1) as f32);
     /// ```
     pub fn set_scheduler<F>(&mut self, scheduler: F)
     where
@@ -102,67 +102,84 @@ impl Optimizer for Adam {
     ///
     /// * `weights` - A mutable reference to the weights tensor.
     /// * `gradients` - A reference to the gradients tensor.
-    fn step(&mut self, _weights: &mut Tensor, _gradients: &Tensor) {
-        // self.timestep += 1;
+    fn step(&mut self, weights: &mut Tensor, gradients: &Tensor) {
+        self.timestep += 1;
 
-        // // Ensure m and v are initialized with the correct shape
-        // if self.m.is_none() || self.m.as_ref().unwrap().shape() != weights.shape() {
-        //     self.m = Some(Tensor::zeros(weights.shape().clone()));
-        // }
-        // if self.v.is_none() || self.v.as_ref().unwrap().shape() != weights.shape() {
-        //     self.v = Some(Tensor::zeros(weights.shape().clone()));
-        // }
+        // Ensure m and v are initialized with the correct shape
+        if self.m.is_none() || self.m.as_ref().unwrap().shape() != weights.shape() {
+            self.m = Some(Tensor::zeros(weights.shape().clone()));
+        }
+        if self.v.is_none() || self.v.as_ref().unwrap().shape() != weights.shape() {
+            self.v = Some(Tensor::zeros(weights.shape().clone()));
+        }
 
-        // let m = self.m.as_mut().unwrap();
-        // let v = self.v.as_mut().unwrap();
+        let m = self.m.as_mut().unwrap();
+        let v = self.v.as_mut().unwrap();
 
-        // println!("Shape of weights: {:?}", weights.shape());
-        // println!("Shape of gradients: {:?}", gradients.shape());
+        // Process gradients to match weights' shape
+        let processed_gradients = if gradients.shape() == weights.shape() {
+            gradients.clone()
+        } else if gradients.data.len() == weights.data.len() {
+            gradients.reshape(weights.shape())
+        } else if gradients.shape().len() == weights.shape().len()
+            && gradients
+                .shape()
+                .iter()
+                .zip(weights.shape())
+                .all(|(g, w)| *g == w || *g == 1)
+        {
+            gradients.broadcast(weights.shape())
+        } else {
+            panic!(
+                "Gradients shape {:?} is incompatible with weights shape {:?}",
+                gradients.shape(),
+                weights.shape()
+            );
+        };
 
-        // // Process gradients to match weights' shape
-        // let processed_gradients = if gradients.shape() != weights.shape() {
-        //     if gradients.data.len() == weights.data.len() {
-        //         // Reshape gradients if the total number of elements matches
-        //         gradients.reshape(weights.shape())
-        //     } else {
-        //         // Handle incompatible shapes, e.g., by reducing batch or spatial dimensions
-        //         gradients.mean_axis(0)
-        //     }
-        // } else {
-        //     gradients.clone()
-        // };
+        // Update moving averages of gradients and squared gradients
+        let gradients = &processed_gradients.mul_scalar(0.1);
+        let m_new = m.mul_scalar(0.9).add(gradients);
+        let v_new = v
+            .mul_scalar(0.999)
+            .add(&gradients.pow(2.0).mul_scalar(0.001));
 
-        // println!(
-        //     "Shape of processed gradients: {:?}",
-        //     processed_gradients.shape()
-        // );
+        // Bias correction
+        let bias_correction_1 = 1.0 - 0.9f32.powi(self.timestep as i32);
+        let bias_correction_2 = 1.0 - 0.999f32.powi(self.timestep as i32);
 
-        // // Update moving averages of gradients and squared gradients
-        // let gradients = &processed_gradients.mul_scalar(0.1);
-        // let m_new = m.mul_scalar(0.9).add(gradients);
-        // let v_new = v
-        //     .mul_scalar(0.999)
-        //     .add(&gradients.pow(2.0).mul_scalar(0.001));
+        let m_hat = m_new.div_scalar(bias_correction_1);
+        let v_hat = v_new.div_scalar(bias_correction_2);
 
-        // // Bias correction
-        // let bias_correction_1 = 1.0 - 0.9f32.powi(self.timestep as i32);
-        // let bias_correction_2 = 1.0 - 0.999f32.powi(self.timestep as i32);
+        // Update weights
+        let lr = self
+            .scheduler
+            .as_ref()
+            .map(|scheduler| scheduler.0(self.timestep))
+            .unwrap_or(self.learning_rate);
 
-        // let m_hat = m_new.div_scalar(bias_correction_1);
-        // let v_hat = v_new.div_scalar(bias_correction_2);
+        let update = m_hat.div(&v_hat.sqrt().add_scalar(1e-8));
+        *weights -= update.mul_scalar(lr);
 
-        // // Update weights
-        // let lr = self
-        //     .scheduler
-        //     .as_ref()
-        //     .map(|scheduler| scheduler.0(self.timestep))
-        //     .unwrap_or(self.learning_rate);
+        // Save updated moments
+        *m = m_new;
+        *v = v_new;
+    }
+}
 
-        // let update = m_hat.div(&v_hat.sqrt().add_scalar(1e-8));
-        // *weights -= update.mul_scalar(lr);
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-        // // Save updated moments
-        // *m = m_new;
-        // *v = v_new;
+    #[test]
+    fn test_adam_optimizer() {
+        let mut optimizer = Adam::new(0.001);
+        let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], vec![3, 1]);
+        let gradients = Tensor::new(vec![0.1, 0.2, 0.3], vec![3, 1]);
+        optimizer.step(&mut weights, &gradients);
+        assert_eq!(
+            weights.data.iter().cloned().collect::<Vec<f32>>(),
+            vec![0.99000007, 1.9900001, 2.99]
+        );
     }
 }

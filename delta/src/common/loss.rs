@@ -27,8 +27,8 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use std::fmt::Debug;
 use crate::common::tensor_ops::Tensor;
+use std::fmt::Debug;
 
 /// A trait representing a loss function.
 pub trait Loss: Debug {
@@ -43,4 +43,16 @@ pub trait Loss: Debug {
     ///
     /// The calculated loss as a `f32` value.
     fn calculate_loss(&self, output: &Tensor, target: &Tensor) -> f32;
+
+    /// Calculates the gradient of the loss with respect to the output tensor.
+    ///
+    /// # Arguments
+    ///
+    /// * `output` - The output tensor from the model.
+    /// * `target` - The target tensor.
+    ///
+    /// # Returns
+    ///
+    /// A `Tensor` containing the gradient of the loss with respect to the output tensor.
+    fn calculate_loss_grad(&self, output: &Tensor, target: &Tensor) -> Tensor;
 }

@@ -73,10 +73,9 @@ impl Tensor {
     ///
     /// A new tensor containing the result of the addition.
     pub fn add(&self, other: &Tensor) -> Tensor {
-        // Perform element-wise addition of the two tensors' data
-        let result_data = &self.data + &other.data;
-        // Return a new Tensor with the resulting data
-        Tensor { data: result_data }
+        Tensor {
+            data: &self.data + &other.data,
+        }
     }
 
     /// Gets the maximum value in the tensor.
@@ -299,13 +298,15 @@ impl Tensor {
         self.map(|x| x + amount)
     }
 
-    /// Divides each element in the tensor by a scalar value.
+    /// Divides each element in the tensor.
     ///
     /// # Arguments
     ///
     /// * `amount` - The scalar value to divide each element by.
     pub fn div(&self, other: &Tensor) -> Tensor {
-        self.map(|x| x / other.data[0])
+        Tensor {
+            data: &self.data / &other.data,
+        }
     }
 
     /// Flattens the tensor into a 1D array.
@@ -336,10 +337,316 @@ impl Tensor {
             .expect("Failed to calculate mean");
         Tensor { data: mean }
     }
+
+    /// Broadcasts the tensor to a target shape.
+    ///
+    /// # Arguments
+    ///
+    /// * `target_shape` - The target shape to broadcast to.
+    ///
+    /// # Returns
+    ///
+    /// A new tensor with the broadcasted shape.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the current shape cannot be broadcasted to the target shape.
+    pub fn broadcast(&self, target_shape: Vec<usize>) -> Tensor {
+        let self_shape = self.shape();
+        let ndim_self = self_shape.len();
+        let ndim_target = target_shape.len();
+
+        // Pad the current shape with leading 1s to match the target dimensions
+        let mut padded_shape = vec![1; ndim_target - ndim_self];
+        padded_shape.extend(&self_shape);
+
+        // Validate compatibility for broadcasting
+        for (self_dim, target_dim) in padded_shape.iter().zip(&target_shape) {
+            if *self_dim != *target_dim && *self_dim != 1 {
+                panic!(
+                    "Cannot broadcast shape {:?} to {:?}",
+                    self.shape(),
+                    target_shape
+                );
+            }
+        }
+
+        // Perform the broadcasting
+        let broadcasted_data = self
+            .data
+            .clone()
+            .broadcast(IxDyn(&target_shape))
+            .expect("Broadcast failed")
+            .to_owned();
+
+        Tensor {
+            data: broadcasted_data,
+        }
+    }
+
+    /// Normalizes the tensor to a specified range.
+    ///
+    /// # Arguments
+    ///
+    /// * `min` - The minimum value of the range.
+    /// * `max` - The maximum value of the range.
+    ///
+    /// # Returns
+    ///
+    /// A new tensor containing the normalized data.
+    pub fn normalize(&self, min: f32, max: f32) -> Tensor {
+        let normalized_data = self.data.mapv(|x| (x - min) / (max - min));
+        Tensor {
+            data: normalized_data,
+        }
+    }
+
+    /// Adds noise to the tensor.
+    ///
+    /// # Arguments
+    ///
+    /// * `noise_level` - The level of noise to add.
+    pub fn add_noise(&mut self, noise_level: f32) {
+        let mut rng = rand::thread_rng();
+        for value in self.data.iter_mut() {
+            let noise: f32 = rng.gen_range(-noise_level..noise_level);
+            *value += noise;
+        }
+    }
+
+    /// Reduces the tensor along the specified axis.
+    ///
+    /// # Arguments
+    ///
+    /// * `axis` - The axis to reduce along.
+    ///
+    /// # Returns
+    ///
+    /// A new tensor containing the reduced data.
+    pub fn reduce_sum(&self, axis: usize) -> Tensor {
+        let sum = self.data.sum_axis(Axis(axis));
+        Tensor { data: sum }
+    }
 }
 
 impl SubAssign for Tensor {
     fn sub_assign(&mut self, rhs: Self) {
         self.data -= &rhs.data;
+    }
+}
+
+impl Default for Tensor {
+    fn default() -> Self {
+        Self::zeros(vec![1, 1])
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new() {
+        let data = vec![1.0, 2.0, 3.0];
+        let shape = vec![3, 1];
+        let tensor = Tensor::new(data, shape);
+        assert_eq!(tensor.data.shape(), &[3, 1]);
+    }
+
+    #[test]
+    fn test_zeros() {
+        let shape = vec![2, 3];
+        let tensor = Tensor::zeros(shape);
+        assert_eq!(tensor.data.shape(), &[2, 3]);
+    }
+
+    #[test]
+    fn test_random() {
+        let shape = vec![2, 3];
+        let tensor = Tensor::random(shape);
+        assert_eq!(tensor.data.shape(), &[2, 3]);
+    }
+
+    #[test]
+    fn test_add() {
+        let tensor1 = Tensor::new(vec![1.0, 2.0, 3.0], vec![3, 1]);
+        let tensor2 = Tensor::new(vec![4.0, 5.0, 6.0], vec![3, 1]);
+        let result = tensor1.add(&tensor2);
+        assert_eq!(result.data.shape(), &[3, 1]);
+    }
+
+    #[test]
+    fn test_max() {
+        let data = vec![1.0, 2.0, 3.0];
+        let tensor = Tensor::new(data, vec![3, 1]);
+        assert_eq!(tensor.max(), 3.0);
+    }
+
+    #[test]
+    fn test_mean() {
+        let data = vec![1.0, 2.0, 3.0];
+        let tensor = Tensor::new(data, vec![3, 1]);
+        assert_eq!(tensor.mean(), 2.0);
+    }
+
+    #[test]
+    fn test_reshape() {
+        let data = vec![1.0, 2.0, 3.0];
+        let tensor = Tensor::new(data, vec![3, 1]);
+        let reshaped = tensor.reshape(vec![1, 3]);
+        assert_eq!(reshaped.data.shape(), &[1, 3]);
+    }
+
+    #[test]
+    fn test_map() {
+        let data = vec![1.0, 2.0, 3.0];
+        let tensor = Tensor::new(data, vec![3, 1]);
+        let mapped = tensor.map(|x| x * 2.0);
+        assert_eq!(mapped.data.shape(), &[3, 1]);
+    }
+
+    #[test]
+    fn test_slice() {
+        let data = vec![1.0, 2.0, 3.0];
+        let tensor = Tensor::new(data, vec![3, 1]);
+        let sliced = tensor.slice(vec![0..2, 0..1]);
+        assert_eq!(sliced.data.shape(), &[2, 1]);
+    }
+
+    #[test]
+    fn test_matmul() {
+        let data1 = vec![1.0, 2.0, 3.0, 4.0];
+        let tensor1 = Tensor::new(data1, vec![2, 2]);
+        let data2 = vec![5.0, 6.0, 7.0, 8.0];
+        let tensor2 = Tensor::new(data2, vec![2, 2]);
+        let result = tensor1.matmul(&tensor2);
+        assert_eq!(result.data.shape(), &[2, 2]);
+    }
+
+    #[test]
+    fn test_transpose() {
+        let data = vec![1.0, 2.0, 3.0, 4.0];
+        let tensor = Tensor::new(data, vec![2, 2]);
+        let transposed = tensor.transpose();
+        assert_eq!(transposed.data.shape(), &[2, 2]);
+    }
+
+    #[test]
+    fn test_shape() {
+        let data = vec![1.0, 2.0, 3.0, 4.0];
+        let tensor = Tensor::new(data, vec![2, 2]);
+        assert_eq!(tensor.shape(), vec![2, 2]);
+    }
+
+    #[test]
+    fn test_permute() {
+        let data = vec![1.0, 2.0, 3.0, 4.0];
+        let tensor = Tensor::new(data, vec![2, 2]);
+        let permuted = tensor.permute(vec![1, 0]);
+        assert_eq!(permuted.data.shape(), &[2, 2]);
+    }
+
+    #[test]
+    fn test_sum_along_axis() {
+        let data = vec![1.0, 2.0, 3.0, 4.0];
+        let tensor = Tensor::new(data, vec![2, 2]);
+        let summed = tensor.sum_along_axis(1);
+        assert_eq!(summed.data.shape(), &[2]);
+    }
+
+    #[test]
+    fn test_mul_scalar() {
+        let data = vec![1.0, 2.0, 3.0, 4.0];
+        let tensor = Tensor::new(data, vec![2, 2]);
+        let multiplied = tensor.mul_scalar(2.0);
+        assert_eq!(multiplied.data.shape(), &[2, 2]);
+    }
+
+    #[test]
+    fn test_pow() {
+        let data = vec![1.0, 2.0, 3.0, 4.0];
+        let tensor = Tensor::new(data, vec![2, 2]);
+        let powered = tensor.pow(2.0);
+        assert_eq!(powered.data.shape(), &[2, 2]);
+    }
+
+    #[test]
+    fn test_div_scalar() {
+        let data = vec![1.0, 2.0, 3.0, 4.0];
+        let tensor = Tensor::new(data, vec![2, 2]);
+        let divided = tensor.div_scalar(2.0);
+        assert_eq!(divided.data.shape(), &[2, 2]);
+    }
+
+    #[test]
+    fn test_sqrt() {
+        let data = vec![1.0, 4.0, 9.0, 16.0];
+        let tensor = Tensor::new(data, vec![2, 2]);
+        let sqrted = tensor.sqrt();
+        assert_eq!(sqrted.data.shape(), &[2, 2]);
+    }
+
+    #[test]
+    fn test_add_scalar() {
+        let data = vec![1.0, 2.0, 3.0, 4.0];
+        let tensor = Tensor::new(data, vec![2, 2]);
+        let added = tensor.add_scalar(2.0);
+        assert_eq!(added.data.shape(), &[2, 2]);
+    }
+
+    #[test]
+    fn test_div() {
+        let data1 = vec![1.0, 2.0, 3.0, 4.0];
+        let tensor1 = Tensor::new(data1, vec![2, 2]);
+        let data2 = vec![2.0, 4.0, 6.0, 8.0];
+        let tensor2 = Tensor::new(data2, vec![2, 2]);
+        let divided = tensor1.div(&tensor2);
+        assert_eq!(divided.data.shape(), &[2, 2]);
+    }
+
+    #[test]
+    fn test_flatten() {
+        let data = vec![1.0, 2.0, 3.0, 4.0];
+        let tensor = Tensor::new(data, vec![2, 2]);
+        let flattened = tensor.flatten();
+        assert_eq!(flattened.data.shape(), &[4]);
+    }
+
+    #[test]
+    fn test_mean_axis() {
+        let data = vec![1.0, 2.0, 3.0, 4.0];
+        let tensor = Tensor::new(data, vec![2, 2]);
+        let meaned = tensor.mean_axis(1);
+        assert_eq!(meaned.data.shape(), &[2]);
+    }
+
+    #[test]
+    fn test_broadcast() {
+        let data = vec![1.0, 2.0, 3.0, 4.0];
+        let tensor = Tensor::new(data, vec![2, 2]);
+        let broadcasted = tensor.broadcast(vec![2, 2]);
+        assert_eq!(broadcasted.data.shape(), &[2, 2]);
+    }
+
+    #[test]
+    fn test_normalize() {
+        let data = vec![1.0, 2.0, 3.0, 4.0];
+        let tensor = Tensor::new(data, vec![2, 2]);
+        let normalized = tensor.normalize(0.0, 1.0);
+        assert_eq!(normalized.data.shape(), &[2, 2]);
+    }
+
+    #[test]
+    fn test_default() {
+        let tensor = Tensor::default();
+        assert_eq!(tensor.data.shape(), &[1, 1]);
+    }
+
+    #[test]
+    fn test_add_noise() {
+        let data = vec![1.0, 2.0, 3.0, 4.0];
+        let mut tensor = Tensor::new(data, vec![2, 2]);
+        tensor.add_noise(0.1);
+        assert_eq!(tensor.data.shape(), &[2, 2]);
     }
 }

@@ -32,3 +32,42 @@ pub mod models;
 
 pub use layers::{Dense, Flatten};
 pub use models::Sequential;
+
+/// Putting tests here since it's using a collection of everything
+#[cfg(test)]
+mod tests {
+    use crate::{
+        activations::{ReluActivation, SoftmaxActivation},
+        common::Shape,
+        losses::MeanSquaredLoss,
+        neuralnet::{Dense, Flatten, Sequential},
+        optimizers::Adam,
+    };
+
+    #[test]
+    fn test_sequential_new() {
+        let model = Sequential::new();
+        assert!(model.layers.is_empty());
+    }
+
+    #[test]
+    fn test_sequential_add() {
+        let mut model = Sequential::new();
+        model = model.add(Flatten::new(Shape::new(vec![28, 28])));
+        model = model.add(Dense::new(128, ReluActivation::new(), true));
+        model = model.add(Dense::new(10, SoftmaxActivation::new(), false));
+        assert_eq!(model.layers.len(), 3);
+    }
+
+    #[test]
+    fn test_sequential_compile() {
+        let mut model = Sequential::new();
+        model = model.add(Flatten::new(Shape::new(vec![28, 28])));
+        model = model.add(Dense::new(128, ReluActivation::new(), true));
+        model = model.add(Dense::new(10, SoftmaxActivation::new(), false));
+        model.compile(Adam::new(0.001), MeanSquaredLoss::new());
+
+        assert!(model.optimizer.is_some());
+        assert!(model.loss.is_some());
+    }
+}
