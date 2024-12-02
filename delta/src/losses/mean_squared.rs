@@ -59,10 +59,13 @@ impl Loss for MeanSquaredLoss {
         let squared_diff = (&y_true.data - &y_pred.data).mapv(|x| x.powi(2));
 
         // Step 4: Calculate the mean of the squared differences
-        let mean_squared_error = squared_diff.mean().unwrap_or(0.0);
+        if squared_diff.is_empty() {
+            panic!("Cannot calculate loss: no data in input tensors");
+        }
 
-        // Debug logs
-        println!("Mean squared error: {}", mean_squared_error);
+        let mean_squared_error = squared_diff
+            .mean()
+            .expect("Mean computation failed unexpectedly");
 
         mean_squared_error
     }
@@ -78,7 +81,7 @@ impl Loss for MeanSquaredLoss {
     ///
     /// A `Tensor` containing the gradient of the loss with respect to the output tensor.
     fn calculate_loss_grad(&self, output: &Tensor, target: &Tensor) -> Tensor {
-        // Step 1: Ensure the shapes of output and target match
+        // Ensure shapes match
         if output.data.shape() != target.data.shape() {
             panic!(
                 "Shape mismatch: output.shape = {:?}, target.shape = {:?}",
@@ -87,8 +90,12 @@ impl Loss for MeanSquaredLoss {
             );
         }
 
-        // Step 2: Calculate the gradient of the loss with respect to the output tensor
-        let gradient = &output.data - &target.data;
+        // Calculate the total number of elements in the tensor
+        let total_elements = output.data.len() as f32;
+
+        // Compute the gradient
+        let diff = &output.data - &target.data;
+        let gradient = &diff * 2.0 / total_elements;
 
         Tensor { data: gradient }
     }

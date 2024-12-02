@@ -27,6 +27,8 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use std::io::Write;
+
 use crate::common::layer::Layer;
 use crate::common::loss::Loss;
 use crate::common::optimizer::Optimizer;
@@ -118,51 +120,65 @@ impl Sequential {
 
         // Loop over each epoch
         for epoch in 0..epochs {
-            println!("Epoch {}/{}", epoch + 1, epochs);
-
-            // TODO: Probably should implement a shuffle capability
-            // train_data.shuffle();
+            println!("\nEpoch {}/{}", epoch + 1, epochs);
 
             let num_batches = train_data.len() / batch_size;
-
-            // Set the initial loss to 0
             let mut epoch_loss = 0.0;
+            let print_frequency = (num_batches / 10).max(1); // Print every 10% or at least once
 
             for batch_idx in 0..num_batches {
                 // Fetch batch
                 let (inputs, targets) = train_data.get_batch(batch_idx, batch_size);
 
-                // Forward pass, iterate through each layer, then pass the outputs to the next
+                // Forward pass
                 let mut outputs = inputs.clone();
                 for layer in &mut self.layers {
                     outputs = layer.forward(&outputs);
                 }
 
-                // Compute loss
-                if let Some(loss_fn) = self.loss.as_ref() {
-                    epoch_loss += loss_fn.calculate_loss(&outputs, &targets);
-                }
+                // Compute loss for this batch
+                let batch_loss = if let Some(loss_fn) = self.loss.as_ref() {
+                    loss_fn.calculate_loss(&outputs, &targets)
+                } else {
+                    0.0
+                };
+                epoch_loss += batch_loss;
 
-                // Backward pass, passing the outputs from the last layer
+                // Backward pass
                 let mut grad = self
                     .loss
                     .as_ref()
                     .unwrap()
                     .calculate_loss_grad(&outputs, &targets);
 
-                // Iterate through each layer in reverse
                 for layer in self.layers.iter_mut().rev() {
-                    // Perform backward pass for this layer
                     grad = layer.backward(&grad);
-                    // Update weights for this layer using the optimizer
                     layer.update_weights(optimizer);
+                }
+
+                // Print progress less frequently
+                if (batch_idx + 1) % print_frequency == 0 {
+                    let progress = (batch_idx + 1) as f32 / num_batches as f32;
+                    let current_avg_loss = epoch_loss / (batch_idx + 1) as f32;
+                    let bar_width = 30;
+                    let filled = (progress * bar_width as f32) as usize;
+                    let bar: String = std::iter::repeat('=')
+                        .take(filled)
+                        .chain(std::iter::repeat(' ').take(bar_width - filled))
+                        .collect();
+                    print!(
+                        "\rProgress: [{}] - Current Average Loss: {:.6}",
+                        bar, current_avg_loss
+                    );
+                    std::io::stdout().flush().unwrap();
                 }
             }
 
+            let final_epoch_loss = epoch_loss / num_batches as f32;
             println!(
-                "Epoch {} completed. Average Loss: {:.4}",
+                "\nEpoch {} completed. Average Loss: {:.6}",
                 epoch + 1,
-                epoch_loss / num_batches as f32
+                final_epoch_loss
             );
         }
     }

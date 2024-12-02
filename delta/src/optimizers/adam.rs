@@ -138,11 +138,10 @@ impl Optimizer for Adam {
         };
 
         // Update moving averages of gradients and squared gradients
-        let gradients = &processed_gradients.mul_scalar(0.1);
-        let m_new = m.mul_scalar(0.9).add(gradients);
+        let m_new = m.mul_scalar(0.9).add(&processed_gradients.mul_scalar(0.1));
         let v_new = v
             .mul_scalar(0.999)
-            .add(&gradients.pow(2.0).mul_scalar(0.001));
+            .add(&processed_gradients.pow(2.0).mul_scalar(0.001));
 
         // Bias correction
         let bias_correction_1 = 1.0 - 0.9f32.powi(self.timestep as i32);

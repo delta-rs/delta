@@ -3,7 +3,7 @@ use deltaml::activations::softmax::SoftmaxActivation;
 use deltaml::common::shape::Shape;
 use deltaml::common::DatasetOps;
 use deltaml::data::MnistDataset;
-use deltaml::losses::MeanSquaredLoss;
+use deltaml::losses::CrossEntropyLoss;
 use deltaml::neuralnet::Sequential;
 use deltaml::neuralnet::{Dense, Flatten};
 use deltaml::optimizers::Adam;
@@ -23,7 +23,7 @@ async fn main() {
     let optimizer = Adam::new(0.001);
 
     // Compile the model
-    model.compile(optimizer, MeanSquaredLoss::new());
+    model.compile(optimizer, CrossEntropyLoss::new());
 
     // Loading the train and test data
     let mut train_data = MnistDataset::load_train().await;
