@@ -26,7 +26,7 @@ impl Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let data = vec![1.0, 2.0, 3.0, 4.0];
     /// let shape = vec![2, 2];
@@ -53,7 +53,7 @@ impl Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let shape = vec![2, 3];
     /// let tensor = Tensor::zeros(shape);
@@ -78,7 +78,7 @@ impl Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let shape = vec![2, 3];
     /// let tensor = Tensor::random(shape);
@@ -105,7 +105,7 @@ impl Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let data1 = vec![1.0, 2.0, 3.0, 4.0];
     /// let tensor1 = Tensor::new(data1, vec![2, 2]);
@@ -128,7 +128,7 @@ impl Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let data = vec![1.0, 2.0, 3.0, 4.0];
     /// let tensor = Tensor::new(data, vec![2, 2]);
@@ -151,7 +151,7 @@ impl Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let data = vec![1.0, 2.0, 3.0, 4.0];
     /// let tensor = Tensor::new(data, vec![2, 2]);
@@ -174,7 +174,7 @@ impl Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let data = vec![1.0, 2.0, 3.0, 4.0];
     /// let tensor = Tensor::new(data, vec![2, 2]);
@@ -205,7 +205,7 @@ impl Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let data = vec![1.0, 2.0, 3.0, 4.0];
     /// let tensor = Tensor::new(data, vec![2, 2]);
@@ -234,7 +234,7 @@ impl Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let data = vec![1.0, 2.0, 3.0, 4.0];
     /// let tensor = Tensor::new(data, vec![2, 2]);
@@ -262,7 +262,7 @@ impl Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let data1 = vec![1.0, 2.0, 3.0, 4.0];
     /// let tensor1 = Tensor::new(data1, vec![2, 2]);
@@ -310,7 +310,7 @@ impl Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let data = vec![1.0, 2.0, 3.0, 4.0];
     /// let tensor = Tensor::new(data, vec![2, 2]);
@@ -338,7 +338,7 @@ impl Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let data = vec![1.0, 2.0, 3.0, 4.0];
     /// let tensor = Tensor::new(data, vec![2, 2]);
@@ -361,7 +361,7 @@ impl Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let data = vec![1.0, 2.0, 3.0, 4.0];
     /// let tensor = Tensor::new(data, vec![2, 2]);
@@ -386,7 +386,7 @@ impl Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let data = vec![1.0, 2.0, 3.0, 4.0];
     /// let tensor = Tensor::new(data, vec![2, 2]);
@@ -406,7 +406,7 @@ impl Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let data = vec![1.0, 2.0, 3.0, 4.0];
     /// let tensor = Tensor::new(data, vec![2, 2]);
@@ -425,7 +425,7 @@ impl Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let data = vec![1.0, 2.0, 3.0, 4.0];
     /// let tensor = Tensor::new(data, vec![2, 2]);
@@ -444,7 +444,7 @@ impl Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let data = vec![1.0, 2.0, 3.0, 4.0];
     /// let tensor = Tensor::new(data, vec![2, 2]);
@@ -463,7 +463,7 @@ impl Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let data = vec![1.0, 4.0, 9.0, 16.0];
     /// let tensor = Tensor::new(data, vec![2, 2]);
@@ -486,7 +486,7 @@ impl Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let data = vec![1.0, 2.0, 3.0, 4.0];
     /// let tensor = Tensor::new(data, vec![2, 2]);
@@ -509,7 +509,7 @@ impl Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let data = vec![1.0, 2.0, 3.0, 4.0];
     /// let tensor = Tensor::new(data, vec![2, 2]);
@@ -530,7 +530,7 @@ impl Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let data = vec![1.0, 2.0, 3.0, 4.0];
     /// let tensor = Tensor::new(data, vec![2, 2]);
@@ -556,7 +556,7 @@ impl Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let data = vec![1.0, 2.0, 3.0, 4.0];
     /// let tensor = Tensor::new(data, vec![2, 2]);
@@ -587,7 +587,7 @@ impl Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let data = vec![1.0, 2.0, 3.0, 4.0];
     /// let tensor = Tensor::new(data, vec![2, 2]);
@@ -641,7 +641,7 @@ impl Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let data = vec![1.0, 2.0, 3.0, 4.0];
     /// let tensor = Tensor::new(data, vec![2, 2]);
@@ -662,7 +662,7 @@ impl Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let data = vec![1.0, 2.0, 3.0, 4.0];
     /// let tensor = Tensor::new(data, vec![2, 2]);
@@ -689,7 +689,7 @@ impl Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let data = vec![1.0, 2.0, 3.0, 4.0];
     /// let tensor = Tensor::new(data, vec![2, 2]);
@@ -717,7 +717,7 @@ impl Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let data = vec![1.0, 2.0, 3.0, 4.0];
     /// let tensor = Tensor::new(data, vec![2, 2]);
@@ -759,7 +759,7 @@ impl SubAssign for Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let data1 = vec![1.0, 2.0, 3.0, 4.0];
     /// let data2 = vec![4.0, 3.0, 2.0, 1.0];
@@ -782,7 +782,7 @@ impl Default for Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let tensor = Tensor::default();
     /// ```
@@ -805,7 +805,7 @@ impl PartialEq for Tensor {
     /// # Example
     ///
     /// ```
-    /// use delta::common::tensor_ops::Tensor;
+    /// use delta::common::Tensor;
     ///
     /// let data1 = vec![1.0, 2.0, 3.0, 4.0];
     /// let data2 = vec![1.0, 2.0, 3.0, 4.0];
