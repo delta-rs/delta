@@ -19,6 +19,10 @@ Are you having trouble with Delta? We want to help!
 
 [//]: # (- Read through the documentation on our [docs]&#40;https://docs.rs/delta/latest/delta/&#41;.)
 
+- If you’d like to discuss Delta, head over to the [GitHub Discussions](https://github.com/delta-rs/delta/discussions) section and join the conversation.
+
+- Check out our [wiki](https://github.com/delta-rs/delta/wiki) for guides, tips, and additional resources.
+
 - If you are upgrading, read the release notes for upgrade instructions and "new and noteworthy" features.
 
 - Ask a question we monitor stackoverflow.com for questions tagged with `delta-rs`.
