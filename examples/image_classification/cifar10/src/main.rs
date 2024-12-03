@@ -38,7 +38,7 @@ async fn main() {
     model.fit(&mut train_data, epoch, batch_size);
 
     // Evaluate the model
-    let accuracy = model.evaluate(&test_data);
+    let accuracy = model.evaluate(&test_data, batch_size);
     println!("Test Accuracy: {:.2}%", accuracy * 100.0);
 
     // Save the model

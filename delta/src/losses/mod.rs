@@ -29,6 +29,8 @@
 
 pub mod cross_entropy;
 pub mod mean_squared;
+pub mod sparse_categorical_cross_entropy;
 
 pub use cross_entropy::CrossEntropyLoss;
 pub use mean_squared::MeanSquaredLoss;
+pub use sparse_categorical_cross_entropy::SparseCategoricalCrossEntropyLoss;

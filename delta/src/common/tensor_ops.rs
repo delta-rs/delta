@@ -427,6 +427,40 @@ impl Tensor {
         let sum = self.data.sum_axis(Axis(axis));
         Tensor { data: sum }
     }
+
+    /// Gets the index of the maximum value along the specified axis.
+    ///
+    /// # Arguments
+    ///
+    /// * `axis` - The axis to find the maximum along.
+    ///
+    /// # Returns
+    ///
+    /// A new tensor containing the indices of the maximum values.
+    pub fn argmax(&self, axis: usize) -> Tensor {
+        // Ensure the axis is valid
+        if axis >= self.data.ndim() {
+            panic!(
+                "Axis {} is out of bounds for tensor with shape {:?}",
+                axis,
+                self.shape()
+            );
+        }
+
+        // Compute the indices of the maximum values along the specified axis
+        let max_indices = self
+            .data
+            .map_axis(Axis(axis), |subview| {
+                subview
+                    .indexed_iter()
+                    .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                    .map(|(index, _)| index)
+                    .unwrap() as f32 // Store indices as f32
+            })
+            .into_dyn(); // Convert to dynamic dimensionality
+
+        Tensor { data: max_indices }
+    }
 }
 
 impl SubAssign for Tensor {
@@ -438,6 +472,12 @@ impl SubAssign for Tensor {
 impl Default for Tensor {
     fn default() -> Self {
         Self::zeros(vec![1, 1])
+    }
+}
+
+impl PartialEq for Tensor {
+    fn eq(&self, other: &Self) -> bool {
+        self.data == other.data
     }
 }
 
@@ -648,5 +688,19 @@ mod tests {
         let mut tensor = Tensor::new(data, vec![2, 2]);
         tensor.add_noise(0.1);
         assert_eq!(tensor.data.shape(), &[2, 2]);
+    }
+
+    #[test]
+    fn test_argmax() {
+        let data = vec![1.0, 3.0, 2.0, 4.0, 5.0, 0.0];
+        let tensor = Tensor::new(data, vec![2, 3]);
+
+        let argmax = tensor.argmax(1);
+
+        assert_eq!(argmax.data.shape(), &[2]);
+        assert_eq!(
+            argmax.data.iter().cloned().collect::<Vec<f32>>(),
+            vec![1.0, 1.0]
+        );
     }
 }

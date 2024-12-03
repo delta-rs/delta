@@ -200,14 +200,49 @@ impl Sequential {
     /// # Arguments
     ///
     /// * `test_data` - The test data.
+    /// * `batch_size` - The batch size to use.
     ///
     /// # Returns
     ///
     /// The evaluation metric.
-    pub fn evaluate<D: DatasetOps>(&self, test_data: &D) -> f32 {
-        let _ = test_data;
-        // Implement evaluation logic here
-        0.0 // Placeholder
+    pub fn evaluate<D: DatasetOps>(&mut self, test_data: &D, batch_size: usize) -> f32 {
+        let mut correct_predictions = 0;
+        let mut total_samples = 0;
+
+        let num_batches = (test_data.len() + batch_size - 1) / batch_size; // Calculate number of batches
+
+        for batch_idx in 0..num_batches {
+            // Fetch batch
+            let (inputs, targets) = test_data.get_batch(batch_idx, batch_size);
+
+            // Forward pass to get predictions
+            let mut outputs = inputs.clone();
+            for layer in &mut self.layers {
+                outputs = layer.forward(&outputs);
+            }
+
+            // Determine the predicted class (argmax for classification)
+            let predictions = outputs.argmax(1); // Assumes outputs support argmax
+            let actuals = targets.argmax(1); // Assumes targets are one-hot encoded
+
+            // Count correct predictions
+            correct_predictions += predictions
+                .data
+                .iter()
+                .zip(actuals.data.iter())
+                .filter(|(pred, actual)| pred == actual)
+                .count();
+
+            total_samples += targets.shape()[0];
+        }
+
+        // Calculate accuracy as a percentage
+        if total_samples == 0 {
+            panic!("Test data contains no samples");
+        }
+
+        let accuracy = correct_predictions as f32 / total_samples as f32;
+        accuracy
     }
 
     /// Saves the model to the specified path.
