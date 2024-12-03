@@ -1067,7 +1067,7 @@ mod tests {
     fn test_add() {
         let tensor1 = Tensor::new(vec![1.0, 2.0, 3.0], vec![3, 1]);
         let tensor2 = Tensor::new(vec![4.0, 5.0, 6.0], vec![3, 1]);
-        let result = tensor1.add(&tensor2);
+        let result = tensor1.add(tensor2);
         assert_eq!(result.data.shape(), &[3, 1]);
     }
 

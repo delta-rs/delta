@@ -27,10 +27,6 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-//! BSD 3-Clause License
-//!
-//! ...
-
 use crate::common::Activation;
 use crate::common::tensor_ops::Tensor;
 use crate::common::layer::Layer;
