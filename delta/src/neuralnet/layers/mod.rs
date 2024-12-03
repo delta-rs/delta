@@ -29,6 +29,7 @@
 
 pub mod dense;
 pub mod flatten;
+pub mod conv2d;
 
 pub use dense::Dense;
 pub use flatten::Flatten;

@@ -1,5 +1,5 @@
 use std::io::Cursor;
-use std::ops::{Mul, Range, SubAssign};
+use std::ops::{Add, Index, IndexMut, Range, SubAssign};
 
 use image::{GenericImageView, ImageReader};
 use ndarray::{Array, ArrayD, Axis, IxDyn};
@@ -299,6 +299,33 @@ impl Tensor {
         }
     }
 
+    /// Multiplies two tensors element-wise.
+    ///
+    /// # Arguments
+    ///
+    /// * `other` - The other tensor to multiply.
+    ///
+    /// # Returns
+    ///
+    /// A new tensor containing the result of the element-wise multiplication.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use deltaml::common::Tensor;
+    ///
+    /// let data1 = vec![1.0, 2.0, 3.0, 4.0];
+    /// let tensor1 = Tensor::new(data1, vec![2, 2]);
+    /// let data2 = vec![5.0, 6.0, 7.0, 8.0];
+    /// let tensor2 = Tensor::new(data2, vec![2, 2]);
+    /// let result = tensor1.mul(&tensor2);
+    /// ```
+    pub fn mul(&self, other: &Tensor) -> Tensor {
+        Tensor {
+            data: &self.data * &other.data,
+        }
+    }
+
     /// Transposes the tensor by swapping axes.
     ///
     /// # Returns
@@ -397,6 +424,10 @@ impl Tensor {
     pub fn sum_along_axis(&self, axis: usize) -> Tensor {
         let sum = self.data.sum_axis(Axis(axis));
         Tensor { data: sum }
+    }
+
+    pub fn sum(&self) -> f32 {
+        self.data.iter().copied().sum()
     }
 
     /// Multiplies the tensor by a scalar value.
@@ -974,6 +1005,35 @@ impl PartialEq for Tensor {
     /// ```
     fn eq(&self, other: &Self) -> bool {
         self.data == other.data
+    }
+}
+
+impl Index<(usize, usize, usize, usize)> for Tensor {
+    type Output = f32;
+
+    fn index(&self, index: (usize, usize, usize, usize)) -> &Self::Output {
+        let (b, i, j, f) = index;
+        &self.data[b * self.shape()[1] * self.shape()[2] * self.shape()[3] + i * self.shape()[2] * self.shape()[3] + j * self.shape()[3] + f]
+    }
+}
+
+impl IndexMut<(usize, usize, usize, usize)> for Tensor {
+    fn index_mut(&mut self, index: (usize, usize, usize, usize)) -> &mut Self::Output {
+        let (b, i, j, f) = index;
+        let shape = self.shape(); // Store the shape in a separate variable
+        &mut self.data[b * shape[1] * shape[2] * shape[3] + i * shape[2] * shape[3] + j * shape[3] + f]
+    }
+}
+
+impl Add for Tensor {
+    type Output = Tensor;
+
+    fn add(self, other: Tensor) -> Tensor {
+        assert_eq!(self.shape(), other.shape(), "Shapes must be equal for addition");
+        let data: Vec<f32> = self.data.iter().zip(other.data.iter()).map(|(a, b)| a + b).collect();
+        Tensor {
+            data: ArrayD::from_shape_vec(self.shape().clone(), data).expect("Invalid shape for addition"),
+        }
     }
 }
 
