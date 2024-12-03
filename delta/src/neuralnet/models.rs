@@ -27,6 +27,8 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use std::io::Write;
+
 use crate::common::layer::Layer;
 use crate::common::loss::Loss;
 use crate::common::optimizer::Optimizer;
@@ -118,51 +120,62 @@ impl Sequential {
 
         // Loop over each epoch
         for epoch in 0..epochs {
-            println!("Epoch {}/{}", epoch + 1, epochs);
-
-            // TODO: Probably should implement a shuffle capability
-            // train_data.shuffle();
+            println!("\nEpoch {}/{}", epoch + 1, epochs);
 
             let num_batches = train_data.len() / batch_size;
-
-            // Set the initial loss to 0
             let mut epoch_loss = 0.0;
 
             for batch_idx in 0..num_batches {
                 // Fetch batch
                 let (inputs, targets) = train_data.get_batch(batch_idx, batch_size);
 
-                // Forward pass, iterate through each layer, then pass the outputs to the next
+                // Forward pass
                 let mut outputs = inputs.clone();
                 for layer in &mut self.layers {
                     outputs = layer.forward(&outputs);
                 }
 
-                // Compute loss
-                if let Some(loss_fn) = self.loss.as_ref() {
-                    epoch_loss += loss_fn.calculate_loss(&outputs, &targets);
-                }
+                // Compute loss for this batch
+                let batch_loss = if let Some(loss_fn) = self.loss.as_ref() {
+                    loss_fn.calculate_loss(&outputs, &targets)
+                } else {
+                    0.0
+                };
+                epoch_loss += batch_loss;
 
-                // Backward pass, passing the outputs from the last layer
+                // Backward pass
                 let mut grad = self
                     .loss
                     .as_ref()
                     .unwrap()
                     .calculate_loss_grad(&outputs, &targets);
 
-                // Iterate through each layer in reverse
                 for layer in self.layers.iter_mut().rev() {
-                    // Perform backward pass for this layer
                     grad = layer.backward(&grad);
-                    // Update weights for this layer using the optimizer
                     layer.update_weights(optimizer);
                 }
+
+                // Print progress
+                let progress = (batch_idx + 1) as f32 / num_batches as f32;
+                let current_avg_loss = epoch_loss / (batch_idx + 1) as f32;
+                let bar_width = 30;
+                let filled = (progress * bar_width as f32) as usize;
+                let bar: String = std::iter::repeat('=')
+                    .take(filled)
+                    .chain(std::iter::repeat(' ').take(bar_width - filled))
+                    .collect();
+                print!(
+                    "\rProgress: [{}] - Current Average Loss: {:.6}",
+                    bar, current_avg_loss
+                );
+                std::io::stdout().flush().unwrap();
             }
 
+            let final_epoch_loss = epoch_loss / num_batches as f32;
             println!(
-                "Epoch {} completed. Average Loss: {:.4}",
+                "\nEpoch {} completed. Average Loss: {:.6}",
                 epoch + 1,
-                epoch_loss / num_batches as f32
+                final_epoch_loss
             );
         }
     }
@@ -187,14 +200,49 @@ impl Sequential {
     /// # Arguments
     ///
     /// * `test_data` - The test data.
+    /// * `batch_size` - The batch size to use.
     ///
     /// # Returns
     ///
     /// The evaluation metric.
-    pub fn evaluate<D: DatasetOps>(&self, test_data: &D) -> f32 {
-        let _ = test_data;
-        // Implement evaluation logic here
-        0.0 // Placeholder
+    pub fn evaluate<D: DatasetOps>(&mut self, test_data: &D, batch_size: usize) -> f32 {
+        let mut correct_predictions = 0;
+        let mut total_samples = 0;
+
+        let num_batches = (test_data.len() + batch_size - 1) / batch_size; // Calculate number of batches
+
+        for batch_idx in 0..num_batches {
+            // Fetch batch
+            let (inputs, targets) = test_data.get_batch(batch_idx, batch_size);
+
+            // Forward pass to get predictions
+            let mut outputs = inputs.clone();
+            for layer in &mut self.layers {
+                outputs = layer.forward(&outputs);
+            }
+
+            // Determine the predicted class (argmax for classification)
+            let predictions = outputs.argmax(1); // Assumes outputs support argmax
+            let actuals = targets.argmax(1); // Assumes targets are one-hot encoded
+
+            // Count correct predictions
+            correct_predictions += predictions
+                .data
+                .iter()
+                .zip(actuals.data.iter())
+                .filter(|(pred, actual)| pred == actual)
+                .count();
+
+            total_samples += targets.shape()[0];
+        }
+
+        // Calculate accuracy as a percentage
+        if total_samples == 0 {
+            panic!("Test data contains no samples");
+        }
+
+        let accuracy = correct_predictions as f32 / total_samples as f32;
+        accuracy
     }
 
     /// Saves the model to the specified path.

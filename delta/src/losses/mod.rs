@@ -27,6 +27,10 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+pub mod cross_entropy;
 pub mod mean_squared;
+pub mod sparse_categorical_cross_entropy;
 
+pub use cross_entropy::CrossEntropyLoss;
 pub use mean_squared::MeanSquaredLoss;
+pub use sparse_categorical_cross_entropy::SparseCategoricalCrossEntropyLoss;

@@ -39,7 +39,7 @@ pub struct Dense {
     weights: Option<Tensor>,
     bias: Option<Tensor>,
     units: usize,
-    activation: Box<dyn Activation>,
+    activation: Option<Box<dyn Activation>>,
     trainable: bool,
     weights_grad: Option<Tensor>,
     bias_grad: Option<Tensor>,
@@ -57,13 +57,17 @@ impl Dense {
     /// # Returns
     ///
     /// A new instance of the dense layer.
-    pub fn new<A: Activation + 'static>(units: usize, activation: A, trainable: bool) -> Self {
+    pub fn new<A: Activation + 'static>(
+        units: usize,
+        activation: Option<A>,
+        trainable: bool,
+    ) -> Self {
         Self {
             name: format!("Dense_{}", units),
             weights: None,
             bias: None,
             units,
-            activation: Box::new(activation),
+            activation: activation.map(|act| Box::new(act) as Box<dyn Activation>),
             trainable,
             weights_grad: None,
             bias_grad: None,
@@ -105,7 +109,13 @@ impl Layer for Dense {
 
         // Perform forward pass: Z = input · weights + bias
         let z = input.matmul(weights).add(bias);
-        self.activation.activate(&z)
+
+        // Apply activation if present
+        if let Some(ref activation) = self.activation {
+            activation.activate(&z)
+        } else {
+            z
+        }
     }
 
     /// Performs a backward pass through the layer.
@@ -309,7 +319,7 @@ mod tests {
     #[test]
     fn test_dense_layer() {
         let input = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
-        let mut dense_layer = Dense::new(2, ReluActivation::new(), true);
+        let mut dense_layer = Dense::new(2, Some(ReluActivation::new()), true);
         dense_layer.build(Shape::new(vec![1, 3]));
 
         let output = dense_layer.forward(&input);
@@ -321,7 +331,7 @@ mod tests {
     #[test]
     fn test_dense_layer_forward_pass() {
         let input = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
-        let mut dense_layer = Dense::new(2, ReluActivation::new(), true);
+        let mut dense_layer = Dense::new(2, Some(ReluActivation::new()), true);
         dense_layer.build(Shape::new(vec![1, 3]));
 
         let output = dense_layer.forward(&input);
@@ -333,7 +343,7 @@ mod tests {
     #[test]
     fn test_dense_layer_backward_pass() {
         let input = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
-        let mut dense_layer = Dense::new(2, ReluActivation::new(), true);
+        let mut dense_layer = Dense::new(2, Some(ReluActivation::new()), true);
         dense_layer.input = Some(input.clone());
         dense_layer.build(Shape::new(vec![1, 3]));
 
