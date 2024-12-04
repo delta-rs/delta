@@ -36,12 +36,14 @@ jobs:
           path: |
             ~/.cargo
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
       - name: Run Clippy
         run: cargo clippy --all-targets --all-features
 
   build:
     name: Build Workspace
     runs-on: ubuntu-latest
+    depends-on: clippy
 
     steps:
       - uses: actions/checkout@v4
@@ -61,3 +63,53 @@ jobs:
 
       - name: Build Project
         run: cargo build --release
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    depends-on: build
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+
+      - name: Cache Cargo Dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run Tests
+        run: cargo test --all-features
+
+    coverage:
+      name: Code Coverage
+      runs-on: ubuntu-latest
+      depends-on: test
+
+      steps:
+        - uses: actions/checkout@v4
+
+        - name: Install Rust
+          uses: actions-rs/toolchain@v1
+          with:
+            profile: minimal
+            toolchain: stable
+
+        - name: Install Tarpaulin
+          run: cargo install cargo-tarpaulin
+
+        - name: Run Coverage
+          run: cargo tarpaulin --out Html
+
+        - name: Upload Coverage Report
+          uses: actions/upload-artifact@v3
+          with:
+            name: coverage-report
+            path: ./tarpaulin-report.html
