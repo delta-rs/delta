@@ -42,6 +42,7 @@ pub struct TestDataset {
 }
 
 impl TestDataset {
+    #[inline]
     pub fn new() -> Self {
         TestDataset {
             train: None,
@@ -49,6 +50,7 @@ impl TestDataset {
         }
     }
 
+    #[inline]
     fn generate_dummy_dataset(size: usize, features: usize) -> Dataset {
         let inputs = Tensor::new(
             (0..size * features).map(|x| x as f32).collect(),
@@ -96,6 +98,7 @@ impl DatasetOps for TestDataset {
         }
     }
 
+    #[inline]
     fn len(&self) -> usize {
         self.train
             .as_ref()
@@ -146,6 +149,7 @@ impl DatasetOps for TestDataset {
         todo!();
     }
 
+    #[inline]
     fn clone(&self) -> Self {
         Self {
             train: self.train.clone(),
