@@ -24,3 +24,10 @@ reqwest = "0.12.9"
 ndarray = "0.16.1"
 approx = "0.5.1"
 tar = "0.4.43"
+
+[profile.release]
+opt-level = 'z'
+lto = true
+codegen-units = 1
+panic = 'abort'
+strip = true
