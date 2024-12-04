@@ -199,7 +199,6 @@ impl Layer for Dense {
             optimizer.step(self.weights.as_mut().unwrap(), weights_grad);
         }
 
-        // Update bias
         if let Some(ref bias_grad) = self.bias_grad {
             optimizer.step(self.bias.as_mut().unwrap(), bias_grad);
         }
