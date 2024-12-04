@@ -36,12 +36,15 @@ use ndarray::s;
 
 use crate::common::{Dataset, DatasetOps, Tensor};
 
+/// A struct representing a test dataset.
 pub struct TestDataset {
     train: Option<Dataset>,
     test: Option<Dataset>,
 }
 
 impl TestDataset {
+    /// Creates a new `TestDataset` instance.
+    #[inline]
     pub fn new() -> Self {
         TestDataset {
             train: None,
@@ -49,6 +52,17 @@ impl TestDataset {
         }
     }
 
+    /// Generates a dummy dataset with the given size and number of features.
+    ///
+    /// # Arguments
+    ///
+    /// * `size` - The number of samples in the dataset.
+    /// * `features` - The number of features per sample.
+    ///
+    /// # Returns
+    ///
+    /// A `Dataset` instance with dummy data.
+    #[inline]
     fn generate_dummy_dataset(size: usize, features: usize) -> Dataset {
         let inputs = Tensor::new(
             (0..size * features).map(|x| x as f32).collect(),
@@ -62,6 +76,11 @@ impl TestDataset {
 impl DatasetOps for TestDataset {
     type LoadFuture = Pin<Box<dyn Future<Output = Self> + Send>>;
 
+    /// Loads the training dataset.
+    ///
+    /// # Returns
+    ///
+    /// A future that resolves to a `TestDataset` instance with the training data loaded.
     fn load_train() -> Self::LoadFuture {
         Box::pin(future::ready(Self {
             train: Some(Self::generate_dummy_dataset(100, 10)),
@@ -69,6 +88,11 @@ impl DatasetOps for TestDataset {
         }))
     }
 
+    /// Loads the test dataset.
+    ///
+    /// # Returns
+    ///
+    /// A future that resolves to a `TestDataset` instance with the test data loaded.
     fn load_test() -> Self::LoadFuture {
         Box::pin(future::ready(Self {
             train: None,
@@ -76,6 +100,12 @@ impl DatasetOps for TestDataset {
         }))
     }
 
+    /// Normalizes the dataset to the given range.
+    ///
+    /// # Arguments
+    ///
+    /// * `min` - The minimum value of the normalized range.
+    /// * `max` - The maximum value of the normalized range.
     fn normalize(&mut self, min: f32, max: f32) {
         if let Some(dataset) = &mut self.train {
             dataset.inputs.normalize(min, max);
@@ -87,6 +117,11 @@ impl DatasetOps for TestDataset {
         }
     }
 
+    /// Adds noise to the dataset.
+    ///
+    /// # Arguments
+    ///
+    /// * `noise_level` - The level of noise to add.
     fn add_noise(&mut self, noise_level: f32) {
         if let Some(dataset) = &mut self.train {
             dataset.inputs.add_noise(noise_level);
@@ -96,6 +131,12 @@ impl DatasetOps for TestDataset {
         }
     }
 
+    /// Returns the length of the dataset.
+    ///
+    /// # Returns
+    ///
+    /// The number of samples in the dataset.
+    #[inline]
     fn len(&self) -> usize {
         self.train
             .as_ref()
@@ -103,6 +144,16 @@ impl DatasetOps for TestDataset {
             .unwrap_or_else(|| self.test.as_ref().map(|d| d.inputs.data.len()).unwrap_or(0))
     }
 
+    /// Retrieves a batch of data from the dataset.
+    ///
+    /// # Arguments
+    ///
+    /// * `batch_idx` - The index of the batch to retrieve.
+    /// * `batch_size` - The size of the batch to retrieve.
+    ///
+    /// # Returns
+    ///
+    /// A tuple containing the inputs and labels for the batch.
     fn get_batch(&self, batch_idx: usize, batch_size: usize) -> (Tensor, Tensor) {
         if let Some(dataset) = &self.train {
             let start = batch_idx * batch_size;
@@ -123,6 +174,16 @@ impl DatasetOps for TestDataset {
         (Tensor::default(), Tensor::default())
     }
 
+    /// Computes the loss between the outputs and targets.
+    ///
+    /// # Arguments
+    ///
+    /// * `outputs` - The predicted outputs.
+    /// * `targets` - The true targets.
+    ///
+    /// # Returns
+    ///
+    /// The computed loss value.
     fn loss(&self, outputs: &Tensor, targets: &Tensor) -> f32 {
         outputs
             .data
@@ -132,6 +193,16 @@ impl DatasetOps for TestDataset {
             .sum()
     }
 
+    /// Computes the gradient of the loss with respect to the outputs.
+    ///
+    /// # Arguments
+    ///
+    /// * `outputs` - The predicted outputs.
+    /// * `targets` - The true targets.
+    ///
+    /// # Returns
+    ///
+    /// A `Tensor` containing the computed gradients.
     fn loss_grad(&self, outputs: &Tensor, targets: &Tensor) -> Tensor {
         let grad = outputs
             .data
@@ -142,10 +213,17 @@ impl DatasetOps for TestDataset {
         Tensor::new(grad, outputs.shape().clone())
     }
 
+    /// Shuffles the dataset.
     fn shuffle(&mut self) {
         todo!();
     }
 
+    /// Clones the dataset.
+    ///
+    /// # Returns
+    ///
+    /// A new `TestDataset` instance that is a clone of the current instance.
+    #[inline]
     fn clone(&self) -> Self {
         Self {
             train: self.train.clone(),

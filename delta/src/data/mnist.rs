@@ -203,6 +203,7 @@ impl DatasetOps for MnistDataset {
     /// # Example
     ///
     /// ```
+    /// use deltaml::common::DatasetOps;
     /// use deltaml::data::MnistDataset;
     ///
     /// let mnist_dataset = MnistDataset::load_train().await;
@@ -228,6 +229,7 @@ impl DatasetOps for MnistDataset {
     /// # Example
     ///
     /// ```
+    /// use deltaml::common::DatasetOps;
     /// use deltaml::data::MnistDataset;
     ///
     /// let mnist_dataset = MnistDataset::load_test().await;
@@ -242,46 +244,6 @@ impl DatasetOps for MnistDataset {
                 Err(err) => panic!("Failed to load test dataset: {}", err),
             }
         })
-    }
-
-    /// Returns the number of samples in the dataset.
-    ///
-    /// # Returns
-    /// The number of samples in the dataset.
-    fn len(&self) -> usize {
-        self.train
-            .as_ref()
-            .or(self.test.as_ref())
-            .map(|ds| ds.inputs.shape()[0])
-            .unwrap_or(0)
-    }
-
-    /// Shuffles the dataset.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::data::MnistDataset;
-    ///
-    /// let mnist_dataset = MnistDataset::load_train().await;
-    /// mnist_dataset.shuffle();
-    /// ```
-    fn shuffle(&mut self) {
-        let shuffle_data = |dataset: &mut Dataset| {
-            let num_samples = dataset.inputs.shape()[0];
-            let mut indices: Vec<usize> = (0..num_samples).collect();
-            indices.shuffle(&mut rand::thread_rng());
-            dataset.inputs = dataset.inputs.permute(indices.clone());
-            dataset.labels = dataset.labels.permute(indices);
-        };
-
-        if let Some(train) = &mut self.train {
-            shuffle_data(train);
-        }
-
-        if let Some(test) = &mut self.test {
-            shuffle_data(test);
-        }
     }
 
     /// Normalizes the dataset.
@@ -302,6 +264,18 @@ impl DatasetOps for MnistDataset {
     fn add_noise(&mut self, noise_level: f32) {
         let _ = noise_level;
         todo!()
+    }
+
+    /// Returns the number of samples in the dataset.
+    ///
+    /// # Returns
+    /// The number of samples in the dataset.
+    fn len(&self) -> usize {
+        self.train
+            .as_ref()
+            .or(self.test.as_ref())
+            .map(|ds| ds.inputs.shape()[0])
+            .unwrap_or(0)
     }
 
     /// Get a batch of data from the dataset
@@ -419,6 +393,35 @@ impl DatasetOps for MnistDataset {
         }
 
         Tensor::new(grad_data, outputs.shape().clone())
+    }
+
+    /// Shuffles the dataset.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use deltaml::common::DatasetOps;
+    /// use deltaml::data::MnistDataset;
+    ///
+    /// let mut mnist_dataset = MnistDataset::load_train().await;
+    /// mnist_dataset.shuffle();
+    /// ```
+    fn shuffle(&mut self) {
+        let shuffle_data = |dataset: &mut Dataset| {
+            let num_samples = dataset.inputs.shape()[0];
+            let mut indices: Vec<usize> = (0..num_samples).collect();
+            indices.shuffle(&mut rand::thread_rng());
+            dataset.inputs = dataset.inputs.permute(indices.clone());
+            dataset.labels = dataset.labels.permute(indices);
+        };
+
+        if let Some(train) = &mut self.train {
+            shuffle_data(train);
+        }
+
+        if let Some(test) = &mut self.test {
+            shuffle_data(test);
+        }
     }
 
     fn clone(&self) -> Self {

@@ -30,6 +30,7 @@
 use crate::common::loss::Loss;
 use crate::common::Tensor;
 
+/// A struct representing the Sparse Categorical Cross-Entropy Loss function.
 #[derive(Debug)]
 pub struct SparseCategoricalCrossEntropyLoss;
 

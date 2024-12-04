@@ -113,6 +113,13 @@ impl Sequential {
     /// # Example
     ///
     /// ```rust
+    /// use deltaml::activations::{ReluActivation, SoftmaxActivation};
+    /// use deltaml::common::DatasetOps;
+    /// use deltaml::data::MnistDataset;
+    /// use deltaml::losses::CrossEntropyLoss;
+    /// use deltaml::neuralnet::{Dense, Sequential};
+    /// use deltaml::optimizers::Adam;
+    ///
     /// let mut model = Sequential::new()
     ///     .add(Dense::new(128, Some(ReluActivation::new()), true))
     ///     .add(Dense::new(10, None::<SoftmaxActivation>, false));

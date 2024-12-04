@@ -6,6 +6,7 @@ pub struct ReluActivation;
 
 impl ReluActivation {
     /// Creates a new instance of `ReluActivation`.
+    #[inline(always)]
     pub fn new() -> Self {
         Self
     }
@@ -33,6 +34,7 @@ impl Activation for ReluActivation {
     /// let relu = ReluActivation::new();
     /// let output = relu.activate(&input);
     /// ```
+    #[inline(always)]
     fn activate(&self, input: &Tensor) -> Tensor {
         input.map(|x| x.max(0.0))
     }
@@ -58,6 +60,7 @@ impl Activation for ReluActivation {
     /// let relu = ReluActivation::new();
     /// let derivative = relu.derivative(&input);
     /// ```
+    #[inline(always)]
     fn derivative(&self, input: &Tensor) -> Tensor {
         input.map(|x| if x > 0.0 { 1.0 } else { 0.0 })
     }
