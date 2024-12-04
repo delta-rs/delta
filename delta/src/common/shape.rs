@@ -31,6 +31,7 @@
 pub struct Shape(pub Vec<usize>);
 
 impl Shape {
+    #[inline]
     pub fn new(dimensions: Vec<usize>) -> Self {
         Shape(dimensions)
     }
@@ -47,6 +48,7 @@ impl Shape {
     ///
     /// let shape = Shape::new(vec![2, 3]);
     /// ```
+    #[inline]
     pub fn len(&self) -> usize {
         self.0.iter().product()
     }
