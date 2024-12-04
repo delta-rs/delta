@@ -27,7 +27,7 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::{Activation, Layer, Shape, Tensor};
+use crate::common::{Activation, Layer, Optimizer, Shape, Tensor};
 
 /// A dense (fully connected) layer.
 #[derive(Debug)]
@@ -54,6 +54,15 @@ impl Dense {
     /// # Returns
     ///
     /// A new instance of the dense layer.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use deltaml::neuralnet::layers::dense::Dense;
+    /// use deltaml::activations::relu::ReluActivation;
+    ///
+    /// let dense_layer = Dense::new(2, Some(ReluActivation::new()), true);
+    /// ```
     pub fn new<A: Activation + 'static>(
         units: usize,
         activation: Option<A>,
@@ -180,7 +189,7 @@ impl Layer for Dense {
     ///
     /// * `grad` - The gradient tensor.
     /// * `optimizer` - The optimizer to use.
-    fn update_weights(&mut self, optimizer: &mut Box<dyn crate::common::optimizer::Optimizer>) {
+    fn update_weights(&mut self, optimizer: &mut Box<dyn Optimizer>) {
         if !self.trainable {
             return;
         }
@@ -242,5 +251,84 @@ mod tests {
 
         assert_eq!(output.data.shape(), &[1, 3]);
         assert_eq!(output.data.len(), 3);
+    }
+
+    #[test]
+    fn test_dense_layer_initialization() {
+        let dense_layer = Dense::new(5, None::<ReluActivation>, true);
+        assert_eq!(dense_layer.units, 5);
+        assert!(dense_layer.weights.is_none());
+        assert!(dense_layer.bias.is_none());
+    }
+
+    #[test]
+    fn test_dense_layer_with_no_activation() {
+        let input = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
+        let mut dense_layer = Dense::new(4, None::<ReluActivation>, true);
+        dense_layer.build(Shape::new(vec![1, 3]));
+
+        let output = dense_layer.forward(&input);
+
+        assert_eq!(output.data.len(), 4);
+        // Verify that the output is computed without activation.
+        // (Exact values depend on random weight initialization.)
+    }
+
+    #[test]
+    fn test_dense_layer_output_shape() {
+        let dense_layer = Dense::new(10, Some(ReluActivation::new()), true);
+        assert_eq!(dense_layer.output_shape().0, vec![10]);
+    }
+
+    #[test]
+    fn test_dense_layer_param_count() {
+        let mut dense_layer = Dense::new(6, None::<ReluActivation>, true);
+        dense_layer.build(Shape::new(vec![1, 4]));
+
+        let (weights_count, bias_count) = dense_layer.param_count();
+        assert_eq!(weights_count, 4 * 6); // 4 input units, 6 output units
+        assert_eq!(bias_count, 6);
+    }
+
+    #[test]
+    fn test_dense_layer_backward_with_no_trainable() {
+        let mut dense_layer = Dense::new(4, None::<ReluActivation>, false);
+        dense_layer.build(Shape::new(vec![1, 3]));
+
+        let input = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
+        dense_layer.input = Some(input);
+
+        let grad = Tensor::new(vec![0.5, -0.5, 1.0, -1.0], vec![1, 4]);
+        let output_grad = dense_layer.backward(&grad);
+
+        // Ensure gradients are not stored when `trainable` is false.
+        assert!(dense_layer.weights_grad.is_none());
+        assert!(dense_layer.bias_grad.is_none());
+
+        // Ensure output gradient is calculated.
+        assert_eq!(output_grad.data.len(), 3);
+    }
+
+    #[test]
+    fn test_dense_layer_with_zero_units() {
+        let mut dense_layer = Dense::new(0, None::<ReluActivation>, true);
+        dense_layer.build(Shape::new(vec![1, 3]));
+
+        // Ensure the layer initializes with zero units without crashing.
+        assert_eq!(dense_layer.output_shape().0, vec![0]);
+        assert!(dense_layer.weights.is_some());
+        assert!(dense_layer.bias.is_some());
+    }
+
+    #[test]
+    fn test_dense_layer_with_large_input() {
+        let input = Tensor::random(vec![1000, 512]); // Large input tensor
+        let mut dense_layer = Dense::new(256, Some(ReluActivation::new()), true);
+        dense_layer.build(Shape::new(vec![1000, 512]));
+
+        let output = dense_layer.forward(&input);
+
+        assert_eq!(output.data.shape(), &[1000, 256]);
+        assert_eq!(output.data.len(), 1000 * 256);
     }
 }
