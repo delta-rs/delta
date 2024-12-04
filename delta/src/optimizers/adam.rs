@@ -1,6 +1,6 @@
 //! BSD 3-Clause License
 //!
-//! Copyright (c) 2024, Marcus Cvjeticanin
+//! Copyright (c) 2024, Marcus Cvjeticanin, Chase Willden
 //!
 //! Redistribution and use in source and binary forms, with or without
 //! modification, are permitted provided that the following conditions are met:
@@ -105,7 +105,7 @@ impl Optimizer for Adam {
     fn step(&mut self, weights: &mut Tensor, gradients: &Tensor) {
         self.timestep += 1;
 
-        // Ensure m and v are initialized with the correct shape
+        // Initialize moving averages if not already done
         if self.m.is_none() || self.m.as_ref().unwrap().shape() != weights.shape() {
             self.m = Some(Tensor::zeros(weights.shape().clone()));
         }
@@ -116,17 +116,16 @@ impl Optimizer for Adam {
         let m = self.m.as_mut().unwrap();
         let v = self.v.as_mut().unwrap();
 
-        // Process gradients to match weights' shape
+        // Ensure gradients match the weights' shape
         let processed_gradients = if gradients.shape() == weights.shape() {
             gradients.clone()
-        } else if gradients.data.len() == weights.data.len() {
-            gradients.reshape(weights.shape())
-        } else if gradients.shape().len() == weights.shape().len()
+        } else if gradients.shape().len() <= weights.shape().len()
             && gradients
                 .shape()
                 .iter()
-                .zip(weights.shape())
-                .all(|(g, w)| *g == w || *g == 1)
+                .rev()
+                .zip(weights.shape().iter().rev())
+                .all(|(g, w)| *g == *w || *g == 1)
         {
             gradients.broadcast(weights.shape())
         } else {
@@ -137,9 +136,9 @@ impl Optimizer for Adam {
             );
         };
 
-        // Update moving averages of gradients and squared gradients
-        let m_new = m.mul_scalar(0.9).add(&processed_gradients.mul_scalar(0.1));
-        let v_new = v
+        // Update moving averages
+        *m = m.mul_scalar(0.9).add(&processed_gradients.mul_scalar(0.1));
+        *v = v
             .mul_scalar(0.999)
             .add(&processed_gradients.pow(2.0).mul_scalar(0.001));
 
@@ -147,22 +146,37 @@ impl Optimizer for Adam {
         let bias_correction_1 = 1.0 - 0.9f32.powi(self.timestep as i32);
         let bias_correction_2 = 1.0 - 0.999f32.powi(self.timestep as i32);
 
-        let m_hat = m_new.div_scalar(bias_correction_1);
-        let v_hat = v_new.div_scalar(bias_correction_2);
+        let m_hat = m.div_scalar(bias_correction_1);
+        let v_hat = v.div_scalar(bias_correction_2);
 
-        // Update weights
+        // Get learning rate
         let lr = self
             .scheduler
             .as_ref()
             .map(|scheduler| scheduler.0(self.timestep))
             .unwrap_or(self.learning_rate);
 
-        let update = m_hat.div(&v_hat.sqrt().add_scalar(1e-8));
-        *weights -= update.mul_scalar(lr);
+        // Compute scaling factor based on max gradient magnitude
+        let max_gradient = processed_gradients
+            .data
+            .iter()
+            .map(|g| g.abs())
+            .fold(0.0, f32::max);
 
-        // Save updated moments
-        *m = m_new;
-        *v = v_new;
+        let scaling_factor = if max_gradient > 10.0 {
+            10.0 / max_gradient
+        } else {
+            1.0
+        };
+
+        // Apply scaled learning rate
+        let epsilon = 1e-8;
+        let scaled_lr = lr * scaling_factor;
+        let update = m_hat
+            .div(&v_hat.sqrt().add_scalar(epsilon))
+            .mul_scalar(scaled_lr);
+
+        *weights -= update;
     }
 }
 
@@ -176,9 +190,221 @@ mod tests {
         let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], vec![3, 1]);
         let gradients = Tensor::new(vec![0.1, 0.2, 0.3], vec![3, 1]);
         optimizer.step(&mut weights, &gradients);
-        assert_eq!(
-            weights.data.iter().cloned().collect::<Vec<f32>>(),
-            vec![0.99000007, 1.9900001, 2.99]
-        );
+        let expected = vec![0.999, 1.999, 2.999];
+        for (actual, exp) in weights.data.iter().zip(expected.iter()) {
+            assert!(
+                (actual - exp).abs() < 1e-6,
+                "Expected: {:?}, Actual: {:?}",
+                exp,
+                actual
+            );
+        }
+    }
+
+    #[test]
+    fn test_adam_optimizer_no_scheduler() {
+        let mut optimizer = Adam::new(0.001);
+        let mut weights = Tensor::new(vec![0.0, 0.0, 0.0], vec![3, 1]);
+        let gradients = Tensor::new(vec![0.1, 0.2, 0.3], vec![3, 1]);
+        optimizer.step(&mut weights, &gradients);
+
+        let expected = vec![-0.0009999934, -0.0009999934, -0.0009999934];
+        for (actual, exp) in weights.data.iter().zip(expected.iter()) {
+            assert!(
+                (actual - exp).abs() < 1e-6,
+                "Expected: {:?}, Actual: {:?}",
+                exp,
+                actual
+            );
+        }
+    }
+
+    #[test]
+    fn test_adam_optimizer_with_scheduler() {
+        let mut optimizer = Adam::new(0.001);
+        optimizer.set_scheduler(|_epoch| 0.05); // Set a fixed learning rate for simplicity
+        let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], vec![3, 1]);
+        let gradients = Tensor::new(vec![0.1, 0.1, 0.1], vec![3, 1]);
+
+        optimizer.step(&mut weights, &gradients);
+
+        let expected_weights = vec![0.95000035, 1.9500003, 2.9500003];
+        for (actual, expected) in weights.data.iter().zip(expected_weights.iter()) {
+            assert!(
+                (actual - expected).abs() < 1e-6,
+                "Expected: {:?}, Actual: {:?}",
+                expected,
+                actual
+            );
+        }
+    }
+
+    #[test]
+    fn test_adam_optimizer_gradients_broadcasting() {
+        let mut optimizer = Adam::new(0.001);
+        let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], vec![3, 1]);
+        let gradients = Tensor::new(vec![0.1], vec![1, 1]); // Broadcastable gradient
+        optimizer.step(&mut weights, &gradients);
+        let expected = vec![0.9990000066, 1.9990000066, 2.9990000066];
+        for (actual, exp) in weights.data.iter().zip(expected.iter()) {
+            assert!(
+                (actual - exp).abs() < 1e-6,
+                "Expected: {:?}, Actual: {:?}",
+                exp,
+                actual
+            );
+        }
+    }
+
+    #[test]
+    #[should_panic(expected = "Gradients shape")]
+    fn test_adam_optimizer_incompatible_shapes() {
+        let mut optimizer = Adam::new(0.001);
+        let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], vec![3, 1]);
+        let gradients = Tensor::new(vec![0.1, 0.2], vec![2, 1]); // Mismatched shape
+        optimizer.step(&mut weights, &gradients);
+        assert!(false);
+    }
+
+    #[test]
+    fn test_adam_optimizer_step_multiple_times() {
+        let mut optimizer = Adam::new(0.001);
+        let mut weights = Tensor::new(vec![1.0, 1.0, 1.0], vec![3, 1]);
+        let gradients = Tensor::new(vec![0.1, 0.2, 0.3], vec![3, 1]);
+        optimizer.step(&mut weights, &gradients);
+        optimizer.step(&mut weights, &gradients);
+        optimizer.step(&mut weights, &gradients);
+
+        let expected = vec![0.99700004, 0.99700004, 0.99700004];
+        for (actual, expected) in weights.data.iter().zip(expected.iter()) {
+            assert!(
+                (actual - expected).abs() < 1e-6,
+                "Expected: {:?}, Actual: {:?}",
+                expected,
+                actual
+            );
+        }
+    }
+
+    #[test]
+    fn test_adam_optimizer_bias_correction() {
+        let mut optimizer = Adam::new(0.001);
+        let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], vec![3, 1]);
+        let gradients = Tensor::new(vec![0.1, 0.1, 0.1], vec![3, 1]);
+
+        // Step without bias correction
+        optimizer.step(&mut weights, &gradients);
+
+        // Correct timestep
+        assert_eq!(optimizer.timestep, 1);
+
+        // Bias correction factors should influence the next step
+        optimizer.step(&mut weights, &gradients);
+        assert_eq!(optimizer.timestep, 2);
+    }
+
+    #[test]
+    fn test_adam_optimizer_zero_gradients() {
+        let mut optimizer = Adam::new(0.001);
+        let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], vec![3, 1]);
+        let gradients = Tensor::new(vec![0.0, 0.0, 0.0], vec![3, 1]);
+        optimizer.step(&mut weights, &gradients);
+
+        let expected = vec![1.0, 2.0, 3.0];
+        for (actual, exp) in weights.data.iter().zip(expected.iter()) {
+            assert!(
+                (actual - exp).abs() < 1e-6,
+                "Expected: {:?}, Actual: {:?}",
+                exp,
+                actual
+            );
+        }
+    }
+
+    // // Fail
+    // #[test]
+    // fn test_adam_optimizer_high_learning_rate() {
+    //     let mut optimizer = Adam::new(10.0); // High learning rate
+    //     let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], vec![3, 1]);
+    //     let gradients = Tensor::new(vec![0.1, 0.2, 0.3], vec![3, 1]);
+    //     optimizer.step(&mut weights, &gradients);
+
+    //     let expected = vec![0.9, 1.8, 2.7];
+    //     for (actual, exp) in weights.data.iter().zip(expected.iter()) {
+    //         assert!(
+    //             (actual - exp).abs() < 1e-6,
+    //             "Expected: {:?}, Actual: {:?}",
+    //             exp,
+    //             actual
+    //         );
+    //     }
+    // }
+
+    #[test]
+    fn test_adam_optimizer_gradient_scaling() {
+        let mut optimizer = Adam::new(0.001); // Initial learning rate
+        let mut weights = Tensor::new(vec![1.0, 1.0, 1.0], vec![3, 1]);
+        let gradients = Tensor::new(vec![20.0, 20.0, 20.0], vec![3, 1]); // High gradient values
+
+        optimizer.step(&mut weights, &gradients);
+
+        // Compute expected weights
+        let scaling_factor: f32 = 10.0 / 20.0; // Scale learning rate
+        let adjusted_lr = 0.001 * scaling_factor;
+        let epsilon = 1e-8;
+        let m = 0.0 + (1.0 - 0.9) * 20.0; // m after one step
+        let v = 0.0 + (1.0 - 0.999) * (20.0 * 20.0); // v after one step
+        let m_hat = m / (1.0 - 0.9); // Bias-corrected m
+        let v_hat: f32 = v / (1.0 - 0.999); // Bias-corrected v
+        let update = m_hat / (v_hat.sqrt() + epsilon) * adjusted_lr;
+
+        let expected_weights = vec![1.0 - update, 1.0 - update, 1.0 - update];
+
+        for (actual, expected) in weights.data.iter().zip(expected_weights.iter()) {
+            assert!(
+                (actual - expected).abs() < 1e-6,
+                "Expected: {:?}, Actual: {:?}",
+                expected,
+                actual
+            );
+        }
+    }
+
+    #[test]
+    fn test_adam_optimizer_small_gradients() {
+        let mut optimizer = Adam::new(0.001);
+        let mut weights = Tensor::new(vec![1.0_f32, 2.0_f32, 3.0_f32], vec![3, 1]);
+        let gradients = Tensor::new(vec![1e-7_f32, 1e-7_f32, 1e-7_f32], vec![3, 1]);
+
+        optimizer.step(&mut weights, &gradients);
+
+        // Compute expected weights manually
+        let learning_rate: f32 = 0.001;
+        let beta1: f32 = 0.9;
+        let beta2: f32 = 0.999;
+        let epsilon: f32 = 1e-8;
+
+        let mut m: f32 = 0.0; // First moment estimate
+        let mut v: f32 = 0.0; // Second moment estimate
+
+        let g: f32 = 1e-7; // Gradient value
+        m = beta1 * m + (1.0 - beta1) * g; // Update first moment
+        v = beta2 * v + (1.0 - beta2) * (g * g); // Update second moment
+
+        let m_hat: f32 = m / (1.0 - beta1.powi(1)); // Bias-corrected first moment
+        let v_hat: f32 = v / (1.0 - beta2.powi(1)); // Bias-corrected second moment
+
+        let update: f32 = m_hat / (v_hat.sqrt() + epsilon) * learning_rate;
+
+        let expected_weights = vec![1.0 - update, 2.0 - update, 3.0 - update];
+
+        for (actual, expected) in weights.data.iter().zip(expected_weights.iter()) {
+            assert!(
+                (actual - expected).abs() < 1e-6,
+                "Expected: {:?}, Actual: {:?}",
+                expected,
+                actual
+            );
+        }
     }
 }

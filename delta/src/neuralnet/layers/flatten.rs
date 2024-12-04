@@ -46,6 +46,14 @@ impl Flatten {
     /// # Returns
     ///
     /// A new instance of the flatten layer.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use deltaml::neuralnet::layers::flatten::Flatten;
+    ///
+    /// let flatten_layer = Flatten::new(Shape::new(vec![28, 28]));
+    /// ```
     pub fn new(input_shape: Shape) -> Self {
         Self {
             name: "Flatten".to_string(),
@@ -133,5 +141,38 @@ impl Layer for Flatten {
     fn update_weights(&mut self, optimizer: &mut Box<dyn crate::common::optimizer::Optimizer>) {
         let _ = optimizer;
         // Do nothing
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::common::Shape;
+
+    #[test]
+    fn test_flatten_new() {
+        let input_shape = Shape::new(vec![28, 28]);
+        let flatten_layer = Flatten::new(input_shape.clone());
+
+        assert_eq!(flatten_layer.name(), "Flatten");
+        assert_eq!(flatten_layer.input_shape, input_shape);
+    }
+
+    #[test]
+    fn test_flatten_output_shape() {
+        let input_shape = Shape::new(vec![3, 4]);
+        let flatten_layer = Flatten::new(input_shape.clone());
+
+        let output_shape = flatten_layer.output_shape();
+        assert_eq!(output_shape.0, vec![12]);
+    }
+
+    #[test]
+    fn test_flatten_param_count() {
+        let flatten_layer = Flatten::new(Shape::new(vec![10, 10]));
+        let (trainable, non_trainable) = flatten_layer.param_count();
+
+        assert_eq!(trainable, 0);
+        assert_eq!(non_trainable, 0);
     }
 }

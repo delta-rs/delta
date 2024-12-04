@@ -27,15 +27,17 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::{Dataset, DatasetOps};
 use crate::common::tensor_ops::Tensor;
+use crate::common::{Dataset, DatasetOps};
 use flate2::read::GzDecoder;
 use rand::seq::SliceRandom;
 use reqwest;
 use std::fs::File;
 use std::future::Future;
 use std::io::{self, Read};
+use std::path::Path;
 use std::pin::Pin;
+use tokio::fs as async_fs;
 
 /// A struct representing the MNIST dataset.
 pub struct MnistDataset {
@@ -55,13 +57,7 @@ impl MnistDataset {
     const TEST_EXAMPLES: usize = 10_000;
 
     /// Load the MNIST dataset
-    ///
-    /// # Arguments
-    /// * `is_train` - Whether to load the training or testing dataset
-    ///
-    /// # Returns
-    /// A dataset containing the MNIST data
-    async fn load_data(is_train: bool) -> Dataset {
+    async fn load_data(is_train: bool) -> Result<Dataset, String> {
         let (data_filename, labels_filename, num_examples) = if is_train {
             (
                 Self::MNIST_TRAIN_DATA_FILENAME,
@@ -76,37 +72,46 @@ impl MnistDataset {
             )
         };
 
-        let data_bytes = Self::get_bytes_data(data_filename).await;
-        let labels_bytes = Self::get_bytes_data(labels_filename).await;
+        let data_bytes = Self::get_bytes_data(data_filename).await?;
+        let labels_bytes = Self::get_bytes_data(labels_filename).await?;
 
-        let data = Self::parse_images(&data_bytes, num_examples);
-        let labels = Self::parse_labels(&labels_bytes, num_examples);
+        let data = Self::parse_images(&data_bytes, num_examples)?;
+        let labels = Self::parse_labels(&labels_bytes, num_examples)?;
 
-        Dataset::new(data, labels)
+        Ok(Dataset::new(data, labels))
     }
 
     /// Parse the images from the MNIST dataset
     ///
     /// # Arguments
-    /// * `data` - The compressed data bytes
+    /// * `data` - The data to parse
     /// * `num_images` - The number of images to parse
     ///
     /// # Returns
     /// A tensor containing the parsed images
-    fn parse_images(data: &[u8], num_images: usize) -> Tensor {
-        let image_data = &data[16..]; // Skip the 16-byte header
+    fn parse_images(data: &[u8], num_images: usize) -> Result<Tensor, String> {
+        if data.len() < 16 {
+            return Err("Invalid MNIST image data file: too short".into());
+        }
+
+        let image_data = &data[16..];
         let num_pixels = Self::MNIST_IMAGE_SIZE * Self::MNIST_IMAGE_SIZE;
         let mut tensor_data = vec![0.0; num_images * num_pixels];
 
         for i in 0..num_images {
             let start = i * num_pixels;
             let end = start + num_pixels;
+
+            if end > image_data.len() {
+                return Err("Image data file is incomplete".into());
+            }
+
             for (j, &pixel) in image_data[start..end].iter().enumerate() {
                 tensor_data[i * num_pixels + j] = pixel as f32 / 255.0; // Normalize to [0, 1]
             }
         }
 
-        Tensor::new(
+        Ok(Tensor::new(
             tensor_data,
             vec![
                 num_images,
@@ -114,26 +119,36 @@ impl MnistDataset {
                 Self::MNIST_IMAGE_SIZE,
                 1,
             ],
-        )
+        ))
     }
 
     /// Parse the labels from the MNIST dataset
     ///
     /// # Arguments
-    /// * `data` - The compressed data bytes
+    /// * `data` - The data to parse
     /// * `num_labels` - The number of labels to parse
     ///
     /// # Returns
     /// A tensor containing the parsed labels
-    fn parse_labels(data: &[u8], num_labels: usize) -> Tensor {
-        let label_data = &data[8..]; // Skip the 8-byte header
-        let mut tensor_data = vec![0.0; num_labels * Self::MNIST_NUM_CLASSES];
-
-        for (i, &label) in label_data.iter().enumerate() {
-            tensor_data[i * Self::MNIST_NUM_CLASSES + label as usize] = 1.0; // One-hot encoding
+    fn parse_labels(data: &[u8], num_labels: usize) -> Result<Tensor, String> {
+        if data.len() < 8 {
+            return Err("Invalid MNIST label data file: too short".into());
         }
 
-        Tensor::new(tensor_data, vec![num_labels, Self::MNIST_NUM_CLASSES])
+        let label_data = &data[8..];
+        let mut tensor_data = vec![0.0; num_labels * Self::MNIST_NUM_CLASSES];
+
+        for (i, &label) in label_data.iter().enumerate().take(num_labels) {
+            if label as usize >= Self::MNIST_NUM_CLASSES {
+                return Err(format!("Invalid label value: {}", label));
+            }
+            tensor_data[i * Self::MNIST_NUM_CLASSES + label as usize] = 1.0;
+        }
+
+        Ok(Tensor::new(
+            tensor_data,
+            vec![num_labels, Self::MNIST_NUM_CLASSES],
+        ))
     }
 
     /// Download and decompress a file from the MNIST dataset
@@ -142,87 +157,130 @@ impl MnistDataset {
     /// * `filename` - The name of the file to download
     ///
     /// # Returns
-    /// A vector of bytes containing the decompressed data
-    async fn get_bytes_data(filename: &str) -> Vec<u8> {
+    /// A vector containing the decompressed data
+    async fn get_bytes_data(filename: &str) -> Result<Vec<u8>, String> {
         let file_path = format!(".cache/data/mnist/{}", filename);
-        if std::path::Path::new(&file_path).exists() {
-            return Self::decompress_gz(&file_path).unwrap();
+
+        if Path::new(&file_path).exists() {
+            return Self::decompress_gz(&file_path).map_err(|e| e.to_string());
         }
 
         let url = format!("{}/{}", Self::MNIST_URL, filename);
         println!("Downloading MNIST dataset from {}", &url);
 
-        let compressed_data = reqwest::get(&url)
-            .await
-            .expect("Failed to download data")
-            .bytes()
-            .await
-            .expect("Failed to read data")
-            .to_vec();
+        let response = reqwest::get(&url).await.map_err(|e| e.to_string())?;
+        let compressed_data = response.bytes().await.map_err(|e| e.to_string())?;
 
-        std::fs::create_dir_all(".cache/data/mnist").unwrap();
-        std::fs::write(&file_path, &compressed_data).unwrap();
+        async_fs::create_dir_all(".cache/data/mnist")
+            .await
+            .map_err(|e| e.to_string())?;
+        async_fs::write(&file_path, &compressed_data)
+            .await
+            .map_err(|e| e.to_string())?;
 
-        Self::decompress_gz(&file_path).unwrap()
+        Self::decompress_gz(&file_path).map_err(|e| e.to_string())
     }
 
     /// Decompress a gzip file
-    ///
-    /// # Arguments
-    /// * `file_path` - The path to the gzip file
-    ///
-    /// # Returns
-    /// A vector of bytes containing the decompressed data
     fn decompress_gz(file_path: &str) -> io::Result<Vec<u8>> {
         let file = File::open(file_path)?;
         let mut decoder = GzDecoder::new(file);
         let mut decompressed_data = Vec::new();
         decoder.read_to_end(&mut decompressed_data)?;
-        println!("Unarchived file: {}", file_path);
+        println!("Decompressed file: {}", file_path);
         Ok(decompressed_data)
     }
 }
 
 impl DatasetOps for MnistDataset {
-    type LoadFuture = Pin<Box<dyn Future<Output = Self> + Send>>;
+    type LoadFuture = Pin<Box<dyn Future<Output = MnistDataset> + Send>>;
 
-    /// Load the MNIST dataset
+    /// Loads the MNIST dataset.
     ///
     /// # Returns
-    /// A dataset containing the MNIST data
+    /// A future that resolves to the `MnistDataset` with the MNIST data loaded.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use deltaml::data::MnistDataset;
+    ///
+    /// let mnist_dataset = MnistDataset::load_train().await;
+    /// ```
+    ///
     fn load_train() -> Self::LoadFuture {
         Box::pin(async {
-            Self {
-                train: Some(Self::load_data(true).await),
-                test: None,
+            match MnistDataset::load_data(true).await {
+                Ok(train_data) => MnistDataset {
+                    train: Some(train_data),
+                    test: None,
+                },
+                Err(err) => panic!("Failed to load train dataset: {}", err),
             }
         })
     }
 
-    /// Load the MNIST dataset
+    /// Loads the MNIST dataset.
     ///
     /// # Returns
-    /// A dataset containing the MNIST data
+    /// A future that resolves to the `MnistDataset` with the MNIST data loaded.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use deltaml::data::MnistDataset;
+    ///
+    /// let mnist_dataset = MnistDataset::load_test().await;
+    /// ```
     fn load_test() -> Self::LoadFuture {
         Box::pin(async {
-            Self {
-                train: None,
-                test: Some(Self::load_data(false).await),
+            match MnistDataset::load_data(false).await {
+                Ok(test_data) => MnistDataset {
+                    train: None,
+                    test: Some(test_data),
+                },
+                Err(err) => panic!("Failed to load test dataset: {}", err),
             }
         })
     }
 
-    /// Get the number of examples in the dataset
+    /// Returns the number of samples in the dataset.
     ///
     /// # Returns
-    /// The number of examples in the dataset
+    /// The number of samples in the dataset.
     fn len(&self) -> usize {
-        if let Some(ref train) = self.train {
-            train.inputs.data.shape()[0]
-        } else if let Some(ref test) = self.test {
-            test.inputs.data.shape()[0]
-        } else {
-            0
+        self.train
+            .as_ref()
+            .or(self.test.as_ref())
+            .map(|ds| ds.inputs.shape()[0])
+            .unwrap_or(0)
+    }
+
+    /// Shuffles the dataset.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use deltaml::data::MnistDataset;
+    ///
+    /// let mnist_dataset = MnistDataset::load_train().await;
+    /// mnist_dataset.shuffle();
+    /// ```
+    fn shuffle(&mut self) {
+        let shuffle_data = |dataset: &mut Dataset| {
+            let num_samples = dataset.inputs.shape()[0];
+            let mut indices: Vec<usize> = (0..num_samples).collect();
+            indices.shuffle(&mut rand::thread_rng());
+            dataset.inputs = dataset.inputs.permute(indices.clone());
+            dataset.labels = dataset.labels.permute(indices);
+        };
+
+        if let Some(train) = &mut self.train {
+            shuffle_data(train);
+        }
+
+        if let Some(test) = &mut self.test {
+            shuffle_data(test);
         }
     }
 
@@ -320,8 +378,8 @@ impl DatasetOps for MnistDataset {
         for i in 0..batch_size {
             for j in 0..num_classes {
                 let target = targets_data[i * num_classes + j];
-                let predicted = outputs_data[i * num_classes + j].max(1e-15); // Avoid log(0)
-                loss -= target * predicted.ln(); // Cross-entropy loss
+                let predicted = outputs_data[i * num_classes + j].max(1e-15);
+                loss -= target * predicted.ln();
             }
         }
 
@@ -361,45 +419,6 @@ impl DatasetOps for MnistDataset {
         }
 
         Tensor::new(grad_data, outputs.shape().clone())
-    }
-
-    /// Shuffle the dataset
-    fn shuffle(&mut self) {
-        if let Some(dataset) = &mut self.train {
-            // Retrieve the number of samples in the dataset
-            let num_samples = dataset.inputs.shape()[0];
-
-            // Create an index permutation
-            let mut indices: Vec<usize> = (0..num_samples).collect();
-            let mut rng = rand::thread_rng();
-            indices.shuffle(&mut rng);
-
-            // Create new tensors with shuffled data
-            let shuffled_inputs = dataset.inputs.permute(indices.clone());
-            let shuffled_labels = dataset.labels.permute(indices);
-
-            // Update the dataset with the shuffled tensors
-            dataset.inputs = shuffled_inputs;
-            dataset.labels = shuffled_labels;
-        }
-
-        if let Some(dataset) = &mut self.test {
-            // Retrieve the number of samples in the dataset
-            let num_samples = dataset.inputs.shape()[0];
-
-            // Create an index permutation
-            let mut indices: Vec<usize> = (0..num_samples).collect();
-            let mut rng = rand::thread_rng();
-            indices.shuffle(&mut rng);
-
-            // Create new tensors with shuffled data
-            let shuffled_inputs = dataset.inputs.permute(indices.clone());
-            let shuffled_labels = dataset.labels.permute(indices);
-
-            // Update the dataset with the shuffled tensors
-            dataset.inputs = shuffled_inputs;
-            dataset.labels = shuffled_labels;
-        }
     }
 
     fn clone(&self) -> Self {

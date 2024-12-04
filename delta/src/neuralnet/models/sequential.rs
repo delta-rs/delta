@@ -28,11 +28,12 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use std::io::Write;
+use std::time::Instant;
 
 use crate::common::layer::Layer;
 use crate::common::loss::Loss;
 use crate::common::optimizer::Optimizer;
-use crate::common::{Dataset, DatasetOps};
+use crate::common::{Dataset, DatasetOps, Tensor};
 
 /// A sequential model that contains a list of layers, an optimizer, and a loss function.
 #[derive(Debug)]
@@ -102,82 +103,157 @@ impl Sequential {
     /// # Arguments
     ///
     /// * `train_data` - The training data.
-    /// * `epochs` - The number of epochs to train for.
+    /// * `epochs` - The number of epochs to train.
     /// * `batch_size` - The batch size to use.
+    ///
+    /// # Returns
+    ///
+    /// None
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// let mut model = Sequential::new()
+    ///     .add(Dense::new(128, Some(ReluActivation::new()), true))
+    ///     .add(Dense::new(10, None::<SoftmaxActivation>, false));
+    ///
+    /// let optimizer = Adam::new(0.001);
+    /// let loss = CrossEntropyLoss::new();
+    ///
+    /// model.compile(optimizer, loss);
+    ///
+    /// let mut train_data = MnistDataset::load_train();
+    ///
+    /// model.fit(&mut train_data, 10, 32);
+    /// ```
     pub fn fit<D: DatasetOps>(&mut self, train_data: &mut D, epochs: i32, batch_size: usize) {
-        // Ensure optimizer is set
+        self.ensure_optimizer_and_loss();
+
+        let mut optimizer = self.optimizer.take().unwrap();
+
+        for epoch in 0..epochs {
+            println!("\nEpoch {}/{}", epoch + 1, epochs);
+            let epoch_loss = self.train_one_epoch(train_data, batch_size, &mut optimizer);
+            println!(
+                "Epoch {} completed. Average Loss: {:.6}",
+                epoch + 1,
+                epoch_loss
+            );
+        }
+    }
+
+    /// Ensures that the optimizer and loss function are set before training.
+    fn ensure_optimizer_and_loss(&mut self) {
         if self.optimizer.is_none() {
             panic!("Optimizer must be set before training");
         }
-
-        // Ensure loss function is set
         if self.loss.is_none() {
             panic!("Loss function must be set before training");
         }
+    }
 
-        // Get a mutable reference to the optimizer
-        let optimizer = self.optimizer.as_mut().unwrap();
+    /// Trains the model for one epoch using the given training data and batch size.
+    ///
+    /// # Arguments
+    ///
+    /// * `train_data` - The training data.
+    /// * `batch_size` - The batch size to use.
+    /// * `optimizer` - The optimizer to use.
+    ///
+    /// # Returns
+    ///
+    /// The average loss for the epoch.
+    fn train_one_epoch<D: DatasetOps>(
+        &mut self,
+        train_data: &mut D,
+        batch_size: usize,
+        optimizer: &mut Box<dyn Optimizer>,
+    ) -> f32 {
+        let num_batches = train_data.len() / batch_size;
+        let mut epoch_loss = 0.0;
 
-        // Loop over each epoch
-        for epoch in 0..epochs {
-            println!("\nEpoch {}/{}", epoch + 1, epochs);
+        let start_time = Instant::now(); // Start timer
 
-            let num_batches = train_data.len() / batch_size;
-            let mut epoch_loss = 0.0;
-
-            for batch_idx in 0..num_batches {
-                // Fetch batch
-                let (inputs, targets) = train_data.get_batch(batch_idx, batch_size);
-
-                // Forward pass
-                let mut outputs = inputs.clone();
-                for layer in &mut self.layers {
-                    outputs = layer.forward(&outputs);
-                }
-
-                // Compute loss for this batch
-                let batch_loss = if let Some(loss_fn) = self.loss.as_ref() {
-                    loss_fn.calculate_loss(&outputs, &targets)
-                } else {
-                    0.0
-                };
-                epoch_loss += batch_loss;
-
-                // Backward pass
-                let mut grad = self
-                    .loss
-                    .as_ref()
-                    .unwrap()
-                    .calculate_loss_grad(&outputs, &targets);
-
-                for layer in self.layers.iter_mut().rev() {
-                    grad = layer.backward(&grad);
-                    layer.update_weights(optimizer);
-                }
-
-                // Print progress
-                let progress = (batch_idx + 1) as f32 / num_batches as f32;
-                let current_avg_loss = epoch_loss / (batch_idx + 1) as f32;
-                let bar_width = 30;
-                let filled = (progress * bar_width as f32) as usize;
-                let bar: String = std::iter::repeat('=')
-                    .take(filled)
-                    .chain(std::iter::repeat(' ').take(bar_width - filled))
-                    .collect();
-                print!(
-                    "\rProgress: [{}] - Current Average Loss: {:.6}",
-                    bar, current_avg_loss
-                );
-                std::io::stdout().flush().unwrap();
-            }
-
-            let final_epoch_loss = epoch_loss / num_batches as f32;
-            println!(
-                "\nEpoch {} completed. Average Loss: {:.6}",
-                epoch + 1,
-                final_epoch_loss
-            );
+        for batch_idx in 0..num_batches {
+            let (inputs, targets) = train_data.get_batch(batch_idx, batch_size);
+            epoch_loss += self.train_one_batch(&inputs, &targets, optimizer);
+            self.display_progress(batch_idx, num_batches, epoch_loss, start_time);
         }
+
+        epoch_loss / num_batches as f32
+    }
+
+    /// Trains the model for one batch using the given inputs and targets.
+    ///
+    /// # Arguments
+    ///
+    /// * `inputs` - The inputs for the batch.
+    /// * `targets` - The targets for the batch.
+    /// * `optimizer` - The optimizer to use.
+    ///
+    /// # Returns
+    ///
+    /// The loss for the batch.
+    fn train_one_batch(
+        &mut self,
+        inputs: &Tensor,
+        targets: &Tensor,
+        optimizer: &mut Box<dyn Optimizer>,
+    ) -> f32 {
+        // Forward pass
+        let mut outputs = inputs.clone();
+        for layer in &mut self.layers {
+            outputs = layer.forward(&outputs);
+        }
+
+        // Compute loss
+        let loss_fn = self.loss.as_ref().unwrap();
+        let batch_loss = loss_fn.calculate_loss(&outputs, targets);
+
+        // Backward pass and update
+        let mut grad = loss_fn.calculate_loss_grad(&outputs, targets);
+        for layer in self.layers.iter_mut().rev() {
+            grad = layer.backward(&grad);
+            layer.update_weights(optimizer);
+        }
+
+        batch_loss
+    }
+
+    /// Displays the training progress bar.
+    ///
+    /// # Arguments
+    ///
+    /// * `batch_idx` - The index of the current batch.
+    /// * `num_batches` - The total number of batches.
+    /// * `epoch_loss` - The current epoch loss.
+    /// * `start_time` - The start time of the training process.
+    fn display_progress(
+        &mut self,
+        batch_idx: usize,
+        num_batches: usize,
+        epoch_loss: f32,
+        start_time: Instant,
+    ) {
+        let progress = (batch_idx + 1) as f32 / num_batches as f32;
+        let current_avg_loss = epoch_loss / (batch_idx + 1) as f32;
+        let bar_width = 30;
+        let filled = (progress * bar_width as f32) as usize;
+        let bar: String = std::iter::repeat('=')
+            .take(filled)
+            .chain(std::iter::repeat(' ').take(bar_width - filled))
+            .collect();
+
+        let elapsed = start_time.elapsed();
+        let elapsed_secs = elapsed.as_secs_f32();
+        let estimated_total = elapsed_secs / progress;
+        let remaining_secs = estimated_total - elapsed_secs;
+
+        print!(
+            "\rProgress: [{}] - Current Average Loss: {:.6} | Elapsed: {:.2}s | Remaining: {:.2}s",
+            bar, current_avg_loss, elapsed_secs, remaining_secs
+        );
+        std::io::stdout().flush().unwrap();
     }
 
     /// Validates the model with the given test data.

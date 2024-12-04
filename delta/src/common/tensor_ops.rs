@@ -1,4 +1,4 @@
-use std::ops::{Range, SubAssign};
+use std::ops::{Mul, Range, SubAssign};
 
 use ndarray::{Array, ArrayD, Axis, IxDyn};
 use ndarray::{Dimension, Ix2};
@@ -791,6 +791,35 @@ impl Default for Tensor {
     }
 }
 
+impl Mul for Tensor {
+    type Output = Tensor;
+
+    /// Multiplies two tensors.
+    ///
+    /// # Arguments
+    ///
+    /// * `rhs` - The tensor to multiply with the current tensor.
+    ///
+    /// # Returns
+    ///
+    /// A new tensor containing the result of the multiplication.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use deltaml::common::Tensor;
+    ///
+    /// let data1 = vec![1.0, 2.0, 3.0, 4.0];
+    /// let data2 = vec![2.0, 3.0, 4.0, 5.0];
+    /// let tensor1 = Tensor::new(data1, vec![2, 2]);
+    /// let tensor2 = Tensor::new(data2, vec![2, 2]);
+    /// let multiplied_tensor = tensor1 * tensor2;
+    /// ```
+    fn mul(self, rhs: Self) -> Self::Output {
+        self.matmul(&rhs)
+    }
+}
+
 impl PartialEq for Tensor {
     /// Checks if two tensors are equal.
     ///
@@ -1039,5 +1068,15 @@ mod tests {
             argmax.data.iter().cloned().collect::<Vec<f32>>(),
             vec![1.0, 1.0]
         );
+    }
+
+    #[test]
+    fn test_mul_operator() {
+        let data1 = vec![1.0, 2.0, 3.0, 4.0];
+        let tensor1 = Tensor::new(data1, vec![2, 2]);
+        let data2 = vec![2.0, 3.0, 4.0, 5.0];
+        let tensor2 = Tensor::new(data2, vec![2, 2]);
+        let result = tensor1 * tensor2;
+        assert_eq!(result.data.shape(), &[2, 2]);
     }
 }
