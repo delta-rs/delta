@@ -43,7 +43,7 @@ jobs:
   build:
     name: Build Workspace
     runs-on: ubuntu-latest
-    depends-on: clippy
+    needs: clippy
 
     steps:
       - uses: actions/checkout@v4
@@ -67,7 +67,7 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
-    depends-on: build
+    needs: build
 
     steps:
       - uses: actions/checkout@v4
@@ -91,7 +91,7 @@ jobs:
     coverage:
       name: Code Coverage
       runs-on: ubuntu-latest
-      depends-on: test
+      needs: test
 
       steps:
         - uses: actions/checkout@v4
