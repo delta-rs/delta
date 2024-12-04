@@ -82,6 +82,13 @@ impl MnistDataset {
     }
 
     /// Parse the images from the MNIST dataset
+    ///
+    /// # Arguments
+    /// * `data` - The data to parse
+    /// * `num_images` - The number of images to parse
+    ///
+    /// # Returns
+    /// A tensor containing the parsed images
     fn parse_images(data: &[u8], num_images: usize) -> Result<Tensor, String> {
         if data.len() < 16 {
             return Err("Invalid MNIST image data file: too short".into());
@@ -116,6 +123,13 @@ impl MnistDataset {
     }
 
     /// Parse the labels from the MNIST dataset
+    ///
+    /// # Arguments
+    /// * `data` - The data to parse
+    /// * `num_labels` - The number of labels to parse
+    ///
+    /// # Returns
+    /// A tensor containing the parsed labels
     fn parse_labels(data: &[u8], num_labels: usize) -> Result<Tensor, String> {
         if data.len() < 8 {
             return Err("Invalid MNIST label data file: too short".into());
@@ -138,6 +152,12 @@ impl MnistDataset {
     }
 
     /// Download and decompress a file from the MNIST dataset
+    ///
+    /// # Arguments
+    /// * `filename` - The name of the file to download
+    ///
+    /// # Returns
+    /// A vector containing the decompressed data
     async fn get_bytes_data(filename: &str) -> Result<Vec<u8>, String> {
         let file_path = format!(".cache/data/mnist/{}", filename);
 
@@ -175,6 +195,19 @@ impl MnistDataset {
 impl DatasetOps for MnistDataset {
     type LoadFuture = Pin<Box<dyn Future<Output = MnistDataset> + Send>>;
 
+    /// Loads the MNIST dataset.
+    ///
+    /// # Returns
+    /// A future that resolves to the `MnistDataset` with the MNIST data loaded.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use deltaml::data::MnistDataset;
+    ///
+    /// let mnist_dataset = MnistDataset::load_train().await;
+    /// ```
+    ///
     fn load_train() -> Self::LoadFuture {
         Box::pin(async {
             match MnistDataset::load_data(true).await {
@@ -187,6 +220,18 @@ impl DatasetOps for MnistDataset {
         })
     }
 
+    /// Loads the MNIST dataset.
+    ///
+    /// # Returns
+    /// A future that resolves to the `MnistDataset` with the MNIST data loaded.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use deltaml::data::MnistDataset;
+    ///
+    /// let mnist_dataset = MnistDataset::load_test().await;
+    /// ```
     fn load_test() -> Self::LoadFuture {
         Box::pin(async {
             match MnistDataset::load_data(false).await {
@@ -199,6 +244,10 @@ impl DatasetOps for MnistDataset {
         })
     }
 
+    /// Returns the number of samples in the dataset.
+    ///
+    /// # Returns
+    /// The number of samples in the dataset.
     fn len(&self) -> usize {
         self.train
             .as_ref()
@@ -207,6 +256,16 @@ impl DatasetOps for MnistDataset {
             .unwrap_or(0)
     }
 
+    /// Shuffles the dataset.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use deltaml::data::MnistDataset;
+    ///
+    /// let mnist_dataset = MnistDataset::load_train().await;
+    /// mnist_dataset.shuffle();
+    /// ```
     fn shuffle(&mut self) {
         let shuffle_data = |dataset: &mut Dataset| {
             let num_samples = dataset.inputs.shape()[0];
