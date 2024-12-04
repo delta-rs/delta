@@ -41,7 +41,7 @@ jobs:
         run: cargo clippy --all-targets --all-features
 
   build:
-    name: Build Workspace
+    name: Build
     runs-on: ubuntu-latest
     needs: clippy
 
@@ -65,7 +65,7 @@ jobs:
         run: cargo build --release
 
   test:
-    name: Run Tests
+    name: Tests
     runs-on: ubuntu-latest
     needs: build
 
