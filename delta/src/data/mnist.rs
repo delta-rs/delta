@@ -402,19 +402,6 @@ impl DatasetOps for MnistDataset {
     }
 
     /// Shuffles the dataset.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::DatasetOps;
-    /// use deltaml::data::MnistDataset;
-    ///
-    /// #[tokio::main]
-    /// async fn main() {
-    ///     let mut mnist_dataset = MnistDataset::load_train().await;
-    ///     mnist_dataset.shuffle();
-    /// }
-    /// ```
     fn shuffle(&mut self) {
         let shuffle_data = |dataset: &mut Dataset| {
             let num_samples = dataset.inputs.shape()[0];
