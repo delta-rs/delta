@@ -136,7 +136,7 @@ impl Sequential {
     ///     model.fit(&mut train_data, 10, 32);
     /// }
     /// ```
-    pub async fn fit<D: DatasetOps>(&mut self, train_data: &mut D, epochs: i32, batch_size: usize) {
+    pub fn fit<D: DatasetOps>(&mut self, train_data: &mut D, epochs: i32, batch_size: usize) {
         self.ensure_optimizer_and_loss();
 
         let mut optimizer = self.optimizer.take().unwrap();
