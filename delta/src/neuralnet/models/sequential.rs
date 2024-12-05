@@ -112,33 +112,6 @@ impl Sequential {
     /// # Returns
     ///
     /// None
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use deltaml::activations::{ReluActivation, SoftmaxActivation};
-    /// use deltaml::common::DatasetOps;
-    /// use deltaml::data::MnistDataset;
-    /// use deltaml::losses::CrossEntropyLoss;
-    /// use deltaml::neuralnet::{Dense, Sequential};
-    /// use deltaml::optimizers::Adam;
-    ///
-    /// #[tokio::main]
-    /// async fn main() {
-    ///     let mut model = Sequential::new()
-    ///       .add(Dense::new(128, Some(ReluActivation::new()), true))
-    ///       .add(Dense::new(10, None::<SoftmaxActivation>, false));
-    ///
-    ///     let optimizer = Adam::new(0.001);
-    ///     let loss = CrossEntropyLoss::new();
-    ///
-    ///     model.compile(optimizer, loss);
-    ///
-    ///     let mut train_data = MnistDataset::load_train().await;
-    ///
-    ///     model.fit(&mut train_data, 10, 32);
-    /// }
-    /// ```
     pub fn fit<D: DatasetOps>(&mut self, train_data: &mut D, epochs: i32, batch_size: usize) {
         self.ensure_optimizer_and_loss();
 
