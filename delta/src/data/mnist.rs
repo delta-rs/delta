@@ -206,7 +206,10 @@ impl DatasetOps for MnistDataset {
     /// use deltaml::common::DatasetOps;
     /// use deltaml::data::MnistDataset;
     ///
-    /// let mnist_dataset = MnistDataset::load_train().await;
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let mnist_dataset = MnistDataset::load_train().await;
+    /// }
     /// ```
     ///
     fn load_train() -> Self::LoadFuture {
@@ -232,7 +235,10 @@ impl DatasetOps for MnistDataset {
     /// use deltaml::common::DatasetOps;
     /// use deltaml::data::MnistDataset;
     ///
-    /// let mnist_dataset = MnistDataset::load_test().await;
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let mnist_dataset = MnistDataset::load_test().await;
+    /// }
     /// ```
     fn load_test() -> Self::LoadFuture {
         Box::pin(async {
@@ -403,16 +409,20 @@ impl DatasetOps for MnistDataset {
     /// use deltaml::common::DatasetOps;
     /// use deltaml::data::MnistDataset;
     ///
-    /// let mut mnist_dataset = MnistDataset::load_train().await;
-    /// mnist_dataset.shuffle();
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let mut mnist_dataset = MnistDataset::load_train().await;
+    ///     mnist_dataset.shuffle();
+    /// }
     /// ```
     fn shuffle(&mut self) {
         let shuffle_data = |dataset: &mut Dataset| {
             let num_samples = dataset.inputs.shape()[0];
             let mut indices: Vec<usize> = (0..num_samples).collect();
             indices.shuffle(&mut rand::thread_rng());
-            dataset.inputs = dataset.inputs.permute(indices.clone());
-            dataset.labels = dataset.labels.permute(indices);
+
+            dataset.inputs = dataset.inputs.take(&indices);
+            dataset.labels = dataset.labels.take(&indices);
         };
 
         if let Some(train) = &mut self.train {
@@ -424,6 +434,11 @@ impl DatasetOps for MnistDataset {
         }
     }
 
+    /// Clones the dataset.
+    ///
+    /// # Returns
+    ///
+    /// A new `MnistDataset` instance that is a clone of the current instance.
     fn clone(&self) -> Self {
         Self {
             train: self.train.clone(),
