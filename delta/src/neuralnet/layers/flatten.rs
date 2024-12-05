@@ -51,6 +51,7 @@ impl Flatten {
     ///
     /// ```
     /// use deltaml::neuralnet::layers::flatten::Flatten;
+    /// use deltaml::common::Shape;
     ///
     /// let flatten_layer = Flatten::new(Shape::new(vec![28, 28]));
     /// ```

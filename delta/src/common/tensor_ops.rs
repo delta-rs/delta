@@ -238,7 +238,7 @@ impl Tensor {
     ///
     /// let data = vec![1.0, 2.0, 3.0, 4.0];
     /// let tensor = Tensor::new(data, vec![2, 2]);
-    /// let indices = vec![0..2, 1..3];
+    /// let indices = vec![0..2, 0..2];
     /// let sliced_tensor = tensor.slice(indices);
     /// ```
     pub fn slice(&self, indices: Vec<Range<usize>>) -> Tensor {
@@ -591,8 +591,7 @@ impl Tensor {
     ///
     /// let data = vec![1.0, 2.0, 3.0, 4.0];
     /// let tensor = Tensor::new(data, vec![2, 2]);
-    /// let target_shape = vec![1, 4];
-    /// let broadcasted_tensor = tensor.broadcast(target_shape);
+    /// let broadcasted_tensor = tensor.broadcast(vec![2, 2]);
     /// ```
     pub fn broadcast(&self, target_shape: Vec<usize>) -> Tensor {
         let self_shape = self.shape();
@@ -746,6 +745,45 @@ impl Tensor {
             .into_dyn(); // Convert to dynamic dimensionality
 
         Tensor { data: max_indices }
+    }
+
+    /// Takes elements from the tensor according to the given indices.
+    ///
+    /// # Arguments
+    ///
+    /// * `indices` - A vector of indices to take.
+    ///
+    /// # Returns
+    ///
+    /// A new tensor containing the selected elements.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use deltaml::common::Tensor;
+    ///
+    /// let data = vec![1.0, 2.0, 3.0, 4.0];
+    /// let tensor = Tensor::new(data, vec![4]);
+    /// let indices = vec![2, 0, 3, 1];
+    /// let selected = tensor.take(&indices);
+    /// ```
+    pub fn take(&self, indices: &[usize]) -> Tensor {
+        let mut data = Vec::with_capacity(indices.len());
+        let mut shape = self.shape();
+        shape[0] = indices.len();
+
+        // Flatten the tensor to make indexing easier
+        let flat_data: Vec<f32> = self.data.iter().cloned().collect();
+        let stride = flat_data.len() / self.shape()[0];
+
+        // Take elements according to indices
+        for &idx in indices {
+            let start = idx * stride;
+            let end = start + stride;
+            data.extend_from_slice(&flat_data[start..end]);
+        }
+
+        Tensor::new(data, shape)
     }
 }
 

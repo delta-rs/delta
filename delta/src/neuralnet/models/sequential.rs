@@ -120,20 +120,23 @@ impl Sequential {
     /// use deltaml::neuralnet::{Dense, Sequential};
     /// use deltaml::optimizers::Adam;
     ///
-    /// let mut model = Sequential::new()
-    ///     .add(Dense::new(128, Some(ReluActivation::new()), true))
-    ///     .add(Dense::new(10, None::<SoftmaxActivation>, false));
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let mut model = Sequential::new()
+    ///       .add(Dense::new(128, Some(ReluActivation::new()), true))
+    ///       .add(Dense::new(10, None::<SoftmaxActivation>, false));
     ///
-    /// let optimizer = Adam::new(0.001);
-    /// let loss = CrossEntropyLoss::new();
+    ///     let optimizer = Adam::new(0.001);
+    ///     let loss = CrossEntropyLoss::new();
     ///
-    /// model.compile(optimizer, loss);
+    ///     model.compile(optimizer, loss);
     ///
-    /// let mut train_data = MnistDataset::load_train();
+    ///     let mut train_data = MnistDataset::load_train().await;
     ///
-    /// model.fit(&mut train_data, 10, 32);
+    ///     model.fit(&mut train_data, 10, 32);
+    /// }
     /// ```
-    pub fn fit<D: DatasetOps>(&mut self, train_data: &mut D, epochs: i32, batch_size: usize) {
+    pub async fn fit<D: DatasetOps>(&mut self, train_data: &mut D, epochs: i32, batch_size: usize) {
         self.ensure_optimizer_and_loss();
 
         let mut optimizer = self.optimizer.take().unwrap();
@@ -264,7 +267,10 @@ impl Sequential {
         let bar: String = std::iter::repeat('=')
             .take(filled)
             .chain(std::iter::once(arrow.chars().next().unwrap()))
-            .chain(std::iter::repeat(' ').take((bar_width as isize - filled as isize - 1).max(0) as usize))
+            .chain(
+                std::iter::repeat(' ')
+                    .take((bar_width as isize - filled as isize - 1).max(0) as usize),
+            )
             .collect();
 
         let elapsed = start_time.elapsed();
@@ -368,7 +374,9 @@ impl Sequential {
     ///
     /// The output tensor after passing through all layers.
     pub fn forward(&mut self, input: &Tensor) -> Tensor {
-        self.layers.iter_mut().fold(input.clone(), |acc, layer| layer.forward(&acc))
+        self.layers
+            .iter_mut()
+            .fold(input.clone(), |acc, layer| layer.forward(&acc))
     }
 
     /// Prints a summary of the model.
