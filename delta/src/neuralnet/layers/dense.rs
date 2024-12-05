@@ -28,6 +28,7 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use crate::common::{Activation, Layer, Optimizer, Shape, Tensor};
+use serde_json;
 
 /// A dense (fully connected) layer.
 #[derive(Debug)]
@@ -48,32 +49,20 @@ impl Dense {
     ///
     /// # Arguments
     ///
-    /// * `units` - The number of units in the layer.
+    /// * `units` - The number of output units.
     /// * `activation` - The activation function to use.
-    ///
-    /// # Returns
-    ///
-    /// A new instance of the dense layer.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::neuralnet::layers::dense::Dense;
-    /// use deltaml::activations::relu::ReluActivation;
-    ///
-    /// let dense_layer = Dense::new(2, Some(ReluActivation::new()), true);
-    /// ```
+    /// * `trainable` - Whether the layer is trainable.
     pub fn new<A: Activation + 'static>(
         units: usize,
         activation: Option<A>,
         trainable: bool,
     ) -> Self {
-        Self {
-            name: format!("Dense_{}", units),
+        Dense {
+            name: format!("dense_{}", units),
             weights: None,
             bias: None,
             units,
-            activation: activation.map(|act| Box::new(act) as Box<dyn Activation>),
+            activation: activation.map(|a| Box::new(a) as Box<dyn Activation>),
             trainable,
             weights_grad: None,
             bias_grad: None,
@@ -206,6 +195,21 @@ impl Layer for Dense {
         // Clear gradients after update
         self.weights_grad = None;
         self.bias_grad = None;
+    }
+
+    fn get_weights(&self) -> serde_json::Value {
+        serde_json::json!({
+            "weights": self.weights.as_ref().map(|w| w.to_vec()),
+            "bias": self.bias.as_ref().map(|b| b.to_vec())
+        })
+    }
+
+    fn get_config(&self) -> serde_json::Value {
+        serde_json::json!({
+            "units": self.units,
+            "trainable": self.trainable,
+            "activation": self.activation.as_ref().map(|a| a.name())
+        })
     }
 }
 

@@ -32,6 +32,7 @@ use crate::common::Tensor;
 use std::fmt::Debug;
 
 use super::optimizer::Optimizer;
+use serde_json;
 
 /// A trait representing a neural network layer.
 pub trait Layer: Debug {
@@ -100,6 +101,33 @@ pub trait Layer: Debug {
     ///
     /// * `optimizer` - The optimizer to use.
     fn update_weights(&mut self, optimizer: &mut Box<dyn Optimizer>);
+
+    /// Returns the weights of the layer as a serializable format.
+    ///
+    /// # Returns
+    ///
+    /// A `serde_json::Value` containing the layer's weights.
+    fn get_weights(&self) -> serde_json::Value {
+        serde_json::json!({})
+    }
+
+    /// Returns the layer's configuration as a serializable format.
+    ///
+    /// # Returns
+    ///
+    /// A `serde_json::Value` containing the layer's configuration.
+    fn get_config(&self) -> serde_json::Value {
+        serde_json::json!({})
+    }
+
+    /// Returns the type name of the layer.
+    ///
+    /// # Returns
+    ///
+    /// A `String` representing the type name of the layer.
+    fn type_name(&self) -> String {
+        std::any::type_name::<Self>().split("::").last().unwrap_or("Unknown").to_string()
+    }
 }
 
 /// A struct representing the output of a layer.

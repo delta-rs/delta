@@ -53,4 +53,13 @@ pub trait Activation: Debug {
     ///
     /// The derivative tensor of the activation function.
     fn derivative(&self, input: &Tensor) -> Tensor;
+
+    /// Returns the name of the activation function.
+    ///
+    /// # Returns
+    ///
+    /// A string slice containing the name of the activation function.
+    fn name(&self) -> &str {
+        std::any::type_name::<Self>().split("::").last().unwrap_or("Unknown")
+    }
 }
