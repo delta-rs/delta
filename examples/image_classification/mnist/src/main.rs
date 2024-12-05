@@ -33,7 +33,7 @@ async fn main() {
     println!("Training the model...");
     println!("Train data size: {}", train_data.len());
 
-    let epoch = 10;
+    let epoch = 1;
     let batch_size = 32;
 
     model.fit(&mut train_data, epoch, batch_size);
@@ -43,5 +43,5 @@ async fn main() {
     println!("Test Accuracy: {:.2}%", accuracy * 100.0);
 
     // Save the model
-    model.save(".cache/models/mnist/mnist.model").unwrap();
+    model.save(".cache/models/mnist/mnist").unwrap();
 }

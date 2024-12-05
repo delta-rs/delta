@@ -27,7 +27,10 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use serde_json;
+use std::fs::File;
 use std::io::Write;
+use std::path::Path;
 use std::time::Instant;
 
 use crate::common::layer::Layer;
@@ -353,14 +356,34 @@ impl Sequential {
     ///
     /// # Arguments
     ///
-    /// * `path` - The path to save the model to.
+    /// * `path_str` - The path to save the model to.
     ///
     /// # Returns
     ///
     /// A result indicating success or failure.
-    pub fn save(&self, path: &str) -> Result<(), std::io::Error> {
-        let _ = path;
-        // Implement model saving logic here
+    pub fn save(&self, path_str: &str) -> Result<(), std::io::Error> {
+        // Create the model state as a JSON object
+        let model_state = serde_json::json!({
+            "layer_names": self.layer_names,
+            "layers": self.layers.iter().map(|layer| {
+                serde_json::json!({
+                    "type": layer.type_name(),
+                    "weights": layer.get_weights(),
+                    "config": layer.get_config()
+                })
+            }).collect::<Vec<_>>()
+        });
+
+        // Create or open the file for writing
+        let path = Path::new(path_str);
+        let path = path.parent().unwrap();
+        std::fs::create_dir_all(path)?;
+
+        let mut file = File::create(path.join("model.json"))?;
+
+        // Write the JSON data to the file
+        file.write_all(serde_json::to_string_pretty(&model_state)?.as_bytes())?;
+
         Ok(())
     }
 

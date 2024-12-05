@@ -785,6 +785,15 @@ impl Tensor {
 
         Tensor::new(data, shape)
     }
+
+    /// Converts the tensor data to a vector.
+    ///
+    /// # Returns
+    ///
+    /// A vector containing the tensor data in row-major order.
+    pub fn to_vec(&self) -> Vec<f32> {
+        self.data.as_slice().unwrap_or(&[]).to_vec()
+    }
 }
 
 impl SubAssign for Tensor {
