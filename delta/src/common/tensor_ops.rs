@@ -899,7 +899,7 @@ impl Tensor {
 
         // Stack tensors along a new axis
         let stacked_data = ndarray::stack(
-            ndarray::Axis(0),
+            Axis(0),
             &tensors.iter().map(|t| t.data.view()).collect::<Vec<_>>(),
         )
         .map_err(|e| e.to_string())?;

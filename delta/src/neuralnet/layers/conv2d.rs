@@ -27,6 +27,8 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use std::ops::Mul;
+use ndarray::s;
 use crate::common::Activation;
 use crate::common::tensor_ops::Tensor;
 use crate::common::layer::Layer;
@@ -87,6 +89,18 @@ impl Layer for Conv2D {
         let output_width = (input_width + 2 * self.padding - self.kernel_size) / self.stride + 1;
         let mut output = Tensor::zeros(vec![batch_size, output_height, output_width, self.filters]);
 
+        // Use ndarray's pad function
+        let input_padding = ndarray::Array::from_shape_fn(
+            (batch_size, input_height + 2 * self.padding, input_width + 2 * self.padding, input_channels),
+            |(b, i, j, c)| {
+                if i < self.padding || i >= input_height + self.padding || j < self.padding || j >= input_width + self.padding {
+                    0.0
+                } else {
+                    input[(b, i - self.padding, j - self.padding, c)]
+                }
+            }
+        );
+
         for b in 0..batch_size {
             for i in 0..output_height {
                 for j in 0..output_width {
@@ -95,9 +109,16 @@ impl Layer for Conv2D {
                         let start_j = j * self.stride;
                         let end_i = start_i + self.kernel_size;
                         let end_j = start_j + self.kernel_size;
-                        let input_slice = input.slice(vec![b..b+1, start_i..end_i, start_j..end_j, 0..input_channels]);
-                        let weight_slice = weights.slice(vec![f..f+1, 0..input_channels, 0..self.kernel_size, 0..self.kernel_size]);
-                        let conv_result = input_slice.mul(&weight_slice).sum() + bias.data[f];
+                        let input_slice = input_padding.slice(s![b, start_i..end_i, start_j..end_j, ..]);
+                        let weight_slice = weights.data.index_axis(ndarray::Axis(0), f);
+                        let conv_result = input_slice.mul(&weight_slice).sum() + bias[(0, 0, 0, f)];
+
+                        println!("Debug: input_slice={:?}", input_slice);
+                        println!("Debug: weight_slice={:?}", weight_slice);
+                        println!("Debug: conv_result={}", conv_result);
+                        println!("Debug: b={}, i={}, j={}, f={}", b, i, j, f);
+                        println!("Debug: output.shape()={:?}", output.shape());
+
                         output[(b, i, j, f)] = conv_result;
                     }
                 }
