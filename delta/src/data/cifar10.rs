@@ -27,6 +27,9 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use crate::common::{Dataset, DatasetOps, Tensor};
+use flate2::read::GzDecoder;
+use log::debug;
 use std::collections::HashSet;
 use std::fs;
 use std::fs::File;
@@ -34,9 +37,7 @@ use std::future::Future;
 use std::io::Read;
 use std::path::Path;
 use std::pin::Pin;
-use flate2::read::GzDecoder;
 use tar::Archive;
-use crate::common::{Dataset, DatasetOps, Tensor};
 
 /// A struct representing the CIFAR10 dataset.
 pub struct Cifar10Dataset {
@@ -68,11 +69,14 @@ impl Cifar10Dataset {
         let tarball_path = format!("{}cifar-10-binary.tar.gz", cache_path);
 
         if !Path::new(&tarball_path).exists() {
-            println!("Downloading CIFAR-10 dataset from {}", Self::CIFAR10_URL);
+            debug!("Downloading CIFAR-10 dataset from {}", Self::CIFAR10_URL);
             let response = reqwest::get(Self::CIFAR10_URL)
                 .await
                 .expect("Failed to download CIFAR-10");
-            let data = response.bytes().await.expect("Failed to read CIFAR-10 data");
+            let data = response
+                .bytes()
+                .await
+                .expect("Failed to read CIFAR-10 data");
             fs::create_dir_all(cache_path).unwrap();
             fs::write(&tarball_path, data).unwrap();
         }
@@ -97,7 +101,7 @@ impl Cifar10Dataset {
                     fs::create_dir_all(parent).unwrap();
                 }
                 entry.unpack(&full_path).unwrap();
-                println!("Unarchived file: {}", full_path);
+                debug!("Unarchived file: {}", full_path);
             }
         }
     }
@@ -113,16 +117,19 @@ impl Cifar10Dataset {
     fn parse_file(file_path: &str, num_examples: usize) -> (Vec<f32>, Vec<f32>) {
         let mut file = File::open(file_path).expect("Failed to open CIFAR-10 file");
         let mut buffer = vec![0u8; 1 + Self::CIFAR10_IMAGE_SIZE * Self::CIFAR10_IMAGE_SIZE * 3];
-        let mut images = vec![0.0; num_examples * Self::CIFAR10_IMAGE_SIZE * Self::CIFAR10_IMAGE_SIZE * 3];
+        let mut images =
+            vec![0.0; num_examples * Self::CIFAR10_IMAGE_SIZE * Self::CIFAR10_IMAGE_SIZE * 3];
         let mut labels = vec![0.0; num_examples * Self::CIFAR10_NUM_CLASSES];
 
         for i in 0..num_examples {
-            file.read_exact(&mut buffer).expect("Failed to read CIFAR-10 example");
+            file.read_exact(&mut buffer)
+                .expect("Failed to read CIFAR-10 example");
             let label = buffer[0] as usize;
             labels[i * Self::CIFAR10_NUM_CLASSES + label] = 1.0; // One-hot encode
 
             for (j, &pixel) in buffer[1..].iter().enumerate() {
-                images[i * Self::CIFAR10_IMAGE_SIZE * Self::CIFAR10_IMAGE_SIZE * 3 + j] = pixel as f32 / 255.0; // Normalize to [0, 1]
+                images[i * Self::CIFAR10_IMAGE_SIZE * Self::CIFAR10_IMAGE_SIZE * 3 + j] =
+                    pixel as f32 / 255.0; // Normalize to [0, 1]
             }
         }
 
@@ -142,13 +149,24 @@ impl Cifar10Dataset {
         let mut labels = Vec::new();
 
         for &file in files {
-            let (img, lbl) = Self::parse_file(&format!(".cache/data/cifar10/cifar-10-batches-bin/{}", file), total_examples / files.len());
+            let (img, lbl) = Self::parse_file(
+                &format!(".cache/data/cifar10/cifar-10-batches-bin/{}", file),
+                total_examples / files.len(),
+            );
             images.extend(img);
             labels.extend(lbl);
         }
 
         Dataset::new(
-            Tensor::new(images, vec![total_examples, Self::CIFAR10_IMAGE_SIZE, Self::CIFAR10_IMAGE_SIZE, 3]),
+            Tensor::new(
+                images,
+                vec![
+                    total_examples,
+                    Self::CIFAR10_IMAGE_SIZE,
+                    Self::CIFAR10_IMAGE_SIZE,
+                    3,
+                ],
+            ),
             Tensor::new(labels, vec![total_examples, Self::CIFAR10_NUM_CLASSES]),
         )
     }
@@ -249,17 +267,14 @@ impl DatasetOps for Cifar10Dataset {
 
         let adjusted_end_idx = end_idx.min(total_samples);
 
-        let inputs_batch = dataset.inputs.slice(vec![
-            start_idx..adjusted_end_idx,
-            0..32,
-            0..32,
-            0..3,
-        ]);
+        let inputs_batch =
+            dataset
+                .inputs
+                .slice(vec![start_idx..adjusted_end_idx, 0..32, 0..32, 0..3]);
 
-        let labels_batch = dataset.labels.slice(vec![
-            start_idx..adjusted_end_idx,
-            0..10,
-        ]);
+        let labels_batch = dataset
+            .labels
+            .slice(vec![start_idx..adjusted_end_idx, 0..10]);
 
         (inputs_batch, labels_batch)
     }
