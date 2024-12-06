@@ -1,7 +1,7 @@
 # Delta <!-- omit in toc --> ![build](https://img.shields.io/github/actions/workflow/status/delta-rs/delta/core.yml?branch=master)
 
-[//]: # (![crates.io]&#40;https://img.shields.io/crates/v/delta.svg&#41;)
-[//]: # ([![documentation]&#40;https://img.shields.io/badge/docs-delta-blue?logo=rust&#41;]&#40;https://docs.rs/delta/latest/&#41;)
+[//]: # "![crates.io](https://img.shields.io/crates/v/delta.svg)"
+[//]: # "[![documentation](https://img.shields.io/badge/docs-delta-blue?logo=rust)](https://docs.rs/delta/latest/)"
 
 An open-source machine learning framework in Rust Δ. It is designed to be fast, with APIs that are easy to use while allowing advanced usage to customize and extend functionality. It provides efficient and scalable tools for building and training neural networks. The framework aims to offer a comprehensive set of features, including various neural network layers, activation functions, loss functions, optimizers, and data handling utilities.
 
@@ -17,7 +17,7 @@ An open-source machine learning framework in Rust Δ. It is designed to be fast,
 
 Are you having trouble with Delta? We want to help!
 
-[//]: # (- Read through the documentation on our [docs]&#40;https://docs.rs/delta/latest/delta/&#41;.)
+[//]: # "- Read through the documentation on our [docs](https://docs.rs/delta/latest/delta/)."
 
 - If you’d like to discuss Delta, head over to the [GitHub Discussions](https://github.com/delta-rs/delta/discussions) section and join the conversation.
 

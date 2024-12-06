@@ -28,6 +28,7 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use crate::common::{Activation, Layer, Optimizer, Shape, Tensor};
+use log::debug;
 use serde_json;
 
 /// A dense (fully connected) layer.
@@ -78,7 +79,7 @@ impl Layer for Dense {
     ///
     /// * `input_shape` - The shape of the input tensor.
     fn build(&mut self, input_shape: Shape) {
-        println!(
+        debug!(
             "Building Dense layer with input shape: {:?} and units: {}",
             input_shape, self.units
         );

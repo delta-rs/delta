@@ -1,6 +1,6 @@
 //! BSD 3-Clause License
 //!
-//! Copyright (c) 2024, Marcus Cvjeticanin
+//! Copyright (c) 2024, Marcus Cvjeticanin, Chase Willden
 //!
 //! Redistribution and use in source and binary forms, with or without
 //! modification, are permitted provided that the following conditions are met:
@@ -30,6 +30,7 @@
 use crate::common::tensor_ops::Tensor;
 use crate::common::{Dataset, DatasetOps};
 use flate2::read::GzDecoder;
+use log::debug;
 use rand::seq::SliceRandom;
 use reqwest;
 use std::fs::File;
@@ -166,7 +167,7 @@ impl MnistDataset {
         }
 
         let url = format!("{}/{}", Self::MNIST_URL, filename);
-        println!("Downloading MNIST dataset from {}", &url);
+        debug!("Downloading MNIST dataset from {}", &url);
 
         let response = reqwest::get(&url).await.map_err(|e| e.to_string())?;
         let compressed_data = response.bytes().await.map_err(|e| e.to_string())?;
@@ -187,7 +188,7 @@ impl MnistDataset {
         let mut decoder = GzDecoder::new(file);
         let mut decompressed_data = Vec::new();
         decoder.read_to_end(&mut decompressed_data)?;
-        println!("Decompressed file: {}", file_path);
+        debug!("Decompressed file: {}", file_path);
         Ok(decompressed_data)
     }
 }
