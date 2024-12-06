@@ -121,6 +121,8 @@ impl Sequential {
             println!("\nEpoch {}/{}", epoch + 1, epochs);
             self.train_one_epoch(train_data, batch_size, &mut optimizer);
         }
+
+        println!();
     }
 
     /// Ensures that the optimizer and loss function are set before training.
