@@ -182,7 +182,20 @@ impl Optimizer for Adam {
 
 #[cfg(test)]
 mod tests {
+    use ndarray::ArrayD;
     use super::*;
+
+    fn assert_almost_equal(actual: &ArrayD<f32>, expected: &[f32], tolerance: f32) {
+        let actual_slice = actual.as_slice().expect("Failed to convert ArrayD to slice");
+        for (a, e) in actual_slice.iter().zip(expected.iter()) {
+            assert!(
+                (a - e).abs() < tolerance,
+                "Expected: {:?}, Actual: {:?}",
+                e,
+                a
+            );
+        }
+    }
 
     #[test]
     fn test_adam_optimizer() {
@@ -191,14 +204,7 @@ mod tests {
         let gradients = Tensor::new(vec![0.1, 0.2, 0.3], vec![3, 1]);
         optimizer.step(&mut weights, &gradients);
         let expected = vec![0.999, 1.999, 2.999];
-        for (actual, exp) in weights.data.iter().zip(expected.iter()) {
-            assert!(
-                (actual - exp).abs() < 1e-6,
-                "Expected: {:?}, Actual: {:?}",
-                exp,
-                actual
-            );
-        }
+        assert_almost_equal(&weights.data, &expected, 1e-6);
     }
 
     #[test]
@@ -209,14 +215,7 @@ mod tests {
         optimizer.step(&mut weights, &gradients);
 
         let expected = vec![-0.0009999934, -0.0009999934, -0.0009999934];
-        for (actual, exp) in weights.data.iter().zip(expected.iter()) {
-            assert!(
-                (actual - exp).abs() < 1e-6,
-                "Expected: {:?}, Actual: {:?}",
-                exp,
-                actual
-            );
-        }
+        assert_almost_equal(&weights.data, &expected, 1e-6);
     }
 
     #[test]
@@ -228,15 +227,8 @@ mod tests {
 
         optimizer.step(&mut weights, &gradients);
 
-        let expected_weights = vec![0.95000035, 1.9500003, 2.9500003];
-        for (actual, expected) in weights.data.iter().zip(expected_weights.iter()) {
-            assert!(
-                (actual - expected).abs() < 1e-6,
-                "Expected: {:?}, Actual: {:?}",
-                expected,
-                actual
-            );
-        }
+        let expected = vec![0.95000035, 1.9500003, 2.9500003];
+        assert_almost_equal(&weights.data, &expected, 1e-6);
     }
 
     #[test]
@@ -246,14 +238,7 @@ mod tests {
         let gradients = Tensor::new(vec![0.1], vec![1, 1]); // Broadcastable gradient
         optimizer.step(&mut weights, &gradients);
         let expected = vec![0.9990000066, 1.9990000066, 2.9990000066];
-        for (actual, exp) in weights.data.iter().zip(expected.iter()) {
-            assert!(
-                (actual - exp).abs() < 1e-6,
-                "Expected: {:?}, Actual: {:?}",
-                exp,
-                actual
-            );
-        }
+        assert_almost_equal(&weights.data, &expected, 1e-6);
     }
 
     #[test]
@@ -276,14 +261,7 @@ mod tests {
         optimizer.step(&mut weights, &gradients);
 
         let expected = vec![0.99700004, 0.99700004, 0.99700004];
-        for (actual, expected) in weights.data.iter().zip(expected.iter()) {
-            assert!(
-                (actual - expected).abs() < 1e-6,
-                "Expected: {:?}, Actual: {:?}",
-                expected,
-                actual
-            );
-        }
+        assert_almost_equal(&weights.data, &expected, 1e-6);
     }
 
     #[test]
@@ -311,14 +289,7 @@ mod tests {
         optimizer.step(&mut weights, &gradients);
 
         let expected = vec![1.0, 2.0, 3.0];
-        for (actual, exp) in weights.data.iter().zip(expected.iter()) {
-            assert!(
-                (actual - exp).abs() < 1e-6,
-                "Expected: {:?}, Actual: {:?}",
-                exp,
-                actual
-            );
-        }
+        assert_almost_equal(&weights.data, &expected, 1e-6);
     }
 
     // // Fail
@@ -358,16 +329,9 @@ mod tests {
         let v_hat: f32 = v / (1.0 - 0.999); // Bias-corrected v
         let update = m_hat / (v_hat.sqrt() + epsilon) * adjusted_lr;
 
-        let expected_weights = vec![1.0 - update, 1.0 - update, 1.0 - update];
+        let expected = vec![1.0 - update, 1.0 - update, 1.0 - update];
 
-        for (actual, expected) in weights.data.iter().zip(expected_weights.iter()) {
-            assert!(
-                (actual - expected).abs() < 1e-6,
-                "Expected: {:?}, Actual: {:?}",
-                expected,
-                actual
-            );
-        }
+        assert_almost_equal(&weights.data, &expected, 1e-6);
     }
 
     #[test]
@@ -396,15 +360,8 @@ mod tests {
 
         let update: f32 = m_hat / (v_hat.sqrt() + epsilon) * learning_rate;
 
-        let expected_weights = vec![1.0 - update, 2.0 - update, 3.0 - update];
+        let expected = vec![1.0 - update, 2.0 - update, 3.0 - update];
 
-        for (actual, expected) in weights.data.iter().zip(expected_weights.iter()) {
-            assert!(
-                (actual - expected).abs() < 1e-6,
-                "Expected: {:?}, Actual: {:?}",
-                expected,
-                actual
-            );
-        }
+        assert_almost_equal(&weights.data, &expected, 1e-6);
     }
 }
