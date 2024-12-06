@@ -1,5 +1,5 @@
 use std::io::Cursor;
-use std::ops::{Add, Index, IndexMut, Range, SubAssign};
+use std::ops::{Add, Index, IndexMut, Mul, Range, SubAssign};
 
 use image::{GenericImageView, ImageReader};
 use ndarray::{Array, ArrayD, Axis, IxDyn};
