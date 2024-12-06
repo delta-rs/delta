@@ -30,16 +30,19 @@
 use crate::common::{Dataset, DatasetOps, Tensor};
 use crate::encoders::one_hot_encode;
 use flate2::read::GzDecoder;
+use log::debug;
 use ndarray::{s, ArrayBase, Axis, Dim, OwnedRepr};
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 use reqwest;
 use std::fs::File;
 use std::future::Future;
-use std::io::{self, Write};
-use std::path::Path;
-use std::pin::Pin;
-use std::process::Command;
+use std::{
+    io::{self},
+    path::Path,
+    pin::Pin,
+    process::Command,
+};
 use tokio::fs as async_fs;
 use walkdir::WalkDir;
 
@@ -70,7 +73,7 @@ impl ImageNetV2Dataset {
         let url = Self::IMAGENETV2_URLS[variant_index];
         let dataset_path = format!(".cache/data/imagenetv2/variant_{}", variant_index);
         let archive_path = format!("{}.tar.gz", dataset_path);
-        println!("Downloading ImageNetV2 dataset from {}", &url);
+        debug!("Downloading ImageNetV2 dataset from {}", &url);
 
         // If archive_path doesn't exist, download it
         if !Path::new(&archive_path).exists() {
@@ -82,7 +85,7 @@ impl ImageNetV2Dataset {
             async_fs::write(&archive_path, &data)
                 .await
                 .map_err(|e| e.to_string())?;
-            println!("File successfully written to {}", &archive_path);
+            debug!("File successfully written to {}", &archive_path);
         }
 
         Self::decompress_and_untar(&archive_path, &dataset_path).map_err(|e| e.to_string())?;
@@ -99,11 +102,11 @@ impl ImageNetV2Dataset {
 
         match archive.unpack(output_path) {
             Ok(_) => {
-                println!("Successfully decompressed to: {}", output_path);
+                debug!("Successfully decompressed to: {}", output_path);
                 Ok(())
             }
             Err(e) => {
-                println!(
+                debug!(
                     "Rust implementation failed: {}. Trying system tar command...",
                     e
                 );
@@ -117,7 +120,7 @@ impl ImageNetV2Dataset {
                     .status()?;
 
                 if status.success() {
-                    println!(
+                    debug!(
                         "Successfully decompressed using system tar to: {}",
                         output_path
                     );
@@ -166,21 +169,6 @@ impl ImageNetV2Dataset {
                     }
                 }
             }
-
-            // Print a progress bar and flush the stdout buffer
-            let bar_width = 30;
-            let filled = (entry.depth() * 2 + 1) as usize;
-            let arrow = if filled < bar_width { ">" } else { "=" };
-            let bar: String = std::iter::repeat('=')
-                .take(filled)
-                .chain(std::iter::once(arrow.chars().next().unwrap()))
-                .chain(
-                    std::iter::repeat(' ')
-                        .take((bar_width as isize - filled as isize - 1).max(0) as usize),
-                )
-                .collect();
-            print!("\r{}", bar);
-            io::stdout().flush().unwrap();
         }
 
         let label_data: ArrayBase<OwnedRepr<f32>, Dim<[usize; 2]>> =
