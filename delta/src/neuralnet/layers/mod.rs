@@ -29,6 +29,8 @@
 
 pub mod dense;
 pub mod flatten;
+pub mod max_pooling_2d;
 
 pub use dense::Dense;
 pub use flatten::Flatten;
+pub use max_pooling_2d::MaxPooling2D;
