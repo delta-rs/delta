@@ -33,6 +33,7 @@ use crate::common::tensor_ops::Tensor;
 use crate::common::layer::Layer;
 use crate::common::shape::Shape;
 
+/// A struct representing a 2D convolutional layer.
 #[derive(Debug)]
 pub struct Conv2D {
     filters: usize,
@@ -49,6 +50,20 @@ pub struct Conv2D {
 }
 
 impl Conv2D {
+    /// Creates a new Conv2D layer.
+    ///
+    /// # Arguments
+    ///
+    /// * `filters` - The number of filters (output channels).
+    /// * `kernel_size` - The size of the convolutional kernel.
+    /// * `stride` - The stride of the convolution.
+    /// * `padding` - The amount of zero-padding added to both sides of the input.
+    /// * `activation` - The activation function to use.
+    /// * `trainable` - Whether the layer is trainable.
+    ///
+    /// # Returns
+    ///
+    /// A new instance of the Conv2D layer.
     pub fn new(filters: usize, kernel_size: usize, stride: usize, padding: usize, activation: Option<Box<dyn Activation>>, trainable: bool) -> Self {
         Self {
             filters,
@@ -65,6 +80,11 @@ impl Conv2D {
         }
     }
 
+    /// Initializes the weights of the layer.
+    ///
+    /// # Arguments
+    ///
+    /// * `input_shape` - The shape of the input tensor.
     fn initialize_weights(&mut self, input_shape: &Shape) {
         let input_channels = input_shape.0[2];
         self.weights = Some(Tensor::random(vec![self.filters, input_channels, self.kernel_size, self.kernel_size]));
@@ -73,32 +93,75 @@ impl Conv2D {
 }
 
 impl Layer for Conv2D {
+    /// Builds the layer with the given input shape.
+    ///
+    /// # Arguments
+    ///
+    /// * `input_shape` - The shape of the input tensor.
     fn build(&mut self, input_shape: Shape) {
         self.initialize_weights(&input_shape);
     }
 
+    /// Performs a forward pass through the layer.
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - The input tensor.
+    ///
+    /// # Returns
+    ///
+    /// The output tensor.
     fn forward(&mut self, input: &Tensor) -> Tensor {
         unimplemented!()
     }
 
+    /// Performs a backward pass through the layer.
+    ///
+    /// # Arguments
+    ///
+    /// * `grad` - The gradient tensor.
+    ///
+    /// # Returns
+    ///
+    /// The gradient tensor with respect to the input.
     fn backward(&mut self, grad: &Tensor) -> Tensor {
         unimplemented!()
     }
 
+    /// Returns the output shape of the layer.
+    ///
+    /// # Returns
+    ///
+    /// A `Shape` representing the output shape of the layer.
     fn output_shape(&self) -> Shape {
         unimplemented!()
     }
 
+    /// Returns the number of parameters in the layer.
+    ///
+    /// # Returns
+    ///
+    /// A tuple containing the number of weights and biases in the layer.
     fn param_count(&self) -> (usize, usize) {
         let weights_count = self.weights.as_ref().map_or(0, |w| w.data.len());
         let bias_count = self.bias.as_ref().map_or(0, |b| b.data.len());
         (weights_count, bias_count)
     }
 
+    /// Returns the name of the layer.
+    ///
+    /// # Returns
+    ///
+    /// A `&str` representing the name of the layer.
     fn name(&self) -> &str {
         "Conv2D"
     }
 
+    /// Updates the weights of the layer using the given optimizer.
+    ///
+    /// # Arguments
+    ///
+    /// * `optimizer` - The optimizer to use.
     fn update_weights(&mut self, optimizer: &mut Box<dyn crate::common::optimizer::Optimizer>) {
         if !self.trainable {
             return;
