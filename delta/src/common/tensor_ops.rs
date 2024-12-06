@@ -806,14 +806,6 @@ impl Tensor {
     /// # Returns
     ///
     /// A `Tensor` containing the image pixel data in the shape `(height, width, channels)`.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    /// let image_bytes = include_bytes!("path_to_image.jpg").to_vec();
-    /// let tensor = Tensor::from_image_bytes(image_bytes).unwrap();
-    /// ```
     pub fn from_image_bytes(image_bytes: Vec<u8>) -> Result<Self, String> {
         // Decode the image from bytes
         let image = ImageReader::new(Cursor::new(image_bytes))
