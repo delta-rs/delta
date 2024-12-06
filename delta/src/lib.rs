@@ -30,6 +30,7 @@
 pub mod activations;
 pub mod common;
 pub mod data;
+pub mod encoders;
 pub mod losses;
 pub mod neuralnet;
 pub mod optimizers;

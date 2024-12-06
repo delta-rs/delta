@@ -1,5 +1,7 @@
+use std::io::Cursor;
 use std::ops::{Mul, Range, SubAssign};
 
+use image::{GenericImageView, ImageReader};
 use ndarray::{Array, ArrayD, Axis, IxDyn};
 use ndarray::{Dimension, Ix2};
 use rand::Rng;
@@ -794,6 +796,95 @@ impl Tensor {
     pub fn to_vec(&self) -> Vec<f32> {
         self.data.as_slice().unwrap_or(&[]).to_vec()
     }
+
+    /// Creates a tensor from image bytes.
+    ///
+    /// # Arguments
+    ///
+    /// * `image_bytes` - The bytes of the image.
+    ///
+    /// # Returns
+    ///
+    /// A `Tensor` containing the image pixel data in the shape `(height, width, channels)`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use deltaml::common::Tensor;
+    /// let image_bytes = include_bytes!("path_to_image.jpg").to_vec();
+    /// let tensor = Tensor::from_image_bytes(image_bytes).unwrap();
+    /// ```
+    pub fn from_image_bytes(image_bytes: Vec<u8>) -> Result<Self, String> {
+        // Decode the image from bytes
+        let image = ImageReader::new(Cursor::new(image_bytes))
+            .with_guessed_format()
+            .map_err(|e| format!("Failed to read image: {}", e))?
+            .decode()
+            .map_err(|e| format!("Failed to decode image: {}", e))?;
+
+        // Get image dimensions and pixel data
+        let (width, height) = image.dimensions();
+        let pixel_data = image.to_rgba8().into_raw(); // Convert to RGBA and flatten the pixel data
+
+        // Construct the Tensor with shape (height, width, 4)
+        Ok(Tensor::new(
+            pixel_data.iter().map(|&x| x as f32 / 255.0).collect(), // Normalize pixel values
+            vec![height as usize, width as usize, 4],               // Shape (H, W, C)
+        ))
+    }
+
+    /// Stacks multiple tensors along a new axis.
+    ///
+    /// # Arguments
+    ///
+    /// * `tensors` - A slice of tensors to stack.
+    ///
+    /// # Returns
+    ///
+    /// A new tensor containing the stacked tensors.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the tensors do not have the same shape.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use deltaml::common::Tensor;
+    ///
+    /// let tensor1 = Tensor::new(vec![1.0, 2.0, 3.0], vec![3]);
+    /// let tensor2 = Tensor::new(vec![4.0, 5.0, 6.0], vec![3]);
+    /// let stacked = Tensor::stack(&[tensor1, tensor2]).unwrap();
+    /// assert_eq!(stacked.shape(), vec![2, 3]);
+    /// ```
+    pub fn stack(tensors: &[Tensor]) -> Result<Tensor, String> {
+        if tensors.is_empty() {
+            return Err("Cannot stack an empty list of tensors.".to_string());
+        }
+
+        // Ensure all tensors have the same shape
+        let first_shape = tensors[0].shape();
+        for tensor in tensors {
+            if tensor.shape() != first_shape {
+                return Err(format!(
+                    "All tensors must have the same shape. Expected {:?}, got {:?}",
+                    first_shape,
+                    tensor.shape()
+                ));
+            }
+        }
+
+        // Stack tensors along a new axis
+        let stacked_data = ndarray::stack(
+            ndarray::Axis(0),
+            &tensors.iter().map(|t| t.data.view()).collect::<Vec<_>>(),
+        )
+        .map_err(|e| e.to_string())?;
+
+        Ok(Tensor {
+            data: stacked_data.into_dyn(),
+        })
+    }
 }
 
 impl SubAssign for Tensor {
@@ -1125,5 +1216,13 @@ mod tests {
         let tensor2 = Tensor::new(data2, vec![2, 2]);
         let result = tensor1 * tensor2;
         assert_eq!(result.data.shape(), &[2, 2]);
+    }
+
+    #[test]
+    fn test_stack() {
+        let tensor1 = Tensor::new(vec![1.0, 2.0, 3.0], vec![3]);
+        let tensor2 = Tensor::new(vec![4.0, 5.0, 6.0], vec![3]);
+        let stacked = Tensor::stack(&[tensor1, tensor2]).unwrap();
+        assert_eq!(stacked.shape(), vec![2, 3]);
     }
 }
