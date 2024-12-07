@@ -27,6 +27,7 @@ tar = "0.4.43"
 serde_json = "1.0.133"
 walkdir = "2.5.0"
 image = "0.25.5"
+serial_test = "0.5"
 
 [profile.dev]
 opt-level = 0

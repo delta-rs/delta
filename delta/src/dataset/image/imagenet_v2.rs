@@ -382,3 +382,67 @@ impl ImageDatasetOps for ImageNetV2Dataset {
         }
     }
 }
+
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+//     use serial_test::serial;
+//     use tokio::runtime::Runtime;
+//     use std::fs;
+//     use crate::get_workspace_dir;
+//
+//     fn setup() {
+//         let workspace_dir = get_workspace_dir();
+//         let cache_path = format!("{}/.cache/dataset/imagenetv2", workspace_dir.display());
+//         if Path::new(&cache_path).exists() {
+//             fs::remove_dir_all(&cache_path).expect("Failed to delete cache directory");
+//         }
+//     }
+//
+//     #[test]
+//     #[serial]
+//     fn test_download_and_extract() {
+//         setup();
+//         let rt = Runtime::new().unwrap();
+//         rt.block_on(async {
+//             let _ = ImageNetV2Dataset::load(0).await;
+//             let workspace_dir = get_workspace_dir();
+//             let cache_path = format!("{}/.cache/dataset/imagenetv2/variant_0", workspace_dir.display());
+//             assert!(Path::new(&cache_path).exists(), "ImageNetV2 dataset should be downloaded and extracted");
+//         });
+//     }
+//
+//     #[test]
+//     #[serial]
+//     fn test_parse_images_and_labels() {
+//         // Ensure the dataset is downloaded before parsing
+//         test_download_and_extract();
+//
+//         let rt = Runtime::new().unwrap();
+//         rt.block_on(async {
+//             let dataset = ImageNetV2Dataset::load(0).await.unwrap();
+//             assert!(dataset.inputs.data.len() > 0, "Images should be parsed correctly");
+//             assert!(dataset.labels.data.len() > 0, "Labels should be parsed correctly");
+//         });
+//     }
+//
+//     #[test]
+//     #[serial]
+//     fn test_load_train() {
+//         let rt = Runtime::new().unwrap();
+//         rt.block_on(async {
+//             let dataset = ImageNetV2Dataset::load_train().await;
+//             assert!(dataset.data.is_some(), "Training dataset should be loaded");
+//         });
+//     }
+//
+//     #[test]
+//     #[serial]
+//     fn test_load_test() {
+//         let rt = Runtime::new().unwrap();
+//         rt.block_on(async {
+//             let dataset = ImageNetV2Dataset::load_test().await;
+//             assert!(dataset.data.is_some(), "Test dataset should be loaded");
+//         });
+//     }
+// }
