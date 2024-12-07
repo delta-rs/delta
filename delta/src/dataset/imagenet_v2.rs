@@ -64,14 +64,14 @@ impl ImageNetV2Dataset {
     /// * `variant_index` - The index of the dataset variant to load.
     ///
     /// # Returns
-    /// A future that resolves to the `ImageNetV2Dataset` with the ImageNetV2 data loaded.
+    /// A future that resolves to the `ImageNetV2Dataset` with the ImageNetV2 dataset loaded.
     pub async fn load(variant_index: usize) -> Result<Dataset, String> {
         if variant_index >= Self::IMAGENETV2_URLS.len() {
             return Err("Invalid variant index".to_string());
         }
 
         let url = Self::IMAGENETV2_URLS[variant_index];
-        let dataset_path = format!(".cache/data/imagenetv2/variant_{}", variant_index);
+        let dataset_path = format!(".cache/dataset/imagenetv2/variant_{}", variant_index);
         let archive_path = format!("{}.tar.gz", dataset_path);
         debug!("Downloading ImageNetV2 dataset from {}", &url);
 
@@ -111,7 +111,7 @@ impl ImageNetV2Dataset {
                     e
                 );
                 // Fallback to system tar command
-                // For some reason, the rust implementation fails with invalid gzip header data
+                // For some reason, the rust implementation fails with invalid gzip header dataset
                 let status = Command::new("tar")
                     .arg("-xzf")
                     .arg(file_path)
@@ -192,7 +192,7 @@ impl DatasetOps for ImageNetV2Dataset {
     /// Loads the ImageNetV2 dataset.
     ///
     /// # Returns
-    /// A future that resolves to the `ImageNetV2Dataset` with the ImageNetV2 data loaded.
+    /// A future that resolves to the `ImageNetV2Dataset` with the ImageNetV2 dataset loaded.
     fn load_train() -> Self::LoadFuture {
         Box::pin(async {
             match ImageNetV2Dataset::load(0).await {
@@ -205,7 +205,7 @@ impl DatasetOps for ImageNetV2Dataset {
     /// Loads the ImageNetV2 dataset.
     ///
     /// # Returns
-    /// A future that resolves to the `ImageNetV2Dataset` with the ImageNetV2 data loaded.
+    /// A future that resolves to the `ImageNetV2Dataset` with the ImageNetV2 dataset loaded.
     fn load_test() -> Self::LoadFuture {
         Box::pin(async {
             match ImageNetV2Dataset::load(0).await {
@@ -258,7 +258,7 @@ impl DatasetOps for ImageNetV2Dataset {
             .unwrap_or(0)
     }
 
-    /// Gets a batch of data from the dataset.
+    /// Gets a batch of dataset from the dataset.
     ///
     /// # Arguments
     /// * `batch_idx` - The index of the batch to get.
@@ -369,7 +369,7 @@ impl DatasetOps for ImageNetV2Dataset {
             let shuffled_inputs = dataset.inputs.data.select(Axis(0), &indices);
             let shuffled_labels = dataset.labels.data.select(Axis(0), &indices);
 
-            // Update the dataset with shuffled data
+            // Update the dataset with shuffled dataset
             dataset.inputs.data = shuffled_inputs;
             dataset.labels.data = shuffled_labels;
         }

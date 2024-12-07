@@ -85,14 +85,14 @@ impl MnistDataset {
     /// Parse the images from the MNIST dataset
     ///
     /// # Arguments
-    /// * `data` - The data to parse
+    /// * `dataset` - The dataset to parse
     /// * `num_images` - The number of images to parse
     ///
     /// # Returns
     /// A tensor containing the parsed images
     fn parse_images(data: &[u8], num_images: usize) -> Result<Tensor, String> {
         if data.len() < 16 {
-            return Err("Invalid MNIST image data file: too short".into());
+            return Err("Invalid MNIST image dataset file: too short".into());
         }
 
         let image_data = &data[16..];
@@ -104,7 +104,7 @@ impl MnistDataset {
             let end = start + num_pixels;
 
             if end > image_data.len() {
-                return Err("Image data file is incomplete".into());
+                return Err("Image dataset file is incomplete".into());
             }
 
             for (j, &pixel) in image_data[start..end].iter().enumerate() {
@@ -126,14 +126,14 @@ impl MnistDataset {
     /// Parse the labels from the MNIST dataset
     ///
     /// # Arguments
-    /// * `data` - The data to parse
+    /// * `dataset` - The dataset to parse
     /// * `num_labels` - The number of labels to parse
     ///
     /// # Returns
     /// A tensor containing the parsed labels
     fn parse_labels(data: &[u8], num_labels: usize) -> Result<Tensor, String> {
         if data.len() < 8 {
-            return Err("Invalid MNIST label data file: too short".into());
+            return Err("Invalid MNIST label dataset file: too short".into());
         }
 
         let label_data = &data[8..];
@@ -158,9 +158,9 @@ impl MnistDataset {
     /// * `filename` - The name of the file to download
     ///
     /// # Returns
-    /// A vector containing the decompressed data
+    /// A vector containing the decompressed dataset
     async fn get_bytes_data(filename: &str) -> Result<Vec<u8>, String> {
-        let file_path = format!(".cache/data/mnist/{}", filename);
+        let file_path = format!(".cache/dataset/mnist/{}", filename);
 
         if Path::new(&file_path).exists() {
             return Self::decompress_gz(&file_path).map_err(|e| e.to_string());
@@ -199,13 +199,13 @@ impl DatasetOps for MnistDataset {
     /// Loads the MNIST dataset.
     ///
     /// # Returns
-    /// A future that resolves to the `MnistDataset` with the MNIST data loaded.
+    /// A future that resolves to the `MnistDataset` with the MNIST dataset loaded.
     ///
     /// # Example
     ///
     /// ```
     /// use deltaml::common::DatasetOps;
-    /// use deltaml::data::MnistDataset;
+    /// use deltaml::dataset::MnistDataset;
     ///
     /// #[tokio::main]
     /// async fn main() {
@@ -228,13 +228,13 @@ impl DatasetOps for MnistDataset {
     /// Loads the MNIST dataset.
     ///
     /// # Returns
-    /// A future that resolves to the `MnistDataset` with the MNIST data loaded.
+    /// A future that resolves to the `MnistDataset` with the MNIST dataset loaded.
     ///
     /// # Example
     ///
     /// ```
     /// use deltaml::common::DatasetOps;
-    /// use deltaml::data::MnistDataset;
+    /// use deltaml::dataset::MnistDataset;
     ///
     /// #[tokio::main]
     /// async fn main() {
@@ -285,7 +285,7 @@ impl DatasetOps for MnistDataset {
             .unwrap_or(0)
     }
 
-    /// Get a batch of data from the dataset
+    /// Get a batch of dataset from the dataset
     ///
     /// # Arguments
     /// * `batch_idx` - The index of the batch to get

@@ -71,7 +71,7 @@ pub trait DatasetOps {
     /// The number of samples in the dataset.
     fn len(&self) -> usize;
 
-    /// Gets a batch of data from the dataset.
+    /// Gets a batch of dataset from the dataset.
     ///
     /// # Arguments
     ///

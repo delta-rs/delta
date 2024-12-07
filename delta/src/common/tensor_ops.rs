@@ -9,7 +9,7 @@ use rand::Rng;
 /// A struct representing a tensor.
 #[derive(Debug, Clone)]
 pub struct Tensor {
-    /// The data of the tensor stored as an n-dimensional array.
+    /// The dataset of the tensor stored as an n-dimensional array.
     pub data: ArrayD<f32>,
 }
 
@@ -18,7 +18,7 @@ impl Tensor {
     ///
     /// # Arguments
     ///
-    /// * `data` - A vector of data.
+    /// * `dataset` - A vector of dataset.
     /// * `shape` - A vector representing the shape of the tensor.
     ///
     /// # Returns
@@ -30,15 +30,15 @@ impl Tensor {
     /// ```
     /// use deltaml::common::Tensor;
     ///
-    /// let data = vec![1.0, 2.0, 3.0, 4.0];
+    /// let dataset = vec![1.0, 2.0, 3.0, 4.0];
     /// let shape = vec![2, 2];
     ///
-    /// let tensor = Tensor::new(data, shape);
+    /// let tensor = Tensor::new(dataset, shape);
     /// ```
     pub fn new(data: Vec<f32>, shape: Vec<usize>) -> Self {
         let shape = IxDyn(&shape);
         Self {
-            data: Array::from_shape_vec(shape, data).expect("Invalid shape for data"),
+            data: Array::from_shape_vec(shape, data).expect("Invalid shape for dataset"),
         }
     }
 
@@ -90,7 +90,7 @@ impl Tensor {
         let shape = IxDyn(&shape); // Convert shape to dynamic dimension
         let data: Vec<f32> = (0..shape.size()).map(|_| rng.gen::<f32>()).collect(); // Use size() method
         Self {
-            data: Array::from_shape_vec(shape, data).expect("Invalid shape for random data"),
+            data: Array::from_shape_vec(shape, data).expect("Invalid shape for random dataset"),
         }
     }
 
@@ -171,15 +171,15 @@ impl Tensor {
     ///
     /// # Returns
     ///
-    /// A new tensor with the reshaped data.
+    /// A new tensor with the reshaped dataset.
     ///
     /// # Example
     ///
     /// ```
     /// use deltaml::common::Tensor;
     ///
-    /// let data = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor = Tensor::new(data, vec![2, 2]);
+    /// let dataset = vec![1.0, 2.0, 3.0, 4.0];
+    /// let tensor = Tensor::new(dataset, vec![2, 2]);
     /// let new_shape = vec![1, 4];
     /// let reshaped_tensor = tensor.reshape(new_shape);
     /// ```
@@ -217,7 +217,7 @@ impl Tensor {
     where
         F: Fn(f32) -> f32,
     {
-        // Create a new array by applying the function `f` to each element of `self.data`
+        // Create a new array by applying the function `f` to each element of `self.dataset`
         let new_data = self.data.mapv(|x| f(x));
 
         Tensor { data: new_data }
@@ -231,15 +231,15 @@ impl Tensor {
     ///
     /// # Returns
     ///
-    /// A new tensor containing the sliced data.
+    /// A new tensor containing the sliced dataset.
     ///
     /// # Example
     ///
     /// ```
     /// use deltaml::common::Tensor;
     ///
-    /// let data = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor = Tensor::new(data, vec![2, 2]);
+    /// let dataset = vec![1.0, 2.0, 3.0, 4.0];
+    /// let tensor = Tensor::new(dataset, vec![2, 2]);
     /// let indices = vec![0..2, 0..2];
     /// let sliced_tensor = tensor.slice(indices);
     /// ```
@@ -303,7 +303,7 @@ impl Tensor {
     ///
     /// # Returns
     ///
-    /// A new tensor containing the transposed data.
+    /// A new tensor containing the transposed dataset.
     ///
     /// # Panics
     ///
@@ -314,8 +314,8 @@ impl Tensor {
     /// ```
     /// use deltaml::common::Tensor;
     ///
-    /// let data = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor = Tensor::new(data, vec![2, 2]);
+    /// let dataset = vec![1.0, 2.0, 3.0, 4.0];
+    /// let tensor = Tensor::new(dataset, vec![2, 2]);
     /// let transposed_tensor = tensor.transpose();
     /// ```
     pub fn transpose(&self) -> Tensor {
@@ -383,15 +383,15 @@ impl Tensor {
     ///
     /// # Returns
     ///
-    /// A new tensor containing the summed data.
+    /// A new tensor containing the summed dataset.
     ///
     /// # Example
     ///
     /// ```
     /// use deltaml::common::Tensor;
     ///
-    /// let data = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor = Tensor::new(data, vec![2, 2]);
+    /// let dataset = vec![1.0, 2.0, 3.0, 4.0];
+    /// let tensor = Tensor::new(dataset, vec![2, 2]);
     /// let summed_tensor = tensor.sum_along_axis(1);
     /// ```
     pub fn sum_along_axis(&self, axis: usize) -> Tensor {
@@ -527,15 +527,15 @@ impl Tensor {
     ///
     /// # Returns
     ///
-    /// A new tensor containing the flattened data.
+    /// A new tensor containing the flattened dataset.
     ///
     /// # Example
     ///
     /// ```
     /// use deltaml::common::Tensor;
     ///
-    /// let data = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor = Tensor::new(data, vec![2, 2]);
+    /// let dataset = vec![1.0, 2.0, 3.0, 4.0];
+    /// let tensor = Tensor::new(dataset, vec![2, 2]);
     /// let flattened_tensor = tensor.flatten();
     /// ```
     pub fn flatten(&self) -> Tensor {
@@ -553,15 +553,15 @@ impl Tensor {
     ///
     /// # Returns
     ///
-    /// A new tensor containing the mean data.
+    /// A new tensor containing the mean dataset.
     ///
     /// # Example
     ///
     /// ```
     /// use deltaml::common::Tensor;
     ///
-    /// let data = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor = Tensor::new(data, vec![2, 2]);
+    /// let dataset = vec![1.0, 2.0, 3.0, 4.0];
+    /// let tensor = Tensor::new(dataset, vec![2, 2]);
     /// let mean_tensor = tensor.mean_axis(1);
     /// ```
     pub fn mean_axis(&self, axis: usize) -> Tensor {
@@ -637,15 +637,15 @@ impl Tensor {
     ///
     /// # Returns
     ///
-    /// A new tensor containing the normalized data.
+    /// A new tensor containing the normalized dataset.
     ///
     /// # Example
     ///
     /// ```
     /// use deltaml::common::Tensor;
     ///
-    /// let data = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor = Tensor::new(data, vec![2, 2]);
+    /// let dataset = vec![1.0, 2.0, 3.0, 4.0];
+    /// let tensor = Tensor::new(dataset, vec![2, 2]);
     /// let normalized_tensor = tensor.normalize(0.0, 1.0);
     pub fn normalize(&self, min: f32, max: f32) -> Tensor {
         let normalized_data = self.data.mapv(|x| (x - min) / (max - min));
@@ -685,15 +685,15 @@ impl Tensor {
     ///
     /// # Returns
     ///
-    /// A new tensor containing the reduced data.
+    /// A new tensor containing the reduced dataset.
     ///
     /// # Example
     ///
     /// ```
     /// use deltaml::common::Tensor;
     ///
-    /// let data = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor = Tensor::new(data, vec![2, 2]);
+    /// let dataset = vec![1.0, 2.0, 3.0, 4.0];
+    /// let tensor = Tensor::new(dataset, vec![2, 2]);
     /// let reduced_tensor = tensor.reduce_sum(1);
     /// ```
     pub fn reduce_sum(&self, axis: usize) -> Tensor {
@@ -788,11 +788,11 @@ impl Tensor {
         Tensor::new(data, shape)
     }
 
-    /// Converts the tensor data to a vector.
+    /// Converts the tensor dataset to a vector.
     ///
     /// # Returns
     ///
-    /// A vector containing the tensor data in row-major order.
+    /// A vector containing the tensor dataset in row-major order.
     pub fn to_vec(&self) -> Vec<f32> {
         self.data.as_slice().unwrap_or(&[]).to_vec()
     }
@@ -805,7 +805,7 @@ impl Tensor {
     ///
     /// # Returns
     ///
-    /// A `Tensor` containing the image pixel data in the shape `(height, width, channels)`.
+    /// A `Tensor` containing the image pixel dataset in the shape `(height, width, channels)`.
     pub fn from_image_bytes(image_bytes: Vec<u8>) -> Result<Self, String> {
         // Decode the image from bytes
         let image = ImageReader::new(Cursor::new(image_bytes))
@@ -814,9 +814,9 @@ impl Tensor {
             .decode()
             .map_err(|e| format!("Failed to decode image: {}", e))?;
 
-        // Get image dimensions and pixel data
+        // Get image dimensions and pixel dataset
         let (width, height) = image.dimensions();
-        let pixel_data = image.to_rgba8().into_raw(); // Convert to RGBA and flatten the pixel data
+        let pixel_data = image.to_rgba8().into_raw(); // Convert to RGBA and flatten the pixel dataset
 
         // Construct the Tensor with shape (height, width, 4)
         Ok(Tensor::new(

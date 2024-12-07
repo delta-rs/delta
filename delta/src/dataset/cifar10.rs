@@ -65,7 +65,7 @@ impl Cifar10Dataset {
     /// This function downloads the CIFAR-10 dataset from the specified URL
     /// and extracts it to the cache directory.
     async fn download_and_extract() {
-        let cache_path = ".cache/data/cifar10/";
+        let cache_path = ".cache/dataset/cifar10/";
         let tarball_path = format!("{}cifar-10-binary.tar.gz", cache_path);
 
         if !Path::new(&tarball_path).exists() {
@@ -76,7 +76,7 @@ impl Cifar10Dataset {
             let data = response
                 .bytes()
                 .await
-                .expect("Failed to read CIFAR-10 data");
+                .expect("Failed to read CIFAR-10 dataset");
             fs::create_dir_all(cache_path).unwrap();
             fs::write(&tarball_path, data).unwrap();
         }
@@ -150,7 +150,7 @@ impl Cifar10Dataset {
 
         for &file in files {
             let (img, lbl) = Self::parse_file(
-                &format!(".cache/data/cifar10/cifar-10-batches-bin/{}", file),
+                &format!(".cache/dataset/cifar10/cifar-10-batches-bin/{}", file),
                 total_examples / files.len(),
             );
             images.extend(img);
@@ -178,7 +178,7 @@ impl DatasetOps for Cifar10Dataset {
     /// Loads the training dataset.
     ///
     /// # Returns
-    /// A future that resolves to the `Cifar10Dataset` with the training data loaded.
+    /// A future that resolves to the `Cifar10Dataset` with the training dataset loaded.
     fn load_train() -> Self::LoadFuture {
         Box::pin(async {
             Self::download_and_extract().await;
@@ -193,7 +193,7 @@ impl DatasetOps for Cifar10Dataset {
     /// Loads the test dataset.
     ///
     /// # Returns
-    /// A future that resolves to the `Cifar10Dataset` with the test data loaded.
+    /// A future that resolves to the `Cifar10Dataset` with the test dataset loaded.
     fn load_test() -> Self::LoadFuture {
         Box::pin(async {
             Self::download_and_extract().await;
@@ -239,7 +239,7 @@ impl DatasetOps for Cifar10Dataset {
         }
     }
 
-    /// Gets a batch of data from the dataset.
+    /// Gets a batch of dataset from the dataset.
     ///
     /// # Arguments
     /// * `batch_idx` - The index of the batch to get.
@@ -346,7 +346,7 @@ impl DatasetOps for Cifar10Dataset {
     /// Clones the dataset.
     ///
     /// # Returns
-    /// A new `Cifar10Dataset` instance with the same data.
+    /// A new `Cifar10Dataset` instance with the same dataset.
     fn clone(&self) -> Self {
         Self {
             train: self.train.clone(),

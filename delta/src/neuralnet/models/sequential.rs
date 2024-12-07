@@ -101,11 +101,11 @@ impl Sequential {
         self.loss = Some(Box::new(loss));
     }
 
-    /// Trains the model with the given training data, number of epochs, and batch size.
+    /// Trains the model with the given training dataset, number of epochs, and batch size.
     ///
     /// # Arguments
     ///
-    /// * `train_data` - The training data.
+    /// * `train_data` - The training dataset.
     /// * `epochs` - The number of epochs to train.
     /// * `batch_size` - The batch size to use.
     ///
@@ -135,11 +135,11 @@ impl Sequential {
         }
     }
 
-    /// Trains the model for one epoch using the given training data and batch size.
+    /// Trains the model for one epoch using the given training dataset and batch size.
     ///
     /// # Arguments
     ///
-    /// * `train_data` - The training data.
+    /// * `train_data` - The training dataset.
     /// * `batch_size` - The batch size to use.
     /// * `optimizer` - The optimizer to use.
     ///
@@ -263,11 +263,11 @@ impl Sequential {
         std::io::stdout().flush().unwrap();
     }
 
-    /// Validates the model with the given test data.
+    /// Validates the model with the given test dataset.
     ///
     /// # Arguments
     ///
-    /// * `test_data` - The test data.
+    /// * `test_data` - The test dataset.
     ///
     /// # Returns
     ///
@@ -278,11 +278,11 @@ impl Sequential {
         0.0 // Placeholder
     }
 
-    /// Evaluates the model with the given test data.
+    /// Evaluates the model with the given test dataset.
     ///
     /// # Arguments
     ///
-    /// * `test_data` - The test data.
+    /// * `test_data` - The test dataset.
     /// * `batch_size` - The batch size to use.
     ///
     /// # Returns
@@ -320,7 +320,7 @@ impl Sequential {
 
         // Calculate accuracy as a percentage
         if total_samples == 0 {
-            panic!("Test data contains no samples");
+            panic!("Test dataset contains no samples");
         }
 
         let accuracy = correct_predictions as f32 / total_samples as f32;
@@ -356,7 +356,7 @@ impl Sequential {
 
         let mut file = File::create(path.join("model.json"))?;
 
-        // Write the JSON data to the file
+        // Write the JSON dataset to the file
         file.write_all(serde_json::to_string_pretty(&model_state)?.as_bytes())?;
 
         Ok(())
