@@ -436,3 +436,79 @@ impl ImageDatasetOps for MnistDataset {
         }
     }
 }
+
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+//     use serial_test::serial;
+//     use tokio::runtime::Runtime;
+//     use std::fs;
+//
+//     fn setup() {
+//         let workspace_dir = get_workspace_dir();
+//         let cache_path = format!("{}/.cache/dataset/mnist", workspace_dir.display());
+//         if Path::new(&cache_path).exists() {
+//             fs::remove_dir_all(&cache_path).expect("Failed to delete cache directory");
+//         }
+//     }
+//
+//     #[test]
+//     #[serial]
+//     fn test_download_and_extract() {
+//         setup();
+//         let rt = Runtime::new().unwrap();
+//         rt.block_on(async {
+//             let _ = MnistDataset::load_data(true).await;
+//             let workspace_dir = get_workspace_dir();
+//             let cache_path = format!("{}/.cache/dataset/mnist", workspace_dir.display());
+//             assert!(Path::new(&cache_path).exists(), "MNIST dataset should be downloaded and extracted");
+//         });
+//     }
+//
+//     #[test]
+//     #[serial]
+//     fn test_parse_images() {
+//         let rt = Runtime::new().unwrap();
+//         rt.block_on(async {
+//             // Ensure the dataset is downloaded before parsing
+//             test_download_and_extract();
+//
+//             let data_bytes = MnistDataset::get_bytes_data(MnistDataset::MNIST_TRAIN_DATA_FILENAME).await.unwrap();
+//             let images = MnistDataset::parse_images(&data_bytes, 60000).unwrap();
+//             assert_eq!(images.data.len(), 60000 * 28 * 28, "Images should have the correct length");
+//         });
+//     }
+//
+//     #[test]
+//     #[serial]
+//     fn test_parse_labels() {
+//         let rt = Runtime::new().unwrap();
+//         rt.block_on(async {
+//             // Ensure the dataset is downloaded before parsing
+//             test_download_and_extract();
+//
+//             let labels_bytes = MnistDataset::get_bytes_data(MnistDataset::MNIST_TRAIN_LABELS_FILENAME).await.unwrap();
+//             let labels = MnistDataset::parse_labels(&labels_bytes, 60000).unwrap();
+//             assert_eq!(labels.data.len(), 60000 * 10, "Labels should have the correct length");
+//         });
+//     }
+//     #[test]
+//     #[serial]
+//     fn test_load_train() {
+//         let rt = Runtime::new().unwrap();
+//         rt.block_on(async {
+//             let dataset = MnistDataset::load_train().await;
+//             assert!(dataset.train.is_some(), "Training dataset should be loaded");
+//         });
+//     }
+//
+//     #[test]
+//     #[serial]
+//     fn test_load_test() {
+//         let rt = Runtime::new().unwrap();
+//         rt.block_on(async {
+//             let dataset = MnistDataset::load_test().await;
+//             assert!(dataset.test.is_some(), "Test dataset should be loaded");
+//         });
+//     }
+// }
