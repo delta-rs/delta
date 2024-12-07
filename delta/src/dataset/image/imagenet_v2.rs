@@ -72,7 +72,7 @@ impl ImageNetV2Dataset {
         }
 
         let url = Self::IMAGENETV2_URLS[variant_index];
-        let dataset_path = format!(".cache/dataset/imagenetv2/variant_{}", variant_index);
+        let dataset_path = format!("{}/.cache/dataset/imagenetv2/variant_{}", env!("CARGO_MANIFEST_DIR"), variant_index);
         let archive_path = format!("{}.tar.gz", dataset_path);
         debug!("Downloading ImageNetV2 dataset from {}", &url);
 

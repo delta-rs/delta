@@ -39,6 +39,7 @@ use std::path::Path;
 use std::pin::Pin;
 use tar::Archive;
 use crate::dataset::base::{Dataset, DatasetOps};
+use crate::get_workspace_dir;
 
 /// A struct representing the CIFAR10 dataset.
 pub struct Cifar10Dataset {
@@ -66,7 +67,8 @@ impl Cifar10Dataset {
     /// This function downloads the CIFAR-10 dataset from the specified URL
     /// and extracts it to the cache directory.
     async fn download_and_extract() {
-        let cache_path = ".cache/dataset/cifar10/";
+        let workspace_dir = get_workspace_dir();
+        let cache_path = format!("{}/.cache/dataset/cifar10/", workspace_dir.display());
         let tarball_path = format!("{}cifar-10-binary.tar.gz", cache_path);
 
         if !Path::new(&tarball_path).exists() {
@@ -78,7 +80,7 @@ impl Cifar10Dataset {
                 .bytes()
                 .await
                 .expect("Failed to read CIFAR-10 dataset");
-            fs::create_dir_all(cache_path).unwrap();
+            fs::create_dir_all(cache_path.clone()).unwrap();
             fs::write(&tarball_path, data).unwrap();
         }
 
@@ -151,7 +153,7 @@ impl Cifar10Dataset {
 
         for &file in files {
             let (img, lbl) = Self::parse_file(
-                &format!(".cache/dataset/cifar10/cifar-10-batches-bin/{}", file),
+                &format!("{}/.cache/dataset/cifar10/cifar-10-batches-bin/{}", env!("CARGO_MANIFEST_DIR"), file),
                 total_examples / files.len(),
             );
             images.extend(img);

@@ -39,6 +39,7 @@ use std::path::Path;
 use std::pin::Pin;
 use tokio::fs as async_fs;
 use crate::dataset::base::{Dataset, DatasetOps};
+use crate::get_workspace_dir;
 
 /// A struct representing the MNIST dataset.
 pub struct MnistDataset {
@@ -160,7 +161,8 @@ impl MnistDataset {
     /// # Returns
     /// A vector containing the decompressed dataset
     async fn get_bytes_data(filename: &str) -> Result<Vec<u8>, String> {
-        let file_path = format!(".cache/dataset/mnist/{}", filename);
+        let workspace_dir = get_workspace_dir();
+        let file_path = format!("{}/.cache/dataset/mnist/{}", workspace_dir.display(), filename);
 
         if Path::new(&file_path).exists() {
             return Self::decompress_gz(&file_path).map_err(|e| e.to_string());
@@ -172,7 +174,7 @@ impl MnistDataset {
         let response = reqwest::get(&url).await.map_err(|e| e.to_string())?;
         let compressed_data = response.bytes().await.map_err(|e| e.to_string())?;
 
-        async_fs::create_dir_all(".cache/data/mnist")
+        async_fs::create_dir_all(format!("{}/.cache/dataset/mnist", workspace_dir.display()))
             .await
             .map_err(|e| e.to_string())?;
         async_fs::write(&file_path, &compressed_data)
@@ -204,7 +206,7 @@ impl DatasetOps for MnistDataset {
     /// # Example
     ///
     /// ```
-    /// use deltaml::common::DatasetOps;
+    /// use deltaml::dataset::DatasetOps;
     /// use deltaml::dataset::MnistDataset;
     ///
     /// #[tokio::main]
@@ -233,7 +235,7 @@ impl DatasetOps for MnistDataset {
     /// # Example
     ///
     /// ```
-    /// use deltaml::common::DatasetOps;
+    /// use deltaml::dataset::DatasetOps;
     /// use deltaml::dataset::MnistDataset;
     ///
     /// #[tokio::main]
