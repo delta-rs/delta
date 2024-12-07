@@ -27,8 +27,7 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::tensor_ops::Tensor;
-use crate::common::{Dataset, DatasetOps};
+use crate::common::Tensor;
 use flate2::read::GzDecoder;
 use log::debug;
 use rand::seq::SliceRandom;
@@ -39,6 +38,7 @@ use std::io::{self, Read};
 use std::path::Path;
 use std::pin::Pin;
 use tokio::fs as async_fs;
+use crate::dataset::base::{Dataset, DatasetOps};
 
 /// A struct representing the MNIST dataset.
 pub struct MnistDataset {

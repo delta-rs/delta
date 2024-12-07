@@ -27,7 +27,7 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::{Dataset, DatasetOps, Tensor};
+use crate::common::{Tensor};
 use flate2::read::GzDecoder;
 use log::debug;
 use std::collections::HashSet;
@@ -38,6 +38,7 @@ use std::io::Read;
 use std::path::Path;
 use std::pin::Pin;
 use tar::Archive;
+use crate::dataset::base::{Dataset, DatasetOps};
 
 /// A struct representing the CIFAR10 dataset.
 pub struct Cifar10Dataset {

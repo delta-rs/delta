@@ -34,7 +34,8 @@ use std::{
 
 use ndarray::s;
 
-use crate::common::{Dataset, DatasetOps, Tensor};
+use crate::common::{Tensor};
+use crate::dataset::base::{Dataset, DatasetOps};
 
 /// A struct representing a test dataset.
 pub struct TestDataset {

@@ -27,7 +27,7 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::{Dataset, DatasetOps, Tensor};
+use crate::common::{Tensor};
 use crate::encoders::one_hot_encode;
 use flate2::read::GzDecoder;
 use log::debug;
@@ -45,6 +45,7 @@ use std::{
 };
 use tokio::fs as async_fs;
 use walkdir::WalkDir;
+use crate::dataset::base::{Dataset, DatasetOps};
 
 /// A struct representing the ImageNetV2 dataset.
 pub struct ImageNetV2Dataset {
