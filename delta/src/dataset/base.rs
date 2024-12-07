@@ -52,8 +52,8 @@ impl Dataset {
     /// # Examples
     ///
     /// ```rust
-    /// use deltaml::common::data::Dataset;
     /// use deltaml::common::tensor_ops::Tensor;
+    /// use deltaml::dataset::Dataset;
     ///
     /// let inputs = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
     /// let labels = Tensor::new(vec![0.0, 1.0, 0.0], vec![1, 3]);
@@ -152,10 +152,154 @@ pub trait DatasetOps {
     fn clone(&self) -> Self;
 }
 
+/// A trait representing operations that can be performed on a text dataset.
 pub trait TextDatasetOps {
-    // Define methods specific to text datasets
+    /// The type of future returned by the `load_train` and `load_test` methods.
+    type LoadFuture: Future<Output = Self> + Send;
+
+    /// Loads the training dataset.
+    ///
+    /// # Returns
+    ///
+    /// A future that resolves to the training dataset.
+    fn load_train() -> Self::LoadFuture;
+
+    /// Loads the test dataset.
+    ///
+    /// # Returns
+    ///
+    /// A future that resolves to the test dataset.
+    fn load_test() -> Self::LoadFuture;
+
+    /// Preprocesses the text dataset.
+    fn preprocess_data(&self);
+
+    /// Returns the number of samples in the dataset.
+    ///
+    /// # Returns
+    ///
+    /// The number of samples in the dataset.
+    fn len(&self) -> usize;
+
+    /// Gets a batch of dataset from the dataset.
+    ///
+    /// # Arguments
+    ///
+    /// * `batch_idx` - The index of the batch to retrieve.
+    /// * `batch_size` - The size of the batch to retrieve.
+    ///
+    /// # Returns
+    ///
+    /// A tuple containing the input tensor and the target tensor for the batch.
+    fn get_batch(&self, batch_idx: usize, batch_size: usize) -> (Tensor, Tensor);
+
+    /// Calculates the loss between the predicted outputs and the true targets.
+    ///
+    /// # Arguments
+    ///
+    /// * `outputs` - The predicted outputs from the model.
+    /// * `targets` - The true target values.
+    ///
+    /// # Returns
+    ///
+    /// The calculated loss as a `f32` value.
+    fn loss(&self, outputs: &Tensor, targets: &Tensor) -> f32;
+
+    /// Calculates the gradient of the loss with respect to the predicted outputs.
+    ///
+    /// # Arguments
+    ///
+    /// * `outputs` - The predicted outputs from the model.
+    /// * `targets` - The true target values.
+    ///
+    /// # Returns
+    ///
+    /// A `Tensor` containing the gradients of the loss with respect to the outputs.
+    fn loss_grad(&self, outputs: &Tensor, targets: &Tensor) -> Tensor;
+
+    /// Shuffles the dataset.
+    fn shuffle(&mut self);
+
+    /// Clones the dataset.
+    ///
+    /// # Returns
+    ///
+    /// A new instance of the dataset.
+    fn clone(&self) -> Self;
 }
 
+/// A trait representing operations that can be performed on an audio dataset.
 pub trait AudioDatasetOps {
-    // Define methods specific to audio datasets
+    /// The type of future returned by the `load_train` and `load_test` methods.
+    type LoadFuture: Future<Output = Self> + Send;
+
+    /// Loads the training dataset.
+    ///
+    /// # Returns
+    ///
+    /// A future that resolves to the training dataset.
+    fn load_train() -> Self::LoadFuture;
+
+    /// Loads the test dataset.
+    ///
+    /// # Returns
+    ///
+    /// A future that resolves to the test dataset.
+    fn load_test() -> Self::LoadFuture;
+
+    /// Preprocesses the audio dataset.
+    fn preprocess_data(&self);
+
+    /// Returns the number of samples in the dataset.
+    ///
+    /// # Returns
+    ///
+    /// The number of samples in the dataset.
+    fn len(&self) -> usize;
+
+    /// Gets a batch of dataset from the dataset.
+    ///
+    /// # Arguments
+    ///
+    /// * `batch_idx` - The index of the batch to retrieve.
+    /// * `batch_size` - The size of the batch to retrieve.
+    ///
+    /// # Returns
+    ///
+    /// A tuple containing the input tensor and the target tensor for the batch.
+    fn get_batch(&self, batch_idx: usize, batch_size: usize) -> (Tensor, Tensor);
+
+    /// Calculates the loss between the predicted outputs and the true targets.
+    ///
+    /// # Arguments
+    ///
+    /// * `outputs` - The predicted outputs from the model.
+    /// * `targets` - The true target values.
+    ///
+    /// # Returns
+    ///
+    /// The calculated loss as a `f32` value.
+    fn loss(&self, outputs: &Tensor, targets: &Tensor) -> f32;
+
+    /// Calculates the gradient of the loss with respect to the predicted outputs.
+    ///
+    /// # Arguments
+    ///
+    /// * `outputs` - The predicted outputs from the model.
+    /// * `targets` - The true target values.
+    ///
+    /// # Returns
+    ///
+    /// A `Tensor` containing the gradients of the loss with respect to the outputs.
+    fn loss_grad(&self, outputs: &Tensor, targets: &Tensor) -> Tensor;
+
+    /// Shuffles the dataset.
+    fn shuffle(&mut self);
+
+    /// Clones the dataset.
+    ///
+    /// # Returns
+    ///
+    /// A new instance of the dataset.
+    fn clone(&self) -> Self;
 }
