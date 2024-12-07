@@ -1,7 +1,7 @@
 use deltaml::activations::ReluActivation;
 use deltaml::activations::SoftmaxActivation;
 use deltaml::common::shape::Shape;
-use deltaml::common::DatasetOps;
+use deltaml::dataset::base::DatasetOps;
 use deltaml::dataset::Cifar10Dataset;
 use deltaml::losses::MeanSquaredLoss;
 use deltaml::neuralnet::Sequential;
