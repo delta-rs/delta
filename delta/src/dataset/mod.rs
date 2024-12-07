@@ -27,12 +27,7 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-pub mod cifar10;
-pub mod imagenet_v2;
-pub mod mnist;
-pub mod test_dataset;
+pub mod base;
+pub mod image;
 
-pub use cifar10::Cifar10Dataset;
-pub use imagenet_v2::ImageNetV2Dataset;
-pub use mnist::MnistDataset;
-pub use test_dataset::TestDataset;
+pub use image::*;
