@@ -45,7 +45,7 @@ use std::{
 };
 use tokio::fs as async_fs;
 use walkdir::WalkDir;
-use crate::dataset::base::{Dataset, DatasetOps};
+use crate::dataset::base::{Dataset, ImageDatasetOps};
 
 /// A struct representing the ImageNetV2 dataset.
 pub struct ImageNetV2Dataset {
@@ -187,7 +187,7 @@ impl ImageNetV2Dataset {
     }
 }
 
-impl DatasetOps for ImageNetV2Dataset {
+impl ImageDatasetOps for ImageNetV2Dataset {
     type LoadFuture = Pin<Box<dyn Future<Output = ImageNetV2Dataset> + Send>>;
 
     /// Loads the ImageNetV2 dataset.

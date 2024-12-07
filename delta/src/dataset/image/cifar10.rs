@@ -38,7 +38,7 @@ use std::io::Read;
 use std::path::Path;
 use std::pin::Pin;
 use tar::Archive;
-use crate::dataset::base::{Dataset, DatasetOps};
+use crate::dataset::base::{Dataset, ImageDatasetOps};
 use crate::get_workspace_dir;
 
 /// A struct representing the CIFAR10 dataset.
@@ -175,7 +175,7 @@ impl Cifar10Dataset {
     }
 }
 
-impl DatasetOps for Cifar10Dataset {
+impl ImageDatasetOps for Cifar10Dataset {
     type LoadFuture = Pin<Box<dyn Future<Output = Self> + Send>>;
 
     /// Loads the training dataset.

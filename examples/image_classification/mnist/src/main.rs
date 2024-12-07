@@ -1,7 +1,7 @@
 use deltaml::activations::ReluActivation;
 use deltaml::activations::SoftmaxActivation;
 use deltaml::common::Shape;
-use deltaml::dataset::{DatasetOps, MnistDataset};
+use deltaml::dataset::{ImageDatasetOps, MnistDataset};
 use deltaml::losses::SparseCategoricalCrossEntropyLoss;
 use deltaml::neuralnet::{Dense, Flatten, Sequential};
 use deltaml::neuralnet::layers::{Conv2D, MaxPooling2D};

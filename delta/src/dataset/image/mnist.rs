@@ -38,7 +38,7 @@ use std::io::{self, Read};
 use std::path::Path;
 use std::pin::Pin;
 use tokio::fs as async_fs;
-use crate::dataset::base::{Dataset, DatasetOps};
+use crate::dataset::base::{Dataset, ImageDatasetOps};
 use crate::get_workspace_dir;
 
 /// A struct representing the MNIST dataset.
@@ -195,7 +195,7 @@ impl MnistDataset {
     }
 }
 
-impl DatasetOps for MnistDataset {
+impl ImageDatasetOps for MnistDataset {
     type LoadFuture = Pin<Box<dyn Future<Output = MnistDataset> + Send>>;
 
     /// Loads the MNIST dataset.
@@ -206,7 +206,7 @@ impl DatasetOps for MnistDataset {
     /// # Example
     ///
     /// ```
-    /// use deltaml::dataset::DatasetOps;
+    /// use deltaml::dataset::ImageDatasetOps;
     /// use deltaml::dataset::MnistDataset;
     ///
     /// #[tokio::main]
@@ -235,7 +235,7 @@ impl DatasetOps for MnistDataset {
     /// # Example
     ///
     /// ```
-    /// use deltaml::dataset::DatasetOps;
+    /// use deltaml::dataset::ImageDatasetOps;
     /// use deltaml::dataset::MnistDataset;
     ///
     /// #[tokio::main]

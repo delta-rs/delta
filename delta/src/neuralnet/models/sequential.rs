@@ -37,7 +37,7 @@ use crate::common::layer::Layer;
 use crate::common::loss::Loss;
 use crate::common::optimizer::Optimizer;
 use crate::common::{Tensor};
-use crate::dataset::base::{Dataset, DatasetOps};
+use crate::dataset::base::{Dataset, ImageDatasetOps};
 
 /// A sequential model that contains a list of layers, an optimizer, and a loss function.
 #[derive(Debug)]
@@ -113,7 +113,7 @@ impl Sequential {
     /// # Returns
     ///
     /// None
-    pub fn fit<D: DatasetOps>(&mut self, train_data: &mut D, epochs: i32, batch_size: usize) {
+    pub fn fit<D: ImageDatasetOps>(&mut self, train_data: &mut D, epochs: i32, batch_size: usize) {
         self.ensure_optimizer_and_loss();
 
         let mut optimizer = self.optimizer.take().unwrap();
@@ -147,7 +147,7 @@ impl Sequential {
     /// # Returns
     ///
     /// The average loss for the epoch.
-    fn train_one_epoch<D: DatasetOps>(
+    fn train_one_epoch<D: ImageDatasetOps>(
         &mut self,
         train_data: &mut D,
         batch_size: usize,
@@ -289,7 +289,7 @@ impl Sequential {
     /// # Returns
     ///
     /// The evaluation metric.
-    pub fn evaluate<D: DatasetOps>(&mut self, test_data: &D, batch_size: usize) -> f32 {
+    pub fn evaluate<D: ImageDatasetOps>(&mut self, test_data: &D, batch_size: usize) -> f32 {
         let mut correct_predictions = 0;
         let mut total_samples = 0;
 

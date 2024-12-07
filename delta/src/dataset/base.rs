@@ -52,7 +52,7 @@ impl Dataset {
     /// # Examples
     ///
     /// ```rust
-    /// use deltaml::common::tensor_ops::Tensor;
+    /// use deltaml::common::Tensor;
     /// use deltaml::dataset::Dataset;
     ///
     /// let inputs = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
@@ -65,7 +65,7 @@ impl Dataset {
 }
 
 /// A trait representing operations that can be performed on a dataset.
-pub trait DatasetOps {
+pub trait ImageDatasetOps {
     /// The type of future returned by the `load_train` and `load_test` methods.
     type LoadFuture: Future<Output = Self> + Send;
 

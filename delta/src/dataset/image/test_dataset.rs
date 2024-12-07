@@ -35,7 +35,7 @@ use std::{
 use ndarray::s;
 
 use crate::common::{Tensor};
-use crate::dataset::base::{Dataset, DatasetOps};
+use crate::dataset::base::{Dataset, ImageDatasetOps};
 
 /// A struct representing a test dataset.
 pub struct TestDataset {
@@ -74,7 +74,7 @@ impl TestDataset {
     }
 }
 
-impl DatasetOps for TestDataset {
+impl ImageDatasetOps for TestDataset {
     type LoadFuture = Pin<Box<dyn Future<Output = Self> + Send>>;
 
     /// Loads the training dataset.
