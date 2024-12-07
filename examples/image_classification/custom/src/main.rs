@@ -2,7 +2,7 @@ use deltaml::activations::ReluActivation;
 use deltaml::activations::SoftmaxActivation;
 use deltaml::common::shape::Shape;
 use deltaml::dataset::base::ImageDatasetOps;
-use deltaml::dataset::Cifar10Dataset;
+use deltaml::dataset::CustomImageDataset;
 use deltaml::losses::MeanSquaredLoss;
 use deltaml::neuralnet::Sequential;
 use deltaml::neuralnet::{Dense, Flatten};
@@ -26,8 +26,8 @@ async fn main() {
     model.compile(optimizer, MeanSquaredLoss::new());
 
     // Loading the train and test dataset
-    let mut train_data = Cifar10Dataset::load_train().await;
-    let test_data = Cifar10Dataset::load_test().await;
+    let mut train_data = CustomImageDataset::load_train_from_csv("examples/image_classification/custom/dataset/train.csv").await;
+    let test_data = CustomImageDataset::load_test_from_csv("examples/image_classification/custom/dataset/val.csv").await;
 
     println!("Training the model...");
     println!("Train dataset size: {}", train_data.len());

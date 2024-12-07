@@ -1,8 +1,8 @@
 use deltaml::activations::relu::ReluActivation;
 use deltaml::activations::softmax::SoftmaxActivation;
 use deltaml::common::shape::Shape;
-use deltaml::common::DatasetOps;
-use deltaml::data::ImageNetV2Dataset;
+use deltaml::dataset::base::ImageDatasetOps;
+use deltaml::dataset::ImageNetV2Dataset;
 use deltaml::losses::SparseCategoricalCrossEntropyLoss;
 use deltaml::neuralnet::Sequential;
 use deltaml::neuralnet::{Dense, Flatten};
@@ -26,15 +26,15 @@ async fn main() {
     // Compile the model
     model.compile(optimizer, SparseCategoricalCrossEntropyLoss::new());
 
-    // Load the train and test data
-    println!("Loading ImageNetV2 training data...");
+    // Load the train and test dataset
+    println!("Loading ImageNetV2 training dataset...");
     let mut train_data = ImageNetV2Dataset::load_train().await;
 
-    println!("Loading ImageNetV2 test data...");
+    println!("Loading ImageNetV2 test dataset...");
     let test_data = ImageNetV2Dataset::load_test().await;
 
     println!("Training the model...");
-    println!("Train data size: {}", train_data.len());
+    println!("Train dataset size: {}", train_data.len());
 
     let epochs = 10;
     let batch_size = 32;

@@ -301,7 +301,7 @@ mod tests {
     //     optimizer.step(&mut weights, &gradients);
 
     //     let expected = vec![0.9, 1.8, 2.7];
-    //     for (actual, exp) in weights.data.iter().zip(expected.iter()) {
+    //     for (actual, exp) in weights.dataset.iter().zip(expected.iter()) {
     //         assert!(
     //             (actual - exp).abs() < 1e-6,
     //             "Expected: {:?}, Actual: {:?}",

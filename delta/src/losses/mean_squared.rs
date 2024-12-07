@@ -60,7 +60,7 @@ impl Loss for MeanSquaredLoss {
 
         // Step 4: Calculate the mean of the squared differences
         if squared_diff.is_empty() {
-            panic!("Cannot calculate loss: no data in input tensors");
+            panic!("Cannot calculate loss: no dataset in input tensors");
         }
 
         let mean_squared_error = squared_diff

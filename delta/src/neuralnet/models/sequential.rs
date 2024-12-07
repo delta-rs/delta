@@ -36,7 +36,8 @@ use std::time::Instant;
 use crate::common::layer::Layer;
 use crate::common::loss::Loss;
 use crate::common::optimizer::Optimizer;
-use crate::common::{Dataset, DatasetOps, Tensor};
+use crate::common::{Tensor};
+use crate::dataset::base::{Dataset, ImageDatasetOps};
 
 /// A sequential model that contains a list of layers, an optimizer, and a loss function.
 #[derive(Debug)]
@@ -101,18 +102,18 @@ impl Sequential {
         self.loss = Some(Box::new(loss));
     }
 
-    /// Trains the model with the given training data, number of epochs, and batch size.
+    /// Trains the model with the given training dataset, number of epochs, and batch size.
     ///
     /// # Arguments
     ///
-    /// * `train_data` - The training data.
+    /// * `train_data` - The training dataset.
     /// * `epochs` - The number of epochs to train.
     /// * `batch_size` - The batch size to use.
     ///
     /// # Returns
     ///
     /// None
-    pub fn fit<D: DatasetOps>(&mut self, train_data: &mut D, epochs: i32, batch_size: usize) {
+    pub fn fit<D: ImageDatasetOps>(&mut self, train_data: &mut D, epochs: i32, batch_size: usize) {
         self.ensure_optimizer_and_loss();
 
         let mut optimizer = self.optimizer.take().unwrap();
@@ -135,18 +136,18 @@ impl Sequential {
         }
     }
 
-    /// Trains the model for one epoch using the given training data and batch size.
+    /// Trains the model for one epoch using the given training dataset and batch size.
     ///
     /// # Arguments
     ///
-    /// * `train_data` - The training data.
+    /// * `train_data` - The training dataset.
     /// * `batch_size` - The batch size to use.
     /// * `optimizer` - The optimizer to use.
     ///
     /// # Returns
     ///
     /// The average loss for the epoch.
-    fn train_one_epoch<D: DatasetOps>(
+    fn train_one_epoch<D: ImageDatasetOps>(
         &mut self,
         train_data: &mut D,
         batch_size: usize,
@@ -263,11 +264,11 @@ impl Sequential {
         std::io::stdout().flush().unwrap();
     }
 
-    /// Validates the model with the given test data.
+    /// Validates the model with the given test dataset.
     ///
     /// # Arguments
     ///
-    /// * `test_data` - The test data.
+    /// * `test_data` - The test dataset.
     ///
     /// # Returns
     ///
@@ -278,17 +279,17 @@ impl Sequential {
         0.0 // Placeholder
     }
 
-    /// Evaluates the model with the given test data.
+    /// Evaluates the model with the given test dataset.
     ///
     /// # Arguments
     ///
-    /// * `test_data` - The test data.
+    /// * `test_data` - The test dataset.
     /// * `batch_size` - The batch size to use.
     ///
     /// # Returns
     ///
     /// The evaluation metric.
-    pub fn evaluate<D: DatasetOps>(&mut self, test_data: &D, batch_size: usize) -> f32 {
+    pub fn evaluate<D: ImageDatasetOps>(&mut self, test_data: &D, batch_size: usize) -> f32 {
         let mut correct_predictions = 0;
         let mut total_samples = 0;
 
@@ -320,7 +321,7 @@ impl Sequential {
 
         // Calculate accuracy as a percentage
         if total_samples == 0 {
-            panic!("Test data contains no samples");
+            panic!("Test dataset contains no samples");
         }
 
         let accuracy = correct_predictions as f32 / total_samples as f32;
@@ -356,7 +357,7 @@ impl Sequential {
 
         let mut file = File::create(path.join("model.json"))?;
 
-        // Write the JSON data to the file
+        // Write the JSON dataset to the file
         file.write_all(serde_json::to_string_pretty(&model_state)?.as_bytes())?;
 
         Ok(())

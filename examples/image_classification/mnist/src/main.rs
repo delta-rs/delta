@@ -1,11 +1,9 @@
-use deltaml::activations::relu::ReluActivation;
-use deltaml::activations::softmax::SoftmaxActivation;
-use deltaml::common::shape::Shape;
-use deltaml::common::DatasetOps;
-use deltaml::data::MnistDataset;
+use deltaml::activations::ReluActivation;
+use deltaml::activations::SoftmaxActivation;
+use deltaml::common::Shape;
+use deltaml::dataset::{ImageDatasetOps, MnistDataset};
 use deltaml::losses::SparseCategoricalCrossEntropyLoss;
-use deltaml::neuralnet::Sequential;
-use deltaml::neuralnet::{Dense, Flatten};
+use deltaml::neuralnet::{Dense, Flatten, Sequential};
 use deltaml::neuralnet::layers::{Conv2D, MaxPooling2D};
 use deltaml::optimizers::Adam;
 
@@ -29,12 +27,12 @@ async fn main() {
     // model.compile(optimizer, CrossEntropyLoss::new());
     model.compile(optimizer, SparseCategoricalCrossEntropyLoss::new());
 
-    // Loading the train and test data
+    // Loading the train and test dataset
     let mut train_data = MnistDataset::load_train().await;
     let test_data = MnistDataset::load_test().await;
 
     println!("Training the model...");
-    println!("Train data size: {}", train_data.len());
+    println!("Train dataset size: {}", train_data.len());
 
     let epoch = 1;
     let batch_size = 32;

@@ -27,7 +27,7 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::{Dataset, DatasetOps, Tensor};
+use crate::common::{Tensor};
 use flate2::read::GzDecoder;
 use log::debug;
 use std::collections::HashSet;
@@ -38,6 +38,8 @@ use std::io::Read;
 use std::path::Path;
 use std::pin::Pin;
 use tar::Archive;
+use crate::dataset::base::{Dataset, ImageDatasetOps};
+use crate::get_workspace_dir;
 
 /// A struct representing the CIFAR10 dataset.
 pub struct Cifar10Dataset {
@@ -65,7 +67,8 @@ impl Cifar10Dataset {
     /// This function downloads the CIFAR-10 dataset from the specified URL
     /// and extracts it to the cache directory.
     async fn download_and_extract() {
-        let cache_path = ".cache/data/cifar10/";
+        let workspace_dir = get_workspace_dir();
+        let cache_path = format!("{}/.cache/dataset/cifar10/", workspace_dir.display());
         let tarball_path = format!("{}cifar-10-binary.tar.gz", cache_path);
 
         if !Path::new(&tarball_path).exists() {
@@ -76,8 +79,8 @@ impl Cifar10Dataset {
             let data = response
                 .bytes()
                 .await
-                .expect("Failed to read CIFAR-10 data");
-            fs::create_dir_all(cache_path).unwrap();
+                .expect("Failed to read CIFAR-10 dataset");
+            fs::create_dir_all(cache_path.clone()).unwrap();
             fs::write(&tarball_path, data).unwrap();
         }
 
@@ -150,7 +153,7 @@ impl Cifar10Dataset {
 
         for &file in files {
             let (img, lbl) = Self::parse_file(
-                &format!(".cache/data/cifar10/cifar-10-batches-bin/{}", file),
+                &format!("{}/.cache/dataset/cifar10/cifar-10-batches-bin/{}", env!("CARGO_MANIFEST_DIR"), file),
                 total_examples / files.len(),
             );
             images.extend(img);
@@ -172,13 +175,13 @@ impl Cifar10Dataset {
     }
 }
 
-impl DatasetOps for Cifar10Dataset {
+impl ImageDatasetOps for Cifar10Dataset {
     type LoadFuture = Pin<Box<dyn Future<Output = Self> + Send>>;
 
     /// Loads the training dataset.
     ///
     /// # Returns
-    /// A future that resolves to the `Cifar10Dataset` with the training data loaded.
+    /// A future that resolves to the `Cifar10Dataset` with the training dataset loaded.
     fn load_train() -> Self::LoadFuture {
         Box::pin(async {
             Self::download_and_extract().await;
@@ -193,7 +196,7 @@ impl DatasetOps for Cifar10Dataset {
     /// Loads the test dataset.
     ///
     /// # Returns
-    /// A future that resolves to the `Cifar10Dataset` with the test data loaded.
+    /// A future that resolves to the `Cifar10Dataset` with the test dataset loaded.
     fn load_test() -> Self::LoadFuture {
         Box::pin(async {
             Self::download_and_extract().await;
@@ -239,7 +242,7 @@ impl DatasetOps for Cifar10Dataset {
         }
     }
 
-    /// Gets a batch of data from the dataset.
+    /// Gets a batch of dataset from the dataset.
     ///
     /// # Arguments
     /// * `batch_idx` - The index of the batch to get.
@@ -346,7 +349,7 @@ impl DatasetOps for Cifar10Dataset {
     /// Clones the dataset.
     ///
     /// # Returns
-    /// A new `Cifar10Dataset` instance with the same data.
+    /// A new `Cifar10Dataset` instance with the same dataset.
     fn clone(&self) -> Self {
         Self {
             train: self.train.clone(),

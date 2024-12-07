@@ -127,5 +127,5 @@ rust-project.json
 .history
 .ionide
 
-# Directory for cached data
+# Directory for cached dataset
 .cache

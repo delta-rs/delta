@@ -34,7 +34,8 @@ use std::{
 
 use ndarray::s;
 
-use crate::common::{Dataset, DatasetOps, Tensor};
+use crate::common::{Tensor};
+use crate::dataset::base::{Dataset, ImageDatasetOps};
 
 /// A struct representing a test dataset.
 pub struct TestDataset {
@@ -61,7 +62,7 @@ impl TestDataset {
     ///
     /// # Returns
     ///
-    /// A `Dataset` instance with dummy data.
+    /// A `Dataset` instance with dummy dataset.
     #[inline]
     fn generate_dummy_dataset(size: usize, features: usize) -> Dataset {
         let inputs = Tensor::new(
@@ -73,14 +74,14 @@ impl TestDataset {
     }
 }
 
-impl DatasetOps for TestDataset {
+impl ImageDatasetOps for TestDataset {
     type LoadFuture = Pin<Box<dyn Future<Output = Self> + Send>>;
 
     /// Loads the training dataset.
     ///
     /// # Returns
     ///
-    /// A future that resolves to a `TestDataset` instance with the training data loaded.
+    /// A future that resolves to a `TestDataset` instance with the training dataset loaded.
     fn load_train() -> Self::LoadFuture {
         Box::pin(future::ready(Self {
             train: Some(Self::generate_dummy_dataset(100, 10)),
@@ -92,7 +93,7 @@ impl DatasetOps for TestDataset {
     ///
     /// # Returns
     ///
-    /// A future that resolves to a `TestDataset` instance with the test data loaded.
+    /// A future that resolves to a `TestDataset` instance with the test dataset loaded.
     fn load_test() -> Self::LoadFuture {
         Box::pin(future::ready(Self {
             train: None,
@@ -144,7 +145,7 @@ impl DatasetOps for TestDataset {
             .unwrap_or_else(|| self.test.as_ref().map(|d| d.inputs.data.len()).unwrap_or(0))
     }
 
-    /// Retrieves a batch of data from the dataset.
+    /// Retrieves a batch of dataset from the dataset.
     ///
     /// # Arguments
     ///

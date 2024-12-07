@@ -28,7 +28,6 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 pub mod activation;
-pub mod data;
 pub mod errors;
 pub mod layer;
 pub mod loss;
@@ -37,7 +36,6 @@ pub mod shape;
 pub mod tensor_ops;
 
 pub use activation::Activation;
-pub use data::{Dataset, DatasetOps};
 pub use errors::{CoreError, Result};
 pub use layer::{Layer, LayerOutput};
 pub use loss::Loss;

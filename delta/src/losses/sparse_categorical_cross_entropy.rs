@@ -109,7 +109,7 @@ impl SparseCategoricalCrossEntropyLoss {
         let data = y_true
             .data
             .as_slice()
-            .expect("Tensor data must be accessible as a slice");
+            .expect("Tensor dataset must be accessible as a slice");
 
         let mut processed_data = Vec::new();
         for i in 0..rows {
