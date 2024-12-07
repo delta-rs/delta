@@ -31,11 +31,10 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 use crate::common::Tensor;
-use crate::dataset::{Dataset, ImageDatasetOps};
+use crate::dataset::{ImageDatasetOps};
 use std::future::Future;
 use std::pin::Pin;
 use image::{DynamicImage, ImageReader};
-use ndarray::s;
 
 /// CustomImageDataset is a dataset that loads images and labels from a CSV file.
 ///
@@ -83,6 +82,15 @@ impl CustomImageDataset {
         Ok(Self { images, labels })
     }
 
+    /// Asynchronously loads the training dataset from a CSV file.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The path to the CSV file.
+    ///
+    /// # Returns
+    ///
+    /// A future that resolves to the loaded CustomImageDataset.
     pub fn load_train_from_csv<P: AsRef<Path> + Send + 'static>(path: P) -> Pin<Box<dyn Future<Output = Self> + Send>> {
         Box::pin(async move {
             let file = File::open(path).expect("Failed to open train CSV file");
@@ -111,6 +119,15 @@ impl CustomImageDataset {
         })
     }
 
+    /// Asynchronously loads the test dataset from a CSV file.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The path to the CSV file.
+    ///
+    /// # Returns
+    ///
+    /// A future that resolves to the loaded CustomImageDataset.
     pub fn load_test_from_csv<P: AsRef<Path> + Send + 'static>(path: P) -> Pin<Box<dyn Future<Output = Self> + Send>> {
         Box::pin(async move {
             let file = File::open(path).expect("Failed to open test CSV file");
