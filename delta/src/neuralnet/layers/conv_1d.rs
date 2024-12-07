@@ -118,12 +118,12 @@ impl Layer for Conv1D {
     ///
     /// # Arguments
     ///
-    /// * `grad` - The gradient tensor.
+    /// * `_grad` - The gradient tensor.
     ///
     /// # Returns
     ///
     /// The gradient tensor with respect to the input.
-    fn backward(&mut self, grad: &Tensor) -> Tensor {
+    fn backward(&mut self, _grad: &Tensor) -> Tensor {
         unimplemented!()
     }
 
