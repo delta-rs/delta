@@ -36,7 +36,8 @@ use std::time::Instant;
 use crate::common::layer::Layer;
 use crate::common::loss::Loss;
 use crate::common::optimizer::Optimizer;
-use crate::common::{Dataset, DatasetOps, Tensor};
+use crate::common::{Tensor};
+use crate::dataset::base::{Dataset, DatasetOps};
 
 /// A sequential model that contains a list of layers, an optimizer, and a loss function.
 #[derive(Debug)]
