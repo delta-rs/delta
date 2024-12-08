@@ -26,8 +26,14 @@ async fn main() {
     model.compile(optimizer, MeanSquaredLoss::new());
 
     // Loading the train and test dataset
-    let mut train_data = CustomImageDataset::load_train_from_csv("examples/image_classification/custom/dataset/train.csv").await;
-    let test_data = CustomImageDataset::load_test_from_csv("examples/image_classification/custom/dataset/val.csv").await;
+    let mut train_data = CustomImageDataset::load_train_from_csv(
+        "examples/image_classification/custom/dataset/train.csv",
+    )
+    .await;
+    let test_data = CustomImageDataset::load_test_from_csv(
+        "examples/image_classification/custom/dataset/val.csv",
+    )
+    .await;
 
     println!("Training the model...");
     println!("Train dataset size: {}", train_data.len());
@@ -35,10 +41,14 @@ async fn main() {
     let epoch = 10;
     let batch_size = 32;
 
-    model.fit(&mut train_data, epoch, batch_size);
+    model
+        .fit(&mut train_data, epoch, batch_size)
+        .expect("Failed to train the model");
 
     // Evaluate the model
-    let accuracy = model.evaluate(&test_data, batch_size);
+    let accuracy = model
+        .evaluate(&test_data, batch_size)
+        .expect("Failed to evaluate the model");
     println!("Test Accuracy: {:.2}%", accuracy * 100.0);
 
     // Save the model

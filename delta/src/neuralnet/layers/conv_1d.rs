@@ -27,7 +27,7 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::{Activation, Layer, Shape, Tensor};
+use crate::common::{Activation, Layer, LayerError, Shape, Tensor};
 
 /// A struct representing a 1D convolutional layer.
 #[derive(Debug)]
@@ -35,14 +35,18 @@ pub struct Conv1D {
     name: String,
     filters: usize,
     kernel_size: usize,
+    #[allow(dead_code)]
     stride: usize,
+    #[allow(dead_code)]
     padding: usize,
     weights: Option<Tensor>,
     bias: Option<Tensor>,
+    #[allow(dead_code)]
     activation: Option<Box<dyn Activation>>,
     trainable: bool,
     weights_grad: Option<Tensor>,
     bias_grad: Option<Tensor>,
+    #[allow(dead_code)]
     input: Option<Tensor>,
 }
 
@@ -91,14 +95,19 @@ impl Layer for Conv1D {
     /// # Arguments
     ///
     /// * `input_shape` - The shape of the input tensor.
-    fn build(&mut self, input_shape: Shape) {
+    fn build(&mut self, input_shape: Shape) -> Result<(), LayerError> {
         println!(
             "Building Conv1D layer with input shape: {:?} and filters: {}",
             input_shape, self.filters
         );
         let input_channels = input_shape.0.last().expect("Input shape must not be empty");
-        self.weights = Some(Tensor::random(vec![self.filters, *input_channels, self.kernel_size]));
+        self.weights = Some(Tensor::random(vec![
+            self.filters,
+            *input_channels,
+            self.kernel_size,
+        ]));
         self.bias = Some(Tensor::zeros(vec![self.filters]));
+        Ok(())
     }
 
     /// Performs a forward pass through the layer.
@@ -110,7 +119,8 @@ impl Layer for Conv1D {
     /// # Returns
     ///
     /// The output tensor.
-    fn forward(&mut self, input: &Tensor) -> Tensor {
+    fn forward(&mut self, input: &Tensor) -> Result<Tensor, LayerError> {
+        let _ = input;
         unimplemented!()
     }
 
@@ -123,7 +133,8 @@ impl Layer for Conv1D {
     /// # Returns
     ///
     /// The gradient tensor with respect to the input.
-    fn backward(&mut self, _grad: &Tensor) -> Tensor {
+    fn backward(&mut self, grad: &Tensor) -> Result<Tensor, LayerError> {
+        let _ = grad;
         unimplemented!()
     }
 
@@ -132,7 +143,7 @@ impl Layer for Conv1D {
     /// # Returns
     ///
     /// A `Shape` representing the output shape of the layer.
-    fn output_shape(&self) -> Shape {
+    fn output_shape(&self) -> Result<Shape, LayerError> {
         unimplemented!()
     }
 
@@ -141,10 +152,10 @@ impl Layer for Conv1D {
     /// # Returns
     ///
     /// A `usize` representing the number of parameters in the layer.
-    fn param_count(&self) -> (usize, usize) {
+    fn param_count(&self) -> Result<(usize, usize), LayerError> {
         let weights_count = self.weights.as_ref().map_or(0, |w| w.data.len());
         let bias_count = self.bias.as_ref().map_or(0, |b| b.data.len());
-        (weights_count, bias_count)
+        Ok((weights_count, bias_count))
     }
 
     /// Returns the name of the layer.
@@ -162,24 +173,33 @@ impl Layer for Conv1D {
     ///
     /// * `grad` - The gradient tensor.
     /// * `optimizer` - The optimizer to use.
-    fn update_weights(&mut self, optimizer: &mut Box<dyn crate::common::optimizer::Optimizer>) {
+    fn update_weights(
+        &mut self,
+        optimizer: &mut Box<dyn crate::common::optimizer::Optimizer>,
+    ) -> Result<(), LayerError> {
         if !self.trainable {
-            return;
+            return Ok(());
         }
 
         // Update weights
         if let Some(ref weights_grad) = self.weights_grad {
-            optimizer.step(self.weights.as_mut().unwrap(), weights_grad);
+            optimizer
+                .step(self.weights.as_mut().unwrap(), weights_grad)
+                .map_err(|e| LayerError::OptimizerError(e))?;
         }
 
         // Update bias
         if let Some(ref bias_grad) = self.bias_grad {
-            optimizer.step(self.bias.as_mut().unwrap(), bias_grad);
+            optimizer
+                .step(self.bias.as_mut().unwrap(), bias_grad)
+                .map_err(|e| LayerError::OptimizerError(e))?;
         }
 
         // Clear gradients after update
         self.weights_grad = None;
         self.bias_grad = None;
+
+        Ok(())
     }
 }
 
@@ -192,9 +212,11 @@ mod tests {
     fn test_conv1d_layer() {
         let input = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0], vec![1, 5, 1]);
         let mut conv1d_layer = Conv1D::new(2, 3, 1, 1, Some(ReluActivation::new()), true);
-        conv1d_layer.build(Shape::new(vec![1, 5, 1]));
+        conv1d_layer
+            .build(Shape::new(vec![1, 5, 1]))
+            .expect("Failed to build layer");
 
-        let output = conv1d_layer.forward(&input);
+        let output = conv1d_layer.forward(&input).unwrap();
 
         assert_eq!(output.shape(), &[1, 5, 2]);
         assert_eq!(output.data.len(), 10);
@@ -204,9 +226,11 @@ mod tests {
     fn test_conv1d_layer_forward_pass() {
         let input = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0], vec![1, 5, 1]);
         let mut conv1d_layer = Conv1D::new(2, 3, 1, 1, Some(ReluActivation::new()), true);
-        conv1d_layer.build(Shape::new(vec![1, 5, 1]));
+        conv1d_layer
+            .build(Shape::new(vec![1, 5, 1]))
+            .expect("Failed to build layer");
 
-        let output = conv1d_layer.forward(&input);
+        let output = conv1d_layer.forward(&input).unwrap();
 
         assert_eq!(output.shape(), &[1, 5, 2]);
         assert_eq!(output.data.len(), 10);
@@ -217,10 +241,15 @@ mod tests {
         let input = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0], vec![1, 5, 1]);
         let mut conv1d_layer = Conv1D::new(2, 3, 1, 1, Some(ReluActivation::new()), true);
         conv1d_layer.input = Some(input.clone());
-        conv1d_layer.build(Shape::new(vec![1, 5, 1]));
+        conv1d_layer
+            .build(Shape::new(vec![1, 5, 1]))
+            .expect("Failed to build layer");
 
-        let grad = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0], vec![1, 5, 2]);
-        let output = conv1d_layer.backward(&grad);
+        let grad = Tensor::new(
+            vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0],
+            vec![1, 5, 2],
+        );
+        let output = conv1d_layer.backward(&grad).unwrap();
 
         assert_eq!(output.shape(), &[1, 5, 1]);
         assert_eq!(output.data.len(), 5);

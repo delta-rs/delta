@@ -27,7 +27,7 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::{Layer, Shape, Tensor};
+use crate::common::{Layer, LayerError, Shape, Tensor};
 
 /// A flatten layer that reshapes the input tensor to a 1D vector.
 #[derive(Debug)]
@@ -69,8 +69,9 @@ impl Layer for Flatten {
     /// # Arguments
     ///
     /// * `input_shape` - The shape of the input tensor.
-    fn build(&mut self, input_shape: Shape) {
+    fn build(&mut self, input_shape: Shape) -> Result<(), LayerError> {
         self.input_shape = input_shape;
+        Ok(())
     }
 
     /// Performs a forward pass through the layer.
@@ -82,10 +83,11 @@ impl Layer for Flatten {
     /// # Returns
     ///
     /// The output tensor.
-    fn forward(&mut self, input: &Tensor) -> Tensor {
+    fn forward(&mut self, input: &Tensor) -> Result<Tensor, LayerError> {
         let batch_size = input.data.shape()[0];
         let flattened_size = input.data.len() / batch_size;
-        input.reshape(vec![batch_size, flattened_size])
+        let reshaped = input.reshape(vec![batch_size, flattened_size]);
+        Ok(reshaped)
     }
 
     /// Performs a backward pass through the layer.
@@ -97,14 +99,14 @@ impl Layer for Flatten {
     /// # Returns
     ///
     /// The gradient tensor with respect to the input.
-    fn backward(&mut self, grad: &Tensor) -> Tensor {
+    fn backward(&mut self, grad: &Tensor) -> Result<Tensor, LayerError> {
         let batch_size = grad.shape()[0];
         let new_shape = [batch_size]
             .iter()
             .chain(self.input_shape.0.iter())
             .cloned()
             .collect::<Vec<_>>();
-        grad.reshape(new_shape)
+        Ok(grad.reshape(new_shape))
     }
 
     /// Returns the output shape of the layer.
@@ -112,8 +114,9 @@ impl Layer for Flatten {
     /// # Returns
     ///
     /// A `Shape` representing the output shape of the layer.
-    fn output_shape(&self) -> Shape {
-        Shape::new(vec![self.input_shape.0.iter().product()])
+    fn output_shape(&self) -> Result<Shape, LayerError> {
+        let shape = Shape::new(vec![self.input_shape.0.iter().product()]);
+        Ok(shape)
     }
 
     /// Returns the number of parameters in the layer.
@@ -121,8 +124,8 @@ impl Layer for Flatten {
     /// # Returns
     ///
     /// A `usize` representing the number of parameters in the layer.
-    fn param_count(&self) -> (usize, usize) {
-        (0, 0)
+    fn param_count(&self) -> Result<(usize, usize), LayerError> {
+        Ok((0, 0))
     }
 
     /// Returns the name of the layer.
@@ -139,9 +142,13 @@ impl Layer for Flatten {
     /// # Arguments
     ///
     /// * `optimizer` - The optimizer to use.
-    fn update_weights(&mut self, optimizer: &mut Box<dyn crate::common::optimizer::Optimizer>) {
+    fn update_weights(
+        &mut self,
+        optimizer: &mut Box<dyn crate::common::optimizer::Optimizer>,
+    ) -> Result<(), LayerError> {
         let _ = optimizer;
         // Do nothing
+        Ok(())
     }
 }
 
@@ -164,14 +171,14 @@ mod tests {
         let input_shape = Shape::new(vec![3, 4]);
         let flatten_layer = Flatten::new(input_shape.clone());
 
-        let output_shape = flatten_layer.output_shape();
+        let output_shape = flatten_layer.output_shape().unwrap();
         assert_eq!(output_shape.0, vec![12]);
     }
 
     #[test]
     fn test_flatten_param_count() {
         let flatten_layer = Flatten::new(Shape::new(vec![10, 10]));
-        let (trainable, non_trainable) = flatten_layer.param_count();
+        let (trainable, non_trainable) = flatten_layer.param_count().unwrap();
 
         assert_eq!(trainable, 0);
         assert_eq!(non_trainable, 0);

@@ -30,6 +30,8 @@
 use crate::common::tensor_ops::Tensor;
 use std::fmt::Debug;
 
+use super::OptimizerError;
+
 /// A trait representing an optimizer for training neural networks.
 pub trait Optimizer: Debug {
     /// Performs an optimization step using the given weights and gradients.
@@ -38,7 +40,7 @@ pub trait Optimizer: Debug {
     ///
     /// * `weights` - A mutable reference to the weights tensor.
     /// * `gradients` - A reference to the gradients tensor.
-    fn step(&mut self, weights: &mut Tensor, gradients: &Tensor);
+    fn step(&mut self, weights: &mut Tensor, gradients: &Tensor) -> Result<(), OptimizerError>;
 }
 
 /// A struct representing the configuration for an optimizer.

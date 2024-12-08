@@ -27,57 +27,39 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::layer::Layer;
-use crate::common::shape::Shape;
-use crate::common::tensor_ops::Tensor;
-use crate::common::{LayerError, Optimizer};
+use std::fmt;
 
+use super::OptimizerError;
+
+/// Errors that can occur in the Dense layer.
 #[derive(Debug)]
-pub struct MaxPooling2D {
-    #[allow(dead_code)]
-    pool_size: usize,
-    #[allow(dead_code)]
-    stride: usize,
-    input_shape: Option<Shape>,
+pub enum LayerError {
+    /// Error when weights are not initialized.
+    UninitializedWeights,
+    /// Error when bias is not initialized.
+    UninitializedBias,
+    /// Error when input is not set for backward pass.
+    UninitializedInput,
+    /// Error related to invalid shape.
+    InvalidShape,
+    /// Error when input is not set.
+    MissingInput,
+
+    /// Error when an optimizer error occurs.
+    OptimizerError(OptimizerError),
 }
 
-impl MaxPooling2D {
-    pub fn new(pool_size: usize, stride: usize) -> Self {
-        Self {
-            pool_size,
-            stride,
-            input_shape: None,
+impl fmt::Display for LayerError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            LayerError::UninitializedWeights => write!(f, "Weights must be initialized"),
+            LayerError::UninitializedBias => write!(f, "Bias must be initialized"),
+            LayerError::UninitializedInput => write!(f, "Input must be initialized"),
+            LayerError::InvalidShape => write!(f, "Invalid shape"),
+            LayerError::MissingInput => write!(f, "Input must be set"),
+            LayerError::OptimizerError(err) => write!(f, "Optimizer error: {}", err),
         }
     }
 }
 
-impl Layer for MaxPooling2D {
-    fn build(&mut self, input_shape: Shape) -> Result<(), LayerError> {
-        self.input_shape = Some(input_shape);
-        Ok(())
-    }
-
-    fn forward(&mut self, _input: &Tensor) -> Result<Tensor, LayerError> {
-        unimplemented!()
-    }
-
-    fn backward(&mut self, _grad: &Tensor) -> Result<Tensor, LayerError> {
-        unimplemented!()
-    }
-
-    fn output_shape(&self) -> Result<Shape, LayerError> {
-        unimplemented!()
-    }
-
-    fn param_count(&self) -> Result<(usize, usize), LayerError> {
-        Ok((0, 0))
-    }
-
-    fn name(&self) -> &str {
-        "MaxPooling2D"
-    }
-
-    fn update_weights(&mut self, _optimizer: &mut Box<dyn Optimizer>) -> Result<(), LayerError> {
-        unimplemented!()
-    }
-}
+impl std::error::Error for LayerError {}

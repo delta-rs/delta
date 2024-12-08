@@ -27,7 +27,7 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::{Activation, Layer, Optimizer, Shape, Tensor};
+use crate::common::{Activation, Layer, LayerError, Optimizer, Shape, Tensor};
 use log::debug;
 use serde_json;
 
@@ -78,7 +78,7 @@ impl Layer for Dense {
     /// # Arguments
     ///
     /// * `input_shape` - The shape of the input tensor.
-    fn build(&mut self, input_shape: Shape) {
+    fn build(&mut self, input_shape: Shape) -> Result<(), LayerError> {
         debug!(
             "Building Dense layer with input shape: {:?} and units: {}",
             input_shape, self.units
@@ -86,6 +86,7 @@ impl Layer for Dense {
         let input_units = input_shape.0.last().expect("Input shape must not be empty");
         self.weights = Some(Tensor::random(vec![*input_units, self.units]));
         self.bias = Some(Tensor::zeros(vec![self.units]));
+        Ok(())
     }
 
     /// Performs a forward pass through the layer.
@@ -97,7 +98,7 @@ impl Layer for Dense {
     /// # Returns
     ///
     /// The output tensor.
-    fn forward(&mut self, input: &Tensor) -> Tensor {
+    fn forward(&mut self, input: &Tensor) -> Result<Tensor, LayerError> {
         let weights = self.weights.as_ref().expect("Weights must be initialized");
         let bias = self.bias.as_ref().expect("Bias must be initialized");
 
@@ -107,11 +108,13 @@ impl Layer for Dense {
         let z = input.matmul(weights).add(bias);
 
         // Apply activation if present
-        if let Some(ref activation) = self.activation {
+        let z = if let Some(ref activation) = self.activation {
             activation.activate(&z)
         } else {
             z
-        }
+        };
+
+        Ok(z)
     }
 
     /// Performs a backward pass through the layer.
@@ -123,7 +126,7 @@ impl Layer for Dense {
     /// # Returns
     ///
     /// The gradient tensor with respect to the input.
-    fn backward(&mut self, grad: &Tensor) -> Tensor {
+    fn backward(&mut self, grad: &Tensor) -> Result<Tensor, LayerError> {
         // Ensure weights and input are initialized
         let weights = self.weights.as_ref().expect("Weights must be initialized");
         let input = self.input.as_ref().expect("Input must be initialized");
@@ -141,7 +144,7 @@ impl Layer for Dense {
         // Calculate the gradient with respect to the input
         let input_grad = grad.matmul(&weights.transpose());
 
-        input_grad
+        Ok(input_grad)
     }
 
     /// Returns the output shape of the layer.
@@ -149,8 +152,9 @@ impl Layer for Dense {
     /// # Returns
     ///
     /// A `Shape` representing the output shape of the layer.
-    fn output_shape(&self) -> Shape {
-        Shape::new(vec![self.units])
+    fn output_shape(&self) -> Result<Shape, LayerError> {
+        let shape = Shape::new(vec![self.units]);
+        Ok(shape)
     }
 
     /// Returns the number of parameters in the layer.
@@ -158,10 +162,10 @@ impl Layer for Dense {
     /// # Returns
     ///
     /// A `usize` representing the number of parameters in the layer.
-    fn param_count(&self) -> (usize, usize) {
+    fn param_count(&self) -> Result<(usize, usize), LayerError> {
         let weights_count = self.weights.as_ref().map_or(0, |w| w.data.len());
         let bias_count = self.bias.as_ref().map_or(0, |b| b.data.len());
-        (weights_count, bias_count)
+        Ok((weights_count, bias_count))
     }
 
     /// Returns the name of the layer.
@@ -179,23 +183,29 @@ impl Layer for Dense {
     ///
     /// * `grad` - The gradient tensor.
     /// * `optimizer` - The optimizer to use.
-    fn update_weights(&mut self, optimizer: &mut Box<dyn Optimizer>) {
+    fn update_weights(&mut self, optimizer: &mut Box<dyn Optimizer>) -> Result<(), LayerError> {
         if !self.trainable {
-            return;
+            return Ok(());
         }
 
         // Update weights
         if let Some(ref weights_grad) = self.weights_grad {
-            optimizer.step(self.weights.as_mut().unwrap(), weights_grad);
+            optimizer
+                .step(self.weights.as_mut().unwrap(), weights_grad)
+                .map_err(|e| LayerError::OptimizerError(e))?;
         }
 
         if let Some(ref bias_grad) = self.bias_grad {
-            optimizer.step(self.bias.as_mut().unwrap(), bias_grad);
+            optimizer
+                .step(self.bias.as_mut().unwrap(), bias_grad)
+                .map_err(|e| LayerError::OptimizerError(e))?;
         }
 
         // Clear gradients after update
         self.weights_grad = None;
         self.bias_grad = None;
+
+        Ok(())
     }
 
     fn get_weights(&self) -> serde_json::Value {
@@ -223,9 +233,11 @@ mod tests {
     fn test_dense_layer() {
         let input = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
         let mut dense_layer = Dense::new(2, Some(ReluActivation::new()), true);
-        dense_layer.build(Shape::new(vec![1, 3]));
+        dense_layer
+            .build(Shape::new(vec![1, 3]))
+            .expect("Failed to build layer");
 
-        let output = dense_layer.forward(&input);
+        let output = dense_layer.forward(&input).unwrap();
 
         assert_eq!(output.data.shape(), &[1, 2]);
         assert_eq!(output.data.len(), 2);
@@ -235,9 +247,11 @@ mod tests {
     fn test_dense_layer_forward_pass() {
         let input = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
         let mut dense_layer = Dense::new(2, Some(ReluActivation::new()), true);
-        dense_layer.build(Shape::new(vec![1, 3]));
+        dense_layer
+            .build(Shape::new(vec![1, 3]))
+            .expect("Failed to build layer");
 
-        let output = dense_layer.forward(&input);
+        let output = dense_layer.forward(&input).unwrap();
 
         assert_eq!(output.data.shape(), &[1, 2]);
         assert_eq!(output.data.len(), 2);
@@ -248,10 +262,12 @@ mod tests {
         let input = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
         let mut dense_layer = Dense::new(2, Some(ReluActivation::new()), true);
         dense_layer.input = Some(input.clone());
-        dense_layer.build(Shape::new(vec![1, 3]));
+        dense_layer
+            .build(Shape::new(vec![1, 3]))
+            .expect("Failed to build layer");
 
         let grad = Tensor::new(vec![1.0, 2.0], vec![1, 2]);
-        let output = dense_layer.backward(&grad);
+        let output = dense_layer.backward(&grad).unwrap();
 
         assert_eq!(output.data.shape(), &[1, 3]);
         assert_eq!(output.data.len(), 3);
@@ -269,9 +285,11 @@ mod tests {
     fn test_dense_layer_with_no_activation() {
         let input = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
         let mut dense_layer = Dense::new(4, None::<ReluActivation>, true);
-        dense_layer.build(Shape::new(vec![1, 3]));
+        dense_layer
+            .build(Shape::new(vec![1, 3]))
+            .expect("Failed to build layer");
 
-        let output = dense_layer.forward(&input);
+        let output = dense_layer.forward(&input).unwrap();
 
         assert_eq!(output.data.len(), 4);
         // Verify that the output is computed without activation.
@@ -281,15 +299,17 @@ mod tests {
     #[test]
     fn test_dense_layer_output_shape() {
         let dense_layer = Dense::new(10, Some(ReluActivation::new()), true);
-        assert_eq!(dense_layer.output_shape().0, vec![10]);
+        assert_eq!(dense_layer.output_shape().unwrap().0, vec![10]);
     }
 
     #[test]
     fn test_dense_layer_param_count() {
         let mut dense_layer = Dense::new(6, None::<ReluActivation>, true);
-        dense_layer.build(Shape::new(vec![1, 4]));
+        dense_layer
+            .build(Shape::new(vec![1, 4]))
+            .expect("Failed to build layer");
 
-        let (weights_count, bias_count) = dense_layer.param_count();
+        let (weights_count, bias_count) = dense_layer.param_count().unwrap();
         assert_eq!(weights_count, 4 * 6); // 4 input units, 6 output units
         assert_eq!(bias_count, 6);
     }
@@ -297,13 +317,15 @@ mod tests {
     #[test]
     fn test_dense_layer_backward_with_no_trainable() {
         let mut dense_layer = Dense::new(4, None::<ReluActivation>, false);
-        dense_layer.build(Shape::new(vec![1, 3]));
+        dense_layer
+            .build(Shape::new(vec![1, 3]))
+            .expect("Failed to build layer");
 
         let input = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
         dense_layer.input = Some(input);
 
         let grad = Tensor::new(vec![0.5, -0.5, 1.0, -1.0], vec![1, 4]);
-        let output_grad = dense_layer.backward(&grad);
+        let output_grad = dense_layer.backward(&grad).unwrap();
 
         // Ensure gradients are not stored when `trainable` is false.
         assert!(dense_layer.weights_grad.is_none());
@@ -316,10 +338,12 @@ mod tests {
     #[test]
     fn test_dense_layer_with_zero_units() {
         let mut dense_layer = Dense::new(0, None::<ReluActivation>, true);
-        dense_layer.build(Shape::new(vec![1, 3]));
+        dense_layer
+            .build(Shape::new(vec![1, 3]))
+            .expect("Failed to build layer");
 
         // Ensure the layer initializes with zero units without crashing.
-        assert_eq!(dense_layer.output_shape().0, vec![0]);
+        assert_eq!(dense_layer.output_shape().unwrap().0, vec![0]);
         assert!(dense_layer.weights.is_some());
         assert!(dense_layer.bias.is_some());
     }
@@ -328,9 +352,11 @@ mod tests {
     fn test_dense_layer_with_large_input() {
         let input = Tensor::random(vec![1000, 512]); // Large input tensor
         let mut dense_layer = Dense::new(256, Some(ReluActivation::new()), true);
-        dense_layer.build(Shape::new(vec![1000, 512]));
+        dense_layer
+            .build(Shape::new(vec![1000, 512]))
+            .expect("Failed to build layer");
 
-        let output = dense_layer.forward(&input);
+        let output = dense_layer.forward(&input).unwrap();
 
         assert_eq!(output.data.shape(), &[1000, 256]);
         assert_eq!(output.data.len(), 1000 * 256);

@@ -32,6 +32,7 @@ use crate::common::Tensor;
 use std::fmt::Debug;
 
 use super::optimizer::Optimizer;
+use super::LayerError;
 use serde_json;
 
 /// A trait representing a neural network layer.
@@ -41,7 +42,7 @@ pub trait Layer: Debug {
     /// # Arguments
     ///
     /// * `input_shape` - The shape of the input tensor.
-    fn build(&mut self, input_shape: Shape);
+    fn build(&mut self, input_shape: Shape) -> Result<(), LayerError>;
 
     /// Performs the forward pass of the layer.
     ///
@@ -52,7 +53,7 @@ pub trait Layer: Debug {
     /// # Returns
     ///
     /// The output tensor after applying the layer.
-    fn forward(&mut self, input: &Tensor) -> Tensor;
+    fn forward(&mut self, input: &Tensor) -> Result<Tensor, LayerError>;
 
     /// Performs the backward pass of the layer.
     ///
@@ -63,21 +64,21 @@ pub trait Layer: Debug {
     /// # Returns
     ///
     /// The gradient tensor to be passed to the previous layer.
-    fn backward(&mut self, grad: &Tensor) -> Tensor;
+    fn backward(&mut self, grad: &Tensor) -> Result<Tensor, LayerError>;
 
     /// Returns the output shape of the layer.
     ///
     /// # Returns
     ///
     /// A `Shape` representing the output shape of the layer.
-    fn output_shape(&self) -> Shape;
+    fn output_shape(&self) -> Result<Shape, LayerError>;
 
     /// Returns the number of parameters in the layer.
     ///
     /// # Returns
     ///
     /// A tuple `(usize, usize)` representing the number of trainable and non-trainable parameters in the layer.
-    fn param_count(&self) -> (usize, usize);
+    fn param_count(&self) -> Result<(usize, usize), LayerError>;
 
     /// Returns the name of the layer.
     ///
@@ -100,7 +101,7 @@ pub trait Layer: Debug {
     /// # Arguments
     ///
     /// * `optimizer` - The optimizer to use.
-    fn update_weights(&mut self, optimizer: &mut Box<dyn Optimizer>);
+    fn update_weights(&mut self, optimizer: &mut Box<dyn Optimizer>) -> Result<(), LayerError>;
 
     /// Returns the weights of the layer as a serializable format.
     ///
@@ -126,7 +127,11 @@ pub trait Layer: Debug {
     ///
     /// A `String` representing the type name of the layer.
     fn type_name(&self) -> String {
-        std::any::type_name::<Self>().split("::").last().unwrap_or("Unknown").to_string()
+        std::any::type_name::<Self>()
+            .split("::")
+            .last()
+            .unwrap_or("Unknown")
+            .to_string()
     }
 }
 
