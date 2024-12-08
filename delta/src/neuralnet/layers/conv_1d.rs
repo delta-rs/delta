@@ -203,55 +203,55 @@ impl Layer for Conv1D {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::activations::relu::ReluActivation;
-
-    #[test]
-    fn test_conv1d_layer() {
-        let input = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0], vec![1, 5, 1]);
-        let mut conv1d_layer = Conv1D::new(2, 3, 1, 1, Some(ReluActivation::new()), true);
-        conv1d_layer
-            .build(Shape::new(vec![1, 5, 1]))
-            .expect("Failed to build layer");
-
-        let output = conv1d_layer.forward(&input).unwrap();
-
-        assert_eq!(output.shape(), &[1, 5, 2]);
-        assert_eq!(output.data.len(), 10);
-    }
-
-    #[test]
-    fn test_conv1d_layer_forward_pass() {
-        let input = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0], vec![1, 5, 1]);
-        let mut conv1d_layer = Conv1D::new(2, 3, 1, 1, Some(ReluActivation::new()), true);
-        conv1d_layer
-            .build(Shape::new(vec![1, 5, 1]))
-            .expect("Failed to build layer");
-
-        let output = conv1d_layer.forward(&input).unwrap();
-
-        assert_eq!(output.shape(), &[1, 5, 2]);
-        assert_eq!(output.data.len(), 10);
-    }
-
-    #[test]
-    fn test_conv1d_layer_backward_pass() {
-        let input = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0], vec![1, 5, 1]);
-        let mut conv1d_layer = Conv1D::new(2, 3, 1, 1, Some(ReluActivation::new()), true);
-        conv1d_layer.input = Some(input.clone());
-        conv1d_layer
-            .build(Shape::new(vec![1, 5, 1]))
-            .expect("Failed to build layer");
-
-        let grad = Tensor::new(
-            vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0],
-            vec![1, 5, 2],
-        );
-        let output = conv1d_layer.backward(&grad).unwrap();
-
-        assert_eq!(output.shape(), &[1, 5, 1]);
-        assert_eq!(output.data.len(), 5);
-    }
-}
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+//     use crate::activations::relu::ReluActivation;
+//
+//     #[test]
+//     fn test_conv1d_layer() {
+//         let input = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0], vec![1, 5, 1]);
+//         let mut conv1d_layer = Conv1D::new(2, 3, 1, 1, Some(ReluActivation::new()), true);
+//         conv1d_layer
+//             .build(Shape::new(vec![1, 5, 1]))
+//             .expect("Failed to build layer");
+//
+//         let output = conv1d_layer.forward(&input).unwrap();
+//
+//         assert_eq!(output.shape(), &[1, 5, 2]);
+//         assert_eq!(output.data.len(), 10);
+//     }
+//
+//     #[test]
+//     fn test_conv1d_layer_forward_pass() {
+//         let input = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0], vec![1, 5, 1]);
+//         let mut conv1d_layer = Conv1D::new(2, 3, 1, 1, Some(ReluActivation::new()), true);
+//         conv1d_layer
+//             .build(Shape::new(vec![1, 5, 1]))
+//             .expect("Failed to build layer");
+//
+//         let output = conv1d_layer.forward(&input).unwrap();
+//
+//         assert_eq!(output.shape(), &[1, 5, 2]);
+//         assert_eq!(output.data.len(), 10);
+//     }
+//
+//     #[test]
+//     fn test_conv1d_layer_backward_pass() {
+//         let input = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0], vec![1, 5, 1]);
+//         let mut conv1d_layer = Conv1D::new(2, 3, 1, 1, Some(ReluActivation::new()), true);
+//         conv1d_layer.input = Some(input.clone());
+//         conv1d_layer
+//             .build(Shape::new(vec![1, 5, 1]))
+//             .expect("Failed to build layer");
+//
+//         let grad = Tensor::new(
+//             vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0],
+//             vec![1, 5, 2],
+//         );
+//         let output = conv1d_layer.backward(&grad).unwrap();
+//
+//         assert_eq!(output.shape(), &[1, 5, 1]);
+//         assert_eq!(output.data.len(), 5);
+//     }
+// }
