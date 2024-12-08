@@ -31,4 +31,4 @@ pub mod base;
 pub mod image;
 
 pub use base::{Dataset, ImageDatasetOps};
-pub use image::{MnistDataset, Cifar10Dataset, ImageNetV2Dataset, TestDataset, CustomImageDataset};
+pub use image::{Cifar10Dataset, CustomImageDataset, ImageNetV2Dataset, MnistDataset, TestDataset};

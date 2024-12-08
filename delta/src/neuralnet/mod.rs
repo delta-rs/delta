@@ -31,7 +31,7 @@ pub mod layers;
 pub mod models;
 
 pub use layers::{Dense, Flatten};
-pub use models::{Sequential};
+pub use models::Sequential;
 
 /// Putting tests here since it's using a collection of everything
 #[cfg(test)]

@@ -36,8 +36,8 @@ use std::time::Instant;
 use crate::common::layer::Layer;
 use crate::common::loss::Loss;
 use crate::common::optimizer::Optimizer;
-use crate::common::{Dataset, DatasetOps, ModelError, Tensor};
-use crate::dataset::ImageDatasetOps;
+use crate::common::{ModelError, Tensor};
+use crate::dataset::{Dataset, ImageDatasetOps};
 
 /// A sequential model that contains a list of layers, an optimizer, and a loss function.
 #[derive(Debug)]
@@ -123,7 +123,7 @@ impl Sequential {
     /// # Returns
     ///
     /// None
-    pub fn fit<D: DatasetOps>(
+    pub fn fit<D: ImageDatasetOps>(
         &mut self,
         train_data: &mut D,
         epochs: i32,
@@ -303,7 +303,7 @@ impl Sequential {
     /// # Returns
     ///
     /// The evaluation metric.
-    pub fn evaluate<D: DatasetOps>(
+    pub fn evaluate<D: ImageDatasetOps>(
         &mut self,
         test_data: &D,
         batch_size: usize,
