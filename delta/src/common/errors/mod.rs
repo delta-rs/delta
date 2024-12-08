@@ -27,57 +27,12 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::layer::Layer;
-use crate::common::shape::Shape;
-use crate::common::tensor_ops::Tensor;
-use crate::common::{LayerError, Optimizer};
+pub mod core_error;
+pub mod layer_error;
+pub mod model_error;
+pub mod optimizer_error;
 
-#[derive(Debug)]
-pub struct MaxPooling2D {
-    #[allow(dead_code)]
-    pool_size: usize,
-    #[allow(dead_code)]
-    stride: usize,
-    input_shape: Option<Shape>,
-}
-
-impl MaxPooling2D {
-    pub fn new(pool_size: usize, stride: usize) -> Self {
-        Self {
-            pool_size,
-            stride,
-            input_shape: None,
-        }
-    }
-}
-
-impl Layer for MaxPooling2D {
-    fn build(&mut self, input_shape: Shape) -> Result<(), LayerError> {
-        self.input_shape = Some(input_shape);
-        Ok(())
-    }
-
-    fn forward(&mut self, _input: &Tensor) -> Result<Tensor, LayerError> {
-        unimplemented!()
-    }
-
-    fn backward(&mut self, _grad: &Tensor) -> Result<Tensor, LayerError> {
-        unimplemented!()
-    }
-
-    fn output_shape(&self) -> Result<Shape, LayerError> {
-        unimplemented!()
-    }
-
-    fn param_count(&self) -> Result<(usize, usize), LayerError> {
-        Ok((0, 0))
-    }
-
-    fn name(&self) -> &str {
-        "MaxPooling2D"
-    }
-
-    fn update_weights(&mut self, _optimizer: &mut Box<dyn Optimizer>) -> Result<(), LayerError> {
-        unimplemented!()
-    }
-}
+pub use core_error::CoreError;
+pub use layer_error::LayerError;
+pub use model_error::ModelError;
+pub use optimizer_error::OptimizerError;

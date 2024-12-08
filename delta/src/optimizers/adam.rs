@@ -28,6 +28,7 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use crate::common::Optimizer;
+use crate::common::OptimizerError;
 use crate::common::Tensor;
 use std::fmt;
 use std::fmt::Debug;
@@ -102,7 +103,11 @@ impl Optimizer for Adam {
     ///
     /// * `weights` - A mutable reference to the weights tensor.
     /// * `gradients` - A reference to the gradients tensor.
-    fn step(&mut self, weights: &mut Tensor, gradients: &Tensor) {
+    fn step(&mut self, weights: &mut Tensor, gradients: &Tensor) -> Result<(), OptimizerError> {
+        if self.learning_rate <= 0.0 {
+            return Err(OptimizerError::InvalidLearningRate);
+        }
+
         self.timestep += 1;
 
         // Initialize moving averages if not already done
@@ -129,11 +134,10 @@ impl Optimizer for Adam {
         {
             gradients.broadcast(weights.shape())
         } else {
-            panic!(
-                "Gradients shape {:?} is incompatible with weights shape {:?}",
-                gradients.shape(),
-                weights.shape()
-            );
+            return Err(OptimizerError::IncompatibleGradientWeightShape(
+                gradients.shape().clone(),
+                weights.shape().clone(),
+            ));
         };
 
         // Update moving averages
@@ -177,16 +181,20 @@ impl Optimizer for Adam {
             .mul_scalar(scaled_lr);
 
         *weights -= update;
+
+        Ok(())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use ndarray::ArrayD;
     use super::*;
+    use ndarray::ArrayD;
 
     fn assert_almost_equal(actual: &ArrayD<f32>, expected: &[f32], tolerance: f32) {
-        let actual_slice = actual.as_slice().expect("Failed to convert ArrayD to slice");
+        let actual_slice = actual
+            .as_slice()
+            .expect("Failed to convert ArrayD to slice");
         for (a, e) in actual_slice.iter().zip(expected.iter()) {
             assert!(
                 (a - e).abs() < tolerance,
@@ -202,7 +210,9 @@ mod tests {
         let mut optimizer = Adam::new(0.001);
         let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], vec![3, 1]);
         let gradients = Tensor::new(vec![0.1, 0.2, 0.3], vec![3, 1]);
-        optimizer.step(&mut weights, &gradients);
+        optimizer
+            .step(&mut weights, &gradients)
+            .expect("Failed to perform step");
         let expected = vec![0.999, 1.999, 2.999];
         assert_almost_equal(&weights.data, &expected, 1e-6);
     }
@@ -212,7 +222,9 @@ mod tests {
         let mut optimizer = Adam::new(0.001);
         let mut weights = Tensor::new(vec![0.0, 0.0, 0.0], vec![3, 1]);
         let gradients = Tensor::new(vec![0.1, 0.2, 0.3], vec![3, 1]);
-        optimizer.step(&mut weights, &gradients);
+        optimizer
+            .step(&mut weights, &gradients)
+            .expect("Failed to perform step");
 
         let expected = vec![-0.0009999934, -0.0009999934, -0.0009999934];
         assert_almost_equal(&weights.data, &expected, 1e-6);
@@ -225,7 +237,9 @@ mod tests {
         let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], vec![3, 1]);
         let gradients = Tensor::new(vec![0.1, 0.1, 0.1], vec![3, 1]);
 
-        optimizer.step(&mut weights, &gradients);
+        optimizer
+            .step(&mut weights, &gradients)
+            .expect("Failed to perform step");
 
         let expected = vec![0.95000035, 1.9500003, 2.9500003];
         assert_almost_equal(&weights.data, &expected, 1e-6);
@@ -236,7 +250,9 @@ mod tests {
         let mut optimizer = Adam::new(0.001);
         let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], vec![3, 1]);
         let gradients = Tensor::new(vec![0.1], vec![1, 1]); // Broadcastable gradient
-        optimizer.step(&mut weights, &gradients);
+        optimizer
+            .step(&mut weights, &gradients)
+            .expect("Failed to perform step");
         let expected = vec![0.9990000066, 1.9990000066, 2.9990000066];
         assert_almost_equal(&weights.data, &expected, 1e-6);
     }
@@ -247,7 +263,9 @@ mod tests {
         let mut optimizer = Adam::new(0.001);
         let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], vec![3, 1]);
         let gradients = Tensor::new(vec![0.1, 0.2], vec![2, 1]); // Mismatched shape
-        optimizer.step(&mut weights, &gradients);
+        optimizer
+            .step(&mut weights, &gradients)
+            .expect("Failed to perform step");
         assert!(false);
     }
 
@@ -256,9 +274,15 @@ mod tests {
         let mut optimizer = Adam::new(0.001);
         let mut weights = Tensor::new(vec![1.0, 1.0, 1.0], vec![3, 1]);
         let gradients = Tensor::new(vec![0.1, 0.2, 0.3], vec![3, 1]);
-        optimizer.step(&mut weights, &gradients);
-        optimizer.step(&mut weights, &gradients);
-        optimizer.step(&mut weights, &gradients);
+        optimizer
+            .step(&mut weights, &gradients)
+            .expect("Failed to perform step");
+        optimizer
+            .step(&mut weights, &gradients)
+            .expect("Failed to perform step");
+        optimizer
+            .step(&mut weights, &gradients)
+            .expect("Failed to perform step");
 
         let expected = vec![0.99700004, 0.99700004, 0.99700004];
         assert_almost_equal(&weights.data, &expected, 1e-6);
@@ -271,13 +295,17 @@ mod tests {
         let gradients = Tensor::new(vec![0.1, 0.1, 0.1], vec![3, 1]);
 
         // Step without bias correction
-        optimizer.step(&mut weights, &gradients);
+        optimizer
+            .step(&mut weights, &gradients)
+            .expect("Failed to perform step");
 
         // Correct timestep
         assert_eq!(optimizer.timestep, 1);
 
         // Bias correction factors should influence the next step
-        optimizer.step(&mut weights, &gradients);
+        optimizer
+            .step(&mut weights, &gradients)
+            .expect("Failed to perform step");
         assert_eq!(optimizer.timestep, 2);
     }
 
@@ -286,7 +314,9 @@ mod tests {
         let mut optimizer = Adam::new(0.001);
         let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], vec![3, 1]);
         let gradients = Tensor::new(vec![0.0, 0.0, 0.0], vec![3, 1]);
-        optimizer.step(&mut weights, &gradients);
+        optimizer
+            .step(&mut weights, &gradients)
+            .expect("Failed to perform step");
 
         let expected = vec![1.0, 2.0, 3.0];
         assert_almost_equal(&weights.data, &expected, 1e-6);
@@ -317,7 +347,9 @@ mod tests {
         let mut weights = Tensor::new(vec![1.0, 1.0, 1.0], vec![3, 1]);
         let gradients = Tensor::new(vec![20.0, 20.0, 20.0], vec![3, 1]); // High gradient values
 
-        optimizer.step(&mut weights, &gradients);
+        optimizer
+            .step(&mut weights, &gradients)
+            .expect("Failed to perform step");
 
         // Compute expected weights
         let scaling_factor: f32 = 10.0 / 20.0; // Scale learning rate
@@ -340,7 +372,9 @@ mod tests {
         let mut weights = Tensor::new(vec![1.0_f32, 2.0_f32, 3.0_f32], vec![3, 1]);
         let gradients = Tensor::new(vec![1e-7_f32, 1e-7_f32, 1e-7_f32], vec![3, 1]);
 
-        optimizer.step(&mut weights, &gradients);
+        optimizer
+            .step(&mut weights, &gradients)
+            .expect("Failed to perform step");
 
         // Compute expected weights manually
         let learning_rate: f32 = 0.001;

@@ -36,8 +36,8 @@ use std::time::Instant;
 use crate::common::layer::Layer;
 use crate::common::loss::Loss;
 use crate::common::optimizer::Optimizer;
-use crate::common::{Tensor};
-use crate::dataset::base::{Dataset, ImageDatasetOps};
+use crate::common::{Dataset, DatasetOps, ModelError, Tensor};
+use crate::dataset::ImageDatasetOps;
 
 /// A sequential model that contains a list of layers, an optimizer, and a loss function.
 #[derive(Debug)]
@@ -82,12 +82,22 @@ impl Sequential {
 
         // Call the build method to initialize weights and biases
         if !self.layers.is_empty() {
-            let input_shape = self.layers.last().unwrap().output_shape();
-            layer.build(input_shape);
+            // Not sure how to do an elegant way to return a Result without unwrapping
+            let input_shape = match self.layers.last().unwrap().output_shape() {
+                Ok(shape) => shape,
+                Err(e) => panic!("Failed to get output shape: {}", e),
+            };
+
+            // Not sure how to do an elegant way to return a Result without unwrapping
+            match layer.build(input_shape) {
+                Ok(_) => {}
+                Err(e) => panic!("Failed to build layer: {}", e),
+            }
         }
 
         self.layers.push(Box::new(layer));
         self.layer_names.push(layer_name);
+
         self
     }
 
@@ -113,27 +123,34 @@ impl Sequential {
     /// # Returns
     ///
     /// None
-    pub fn fit<D: ImageDatasetOps>(&mut self, train_data: &mut D, epochs: i32, batch_size: usize) {
-        self.ensure_optimizer_and_loss();
+    pub fn fit<D: DatasetOps>(
+        &mut self,
+        train_data: &mut D,
+        epochs: i32,
+        batch_size: usize,
+    ) -> Result<(), ModelError> {
+        self.ensure_optimizer_and_loss()?;
 
         let mut optimizer = self.optimizer.take().unwrap();
 
         for epoch in 0..epochs {
             println!("\nEpoch {}/{}", epoch + 1, epochs);
-            self.train_one_epoch(train_data, batch_size, &mut optimizer);
+            self.train_one_epoch(train_data, batch_size, &mut optimizer)?;
         }
 
         println!();
+        Ok(())
     }
 
     /// Ensures that the optimizer and loss function are set before training.
-    fn ensure_optimizer_and_loss(&mut self) {
+    fn ensure_optimizer_and_loss(&mut self) -> Result<(), ModelError> {
         if self.optimizer.is_none() {
-            panic!("Optimizer must be set before training");
+            return Err(ModelError::MissingOptimizer);
         }
         if self.loss.is_none() {
-            panic!("Loss function must be set before training");
+            return Err(ModelError::MissingLossFunction);
         }
+        Ok(())
     }
 
     /// Trains the model for one epoch using the given training dataset and batch size.
@@ -152,7 +169,7 @@ impl Sequential {
         train_data: &mut D,
         batch_size: usize,
         optimizer: &mut Box<dyn Optimizer>,
-    ) -> f32 {
+    ) -> Result<f32, ModelError> {
         let num_batches = train_data.len() / batch_size;
         let mut epoch_loss = 0.0;
         let mut correct_predictions = 0;
@@ -162,11 +179,10 @@ impl Sequential {
 
         for batch_idx in 0..num_batches {
             let (inputs, targets) = train_data.get_batch(batch_idx, batch_size);
-            let batch_loss = self.train_one_batch(&inputs, &targets, optimizer);
+            let batch_loss = self.train_one_batch(&inputs, &targets, optimizer)?;
             epoch_loss += batch_loss;
 
-            // Calculate accuracy
-            let outputs = self.forward(&inputs);
+            let outputs = self.forward(&inputs)?;
             let predictions = outputs.argmax(1);
             let actuals = targets.argmax(1);
             correct_predictions += predictions
@@ -181,7 +197,7 @@ impl Sequential {
             self.display_progress(batch_idx, num_batches, epoch_loss, accuracy, start_time);
         }
 
-        epoch_loss / num_batches as f32
+        Ok(epoch_loss / num_batches as f32)
     }
 
     /// Trains the model for one batch using the given inputs and targets.
@@ -200,25 +216,24 @@ impl Sequential {
         inputs: &Tensor,
         targets: &Tensor,
         optimizer: &mut Box<dyn Optimizer>,
-    ) -> f32 {
-        // Forward pass
+    ) -> Result<f32, ModelError> {
         let mut outputs = inputs.clone();
         for layer in &mut self.layers {
-            outputs = layer.forward(&outputs);
+            outputs = layer.forward(&outputs).map_err(ModelError::LayerError)?;
         }
 
-        // Compute loss
-        let loss_fn = self.loss.as_ref().unwrap();
+        let loss_fn = self.loss.as_ref().ok_or(ModelError::MissingLossFunction)?;
         let batch_loss = loss_fn.calculate_loss(&outputs, targets);
 
-        // Backward pass and update
         let mut grad = loss_fn.calculate_loss_grad(&outputs, targets);
         for layer in self.layers.iter_mut().rev() {
-            grad = layer.backward(&grad);
-            layer.update_weights(optimizer);
+            grad = layer.backward(&grad).map_err(ModelError::LayerError)?;
+            layer
+                .update_weights(optimizer)
+                .map_err(ModelError::LayerError)?;
         }
 
-        batch_loss
+        Ok(batch_loss)
     }
 
     /// Displays the training progress bar.
@@ -273,10 +288,9 @@ impl Sequential {
     /// # Returns
     ///
     /// The validation loss.
-    pub fn validate(&self, test_data: &Dataset) -> f32 {
+    pub fn validate(&self, test_data: &Dataset) -> Result<f32, String> {
         let _ = test_data;
-        // Implement validation logic here
-        0.0 // Placeholder
+        Ok(0.0) // Placeholder
     }
 
     /// Evaluates the model with the given test dataset.
@@ -289,7 +303,11 @@ impl Sequential {
     /// # Returns
     ///
     /// The evaluation metric.
-    pub fn evaluate<D: ImageDatasetOps>(&mut self, test_data: &D, batch_size: usize) -> f32 {
+    pub fn evaluate<D: DatasetOps>(
+        &mut self,
+        test_data: &D,
+        batch_size: usize,
+    ) -> Result<f32, ModelError> {
         let mut correct_predictions = 0;
         let mut total_samples = 0;
 
@@ -298,17 +316,14 @@ impl Sequential {
         for batch_idx in 0..num_batches {
             let (inputs, targets) = test_data.get_batch(batch_idx, batch_size);
 
-            // Forward pass to get predictions
             let mut outputs = inputs.clone();
             for layer in &mut self.layers {
-                outputs = layer.forward(&outputs);
+                outputs = layer.forward(&outputs).map_err(ModelError::LayerError)?;
             }
 
-            // Determine the predicted class (argmax for classification)
-            let predictions = outputs.argmax(1); // Assumes outputs support argmax
-            let actuals = targets.argmax(1); // Assumes targets are one-hot encoded
+            let predictions = outputs.argmax(1);
+            let actuals = targets.argmax(1);
 
-            // Count correct predictions
             correct_predictions += predictions
                 .data
                 .iter()
@@ -319,13 +334,13 @@ impl Sequential {
             total_samples += targets.shape()[0];
         }
 
-        // Calculate accuracy as a percentage
         if total_samples == 0 {
-            panic!("Test dataset contains no samples");
+            return Err(ModelError::DatasetError(
+                "No samples found in the dataset".to_string(),
+            ));
         }
 
-        let accuracy = correct_predictions as f32 / total_samples as f32;
-        accuracy
+        Ok(correct_predictions as f32 / total_samples as f32)
     }
 
     /// Saves the model to the specified path.
@@ -338,7 +353,6 @@ impl Sequential {
     ///
     /// A result indicating success or failure.
     pub fn save(&self, path_str: &str) -> Result<(), std::io::Error> {
-        // Create the model state as a JSON object
         let model_state = serde_json::json!({
             "layer_names": self.layer_names,
             "layers": self.layers.iter().map(|layer| {
@@ -350,14 +364,12 @@ impl Sequential {
             }).collect::<Vec<_>>()
         });
 
-        // Create or open the file for writing
         let path = Path::new(path_str);
         let path = path.parent().unwrap();
         std::fs::create_dir_all(path)?;
 
         let mut file = File::create(path.join("model.json"))?;
 
-        // Write the JSON dataset to the file
         file.write_all(serde_json::to_string_pretty(&model_state)?.as_bytes())?;
 
         Ok(())
@@ -372,10 +384,15 @@ impl Sequential {
     /// # Returns
     ///
     /// The output tensor after passing through all layers.
-    pub fn forward(&mut self, input: &Tensor) -> Tensor {
-        self.layers
+    pub fn forward(&mut self, input: &Tensor) -> Result<Tensor, ModelError> {
+        let tensor = self
+            .layers
             .iter_mut()
-            .fold(input.clone(), |acc, layer| layer.forward(&acc))
+            .try_fold(input.clone(), |acc, layer| {
+                layer.forward(&acc).map_err(ModelError::LayerError)
+            })?;
+
+        Ok(tensor)
     }
 
     /// Prints a summary of the model.
@@ -395,8 +412,12 @@ impl Sequential {
             let layer_type = &self.layer_names[i];
             let layer_type_only = layer_type.split('_').next().unwrap();
             let display_name = format!("{} ({})", layer_type, layer_type_only);
-            let output_shape = format!("{:?}", layer.output_shape());
-            let (trainable, non_trainable) = layer.param_count();
+            let output_shape = format!(
+                "{:?}",
+                layer.output_shape().expect("Failed to get output shape")
+            );
+            let (trainable, non_trainable) =
+                layer.param_count().expect("Failed to get param count");
             total_params += trainable + non_trainable;
             trainable_params += trainable;
             non_trainable_params += non_trainable;

@@ -36,7 +36,8 @@ pub mod shape;
 pub mod tensor_ops;
 
 pub use activation::Activation;
-pub use errors::{CoreError, Result};
+pub use data::{Dataset, DatasetOps};
+pub use errors::*;
 pub use layer::{Layer, LayerOutput};
 pub use loss::Loss;
 pub use optimizer::{Optimizer, OptimizerConfig};
