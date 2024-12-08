@@ -46,3 +46,45 @@ async fn main() {
     // Save the model
     model.save(".cache/models/mnist/mnist").unwrap();
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use deltaml::dataset::MnistDataset;
+
+    #[tokio::test]
+    async fn test_model_creation(){
+        //testing for model test_model_creation
+        let model = Sequential::new()
+            .add(Conv2D::new(32, 3, 1, 1, Some(Box::new(ReluActivation::new())), true))
+            .add(MaxPooling2D::new(2, 2))
+            .add(Flatten::new(Shape::new(vec![28, 28, 32])))
+            .add(Dense::new(128, Some(ReluActivation::new()), true))
+            .add(Dense::new(10, None::<SoftmaxActivation>, false));
+
+        assert!(model.is_ok(), "Failed to create the model");
+    }
+    
+     #[tokio::test]
+    async fn test_model_evaluation() {
+        let mut model = Sequential::new()
+            .add(Conv2D::new(32, 3, 1, 1, Some(Box::new(ReluActivation::new())), true))
+            .add(MaxPooling2D::new(2, 2))
+            .add(Flatten::new(Shape::new(vec![28, 28, 32])))
+            .add(Dense::new(128, Some(ReluActivation::new()), true))
+            .add(Dense::new(10, None::<SoftmaxActivation>, false));
+
+        let optimizer = Adam::new(0.001);
+        model.compile(optimizer, SparseCategoricalCrossEntropyLoss::new());
+
+        let test_data = MnistDataset::load_test().await;
+
+        let batch_size = 32;
+        let accuracy = model.evaluate(&test_data, batch_size);
+
+        assert!(
+            accuracy >= 0.0 && accuracy <= 1.0,
+            "Accuracy should be between 0 and 1"
+        );
+    }
+}
