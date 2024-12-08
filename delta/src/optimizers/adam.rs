@@ -258,15 +258,20 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Gradients shape")]
     fn test_adam_optimizer_incompatible_shapes() {
         let mut optimizer = Adam::new(0.001);
         let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], vec![3, 1]);
         let gradients = Tensor::new(vec![0.1, 0.2], vec![2, 1]); // Mismatched shape
-        optimizer
-            .step(&mut weights, &gradients)
-            .expect("Failed to perform step");
-        assert!(false);
+        let result = optimizer.step(&mut weights, &gradients);
+
+        assert!(result.is_err(), "Expected an error due to incompatible shapes");
+
+        if let Err(OptimizerError::IncompatibleGradientWeightShape(g_shape, w_shape)) = result {
+            assert_eq!(g_shape, vec![2, 1]);
+            assert_eq!(w_shape, vec![3, 1]);
+        } else {
+            panic!("Unexpected error type");
+        }
     }
 
     #[test]
