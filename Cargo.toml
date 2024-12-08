@@ -4,7 +4,6 @@ members = [
     "examples/image_classification/cifar10",
     "examples/image_classification/mnist",
     "examples/image_classification/imagenet_v2",
-    "examples/image_classification/custom",
 ]
 resolver = "2"
 
