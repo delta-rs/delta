@@ -44,20 +44,19 @@ async fn main() {
     // Save the model
     model.save("model_path").unwrap();
 }
-#[cfg(test)]]
-
-mod test{
+#[cfg(test)]
+mod test {
     use super::*;
-    use deltaml::dataset:MnistDataset;
-    #[tokio::test]
+    use deltaml::dataset::MnistDataset;
 
-    async fn test_model_creation(){
+    #[tokio::test]
+    async fn test_model_creation() {
         let model = Sequential::new()
-        .add(Flatten::new(Shape::new(vec![28, 28]))) // Input: 28x28, Output: 784
-        .add(Dense::new(128, Some(ReluActivation::new()), true)) // Input: 784, Output: 128
-        .add(Dense::new(10, Some(SoftmaxActivation::new()), false)); // Output: 10 classes
+            .add(Flatten::new(Shape::new(vec![28, 28]))) // Input: 28x28, Output: 784
+            .add(Dense::new(128, Some(ReluActivation::new()), true)) // Input: 784, Output: 128
+            .add(Dense::new(10, Some(SoftmaxActivation::new()), false)); // Output: 10 classes
         
-        asset!(model.is_ok(),"Failed to create the model")
+        assert!(model.is_ok(), "Failed to create the model");
     }
 
     #[tokio::test]
@@ -73,14 +72,12 @@ mod test{
     #[tokio::test]
     async fn test_model_training() {
         let mut model = Sequential::new()
-            .add(Conv2D::new(32, 3, 1, 1, Some(Box::new(ReluActivation::new())), true))
-            .add(MaxPooling2D::new(2, 2))
-            .add(Flatten::new(Shape::new(vec![28, 28, 32])))
+            .add(Flatten::new(Shape::new(vec![28, 28])))
             .add(Dense::new(128, Some(ReluActivation::new()), true))
-            .add(Dense::new(10, None::<SoftmaxActivation>, false));
+            .add(Dense::new(10, Some(SoftmaxActivation::new()), false));
 
         let optimizer = Adam::new(0.001);
-        model.compile(optimizer, SparseCategoricalCrossEntropyLoss::new());
+        model.compile(optimizer, MeanSquaredLoss::new());
 
         let mut train_data = MnistDataset::load_train().await;
 
@@ -98,14 +95,12 @@ mod test{
     #[tokio::test]
     async fn test_model_evaluation() {
         let mut model = Sequential::new()
-            .add(Conv2D::new(32, 3, 1, 1, Some(Box::new(ReluActivation::new())), true))
-            .add(MaxPooling2D::new(2, 2))
-            .add(Flatten::new(Shape::new(vec![28, 28, 32])))
+            .add(Flatten::new(Shape::new(vec![28, 28])))
             .add(Dense::new(128, Some(ReluActivation::new()), true))
-            .add(Dense::new(10, None::<SoftmaxActivation>, false));
+            .add(Dense::new(10, Some(SoftmaxActivation::new()), false));
 
         let optimizer = Adam::new(0.001);
-        model.compile(optimizer, SparseCategoricalCrossEntropyLoss::new());
+        model.compile(optimizer, MeanSquaredLoss::new());
 
         let test_data = MnistDataset::load_test().await;
 
@@ -118,3 +113,4 @@ mod test{
         );
     }
 }
+
