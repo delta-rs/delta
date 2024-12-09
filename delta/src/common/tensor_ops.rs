@@ -2,7 +2,7 @@ use std::io::Cursor;
 use std::ops::{Mul, Range, SubAssign};
 
 use image::{GenericImageView, ImageReader};
-use ndarray::{Array, ArrayD, Axis, IxDyn, Shape};
+use ndarray::{s, Array, ArrayD, Axis, IxDyn, Shape};
 use ndarray::{Dimension, Ix2};
 use rand::Rng;
 
@@ -115,7 +115,7 @@ impl Tensor {
                 .clone()
                 .into_shape_with_order(shape)
                 .expect("Invalid shape for reshape")
-                .into_dyn(), // Convert to ArrayD
+                .into_dyn(),
         }
     }
 
@@ -577,6 +577,37 @@ impl Tensor {
         Ok(Tensor {
             data: stacked_data.into_dyn(),
         })
+    }
+
+    /// Splits the tensor into two parts at the specified index.
+    ///
+    /// # Arguments
+    ///
+    /// * `index` - The index at which to split the tensor.
+    ///
+    /// # Returns
+    ///
+    /// A tuple containing the two resulting tensors.
+    pub fn split_at(&self, index: usize) -> (Tensor, Tensor) {
+        let shape_binding = self.shape();
+        let shape = shape_binding.raw_dim();
+
+        // Ensure the tensor has at least one dimension
+        assert!(shape.ndim() > 0, "Tensor must have at least one dimension");
+
+        // Ensure the index is within the bounds of the tensor's first dimension
+        assert!(index <= shape[0], "Index out of bounds for tensor split");
+
+        // Ensure the tensor has at least two dimensions for slicing
+        assert!(shape.ndim() >= 2, "Tensor must have at least two dimensions for slicing");
+
+        let data1 = self.data.slice(s![0..index, ..]).to_owned().into_dyn();
+        let data2 = self.data.slice(s![index.., ..]).to_owned().into_dyn();
+
+        (
+            Tensor { data: data1 },
+            Tensor { data: data2 },
+        )
     }
 }
 

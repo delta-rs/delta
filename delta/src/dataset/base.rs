@@ -72,6 +72,13 @@ pub trait ImageDatasetOps {
     /// A future that resolves to the test dataset.
     fn load_test() -> Self::LoadFuture;
 
+    /// Loads the MNIST dataset.
+    ///
+    /// # Returns
+    ///
+    /// A future that resolves to the `MnistDataset` with the MNIST dataset loaded.
+    fn load_val() -> Self::LoadFuture;
+
     /// Normalizes the dataset.
     ///
     /// # Arguments

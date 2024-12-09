@@ -30,6 +30,7 @@ async fn main() {
     // Loading the train and test dataset
     let mut train_data = MnistDataset::load_train().await;
     let test_data = MnistDataset::load_test().await;
+    let val_data = MnistDataset::load_val().await;
 
     println!("Training the model...");
     println!("Train dataset size: {}", train_data.len());
@@ -40,6 +41,12 @@ async fn main() {
     match model.fit(&mut train_data, epoch, batch_size) {
         Ok(_) => println!("Model trained successfully"),
         Err(e) => println!("Failed to train model: {}", e),
+    }
+
+    // Validate the model
+    match model.validate(&val_data, batch_size) {
+        Ok(validation_loss) => println!("Validation Loss: {:.6}", validation_loss),
+        Err(e) => println!("Failed to validate model: {}", e),
     }
 
     // Evaluate the model

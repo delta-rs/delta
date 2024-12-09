@@ -46,6 +46,7 @@ use crate::get_workspace_dir;
 pub struct Cifar10Dataset {
     train: Option<Dataset>,
     test: Option<Dataset>,
+    val: Option<Dataset>,
 }
 
 impl Cifar10Dataset {
@@ -174,6 +175,31 @@ impl Cifar10Dataset {
             Tensor::new(labels, Shape::from(IxDyn(&[total_examples, Self::CIFAR10_NUM_CLASSES]))),
         )
     }
+
+    /// Splits the training data into training and validation datasets.
+    ///
+    /// # Arguments
+    ///
+    /// * `validation_split` - The fraction of the training data to use for validation.
+    ///
+    /// # Returns
+    ///
+    /// A tuple containing the training and validation datasets.
+    fn split_train_validation(&mut self, validation_split: f32) {
+        if let Some(train_data) = &self.train {
+            let total_samples = train_data.inputs.shape().raw_dim()[0];
+            let validation_size = (total_samples as f32 * validation_split).round() as usize;
+            let train_size = total_samples - validation_size;
+
+            let (train_inputs, val_inputs) = train_data.inputs.split_at(train_size);
+            let (train_labels, val_labels) = train_data.labels.split_at(train_size);
+
+            self.train = Some(Dataset::new(train_inputs, train_labels));
+            self.val = Some(Dataset::new(val_inputs, val_labels));
+        } else {
+            panic!("Training dataset not loaded!");
+        }
+    }
 }
 
 impl ImageDatasetOps for Cifar10Dataset {
@@ -190,6 +216,7 @@ impl ImageDatasetOps for Cifar10Dataset {
             Cifar10Dataset {
                 train: Some(train_data),
                 test: None,
+                val: None,
             }
         })
     }
@@ -205,7 +232,22 @@ impl ImageDatasetOps for Cifar10Dataset {
             Cifar10Dataset {
                 train: None,
                 test: Some(test_data),
+                val: None,
             }
+        })
+    }
+
+    fn load_val() -> Self::LoadFuture {
+        Box::pin(async {
+            Self::download_and_extract().await;
+            let train_data = Self::load_data(&Self::CIFAR10_TRAIN_FILES, Self::TRAIN_EXAMPLES);
+            let mut dataset = Cifar10Dataset {
+                train: Some(train_data),
+                test: None,
+                val: None,
+            };
+            dataset.split_train_validation(0.2);
+            dataset
         })
     }
 
@@ -355,6 +397,7 @@ impl ImageDatasetOps for Cifar10Dataset {
         Self {
             train: self.train.clone(),
             test: self.test.clone(),
+            val: self.val.clone()
         }
     }
 }
