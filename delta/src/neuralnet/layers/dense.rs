@@ -89,8 +89,9 @@ impl Layer for Dense {
             input_shape, self.units
         );
         let raw_dim = input_shape.raw_dim();
-        let input_units = raw_dim.as_array_view().last().expect("Input shape must not be empty");
-        self.weights = Some(Tensor::random(Shape::from(IxDyn(&[input_units, self.units]))));
+        let array_view = raw_dim.as_array_view();
+        let input_units = array_view.last().expect("Input shape must not be empty");
+        self.weights = Some(Tensor::random(Shape::from(IxDyn(&[*input_units, self.units]))));
         self.bias = Some(Tensor::zeros(Shape::from(IxDyn(&[self.units]))));
         Ok(())
     }

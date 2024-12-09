@@ -418,7 +418,8 @@ impl Tensor {
     ///
     /// Panics if the current shape cannot be broadcasted to the target shape.
     pub fn broadcast(&self, target_shape: Shape<IxDyn>) -> Tensor {
-        let self_shape = self.shape().raw_dim();
+        let shape_binding = self.shape();
+        let self_shape = shape_binding.raw_dim();
         let ndim_self = self_shape.ndim();
         let ndim_target = target_shape.raw_dim().ndim();
 
@@ -612,8 +613,10 @@ impl Tensor {
             return Err("Cannot stack an empty list of tensors.".to_string());
         }
 
-        // Ensure all tensors have the same shape
-        let first_shape = tensors[0].shape().raw_dim();
+        // Create a longer-lived binding for the shape
+        let shape_binding = tensors[0].shape();
+        let first_shape = shape_binding.raw_dim();
+
         for tensor in tensors {
             if tensor.shape().raw_dim() != first_shape {
                 return Err(format!(

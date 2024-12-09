@@ -27,7 +27,7 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use ndarray::{IxDyn, Shape};
+use ndarray::{Dimension, IxDyn, Shape};
 use crate::common::Tensor;
 use crate::neuralnet::layers::error::LayerError;
 use crate::neuralnet::layers::Layer;
@@ -89,7 +89,7 @@ impl Layer for Flatten {
     fn forward(&mut self, input: &Tensor) -> Result<Tensor, LayerError> {
         let batch_size = input.data.shape()[0];
         let flattened_size = input.data.len() / batch_size;
-        let reshaped = input.reshape(vec![batch_size, flattened_size]);
+        let reshaped = input.reshape(IxDyn(&[batch_size, flattened_size]));
         Ok(reshaped)
     }
 
@@ -103,13 +103,14 @@ impl Layer for Flatten {
     ///
     /// The gradient tensor with respect to the input.
     fn backward(&mut self, grad: &Tensor) -> Result<Tensor, LayerError> {
-        let batch_size = grad.shape()[0];
+        let batch_size = grad.shape().raw_dim().as_array_view()[0];
         let new_shape = [batch_size]
             .iter()
-            .chain(self.input_shape.0.iter())
+            .chain(self.input_shape.raw_dim().as_array_view().iter())
             .cloned()
             .collect::<Vec<_>>();
-        Ok(grad.reshape(new_shape))
+
+        Ok(grad.reshape(IxDyn(&new_shape)))
     }
 
     /// Returns the output shape of the layer.
@@ -118,7 +119,7 @@ impl Layer for Flatten {
     ///
     /// A `Shape` representing the output shape of the layer.
     fn output_shape(&self) -> Result<Shape<IxDyn>, LayerError> {
-        let shape = Shape::new(vec![self.input_shape.0.iter().product()]);
+        let shape = Shape::from(IxDyn(&[self.input_shape.raw_dim().as_array_view().iter().product()]));
         Ok(shape)
     }
 
@@ -158,29 +159,29 @@ impl Layer for Flatten {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Shape;
+    use ndarray::{IxDyn, Shape};
 
     #[test]
     fn test_flatten_new() {
-        let input_shape = Shape::new(vec![28, 28]);
+        let input_shape = Shape::from(IxDyn(&[28, 28]));
         let flatten_layer = Flatten::new(input_shape.clone());
 
         assert_eq!(flatten_layer.name(), "Flatten");
-        assert_eq!(flatten_layer.input_shape, input_shape);
+        assert_eq!(flatten_layer.input_shape.raw_dim(), input_shape.raw_dim());
     }
 
     #[test]
     fn test_flatten_output_shape() {
-        let input_shape = Shape::new(vec![3, 4]);
+        let input_shape = Shape::from(IxDyn(&[3, 4]));
         let flatten_layer = Flatten::new(input_shape.clone());
 
         let output_shape = flatten_layer.output_shape().unwrap();
-        assert_eq!(output_shape.0, vec![12]);
+        assert_eq!(output_shape.raw_dim().as_array_view(), &[12]);
     }
 
     #[test]
     fn test_flatten_param_count() {
-        let flatten_layer = Flatten::new(Shape::new(vec![10, 10]));
+        let flatten_layer = Flatten::new(Shape::from(IxDyn(&[10, 10])));
         let (trainable, non_trainable) = flatten_layer.param_count().unwrap();
 
         assert_eq!(trainable, 0);

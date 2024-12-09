@@ -192,7 +192,7 @@ impl Sequential {
                 .zip(actuals.data.iter())
                 .filter(|(pred, actual)| pred == actual)
                 .count();
-            total_samples += targets.shape()[0];
+            total_samples += targets.shape().raw_dim()[0];
 
             let accuracy = correct_predictions as f32 / total_samples as f32;
             self.display_progress(batch_idx, num_batches, epoch_loss, accuracy, start_time);
@@ -332,7 +332,7 @@ impl Sequential {
                 .filter(|(pred, actual)| pred == actual)
                 .count();
 
-            total_samples += targets.shape()[0];
+            total_samples += targets.shape().raw_dim()[0];
         }
 
         if total_samples == 0 {

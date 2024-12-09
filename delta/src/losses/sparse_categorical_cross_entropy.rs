@@ -27,6 +27,7 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use ndarray::{Dimension, IxDyn, Shape};
 use crate::common::Tensor;
 use crate::losses::Loss;
 
@@ -64,14 +65,14 @@ impl SparseCategoricalCrossEntropyLoss {
     ///
     /// A tensor containing class indices.
     fn one_hot_to_indices(&self, one_hot: &Tensor) -> Tensor {
-        if one_hot.shape().len() != 2 {
+        if one_hot.shape().raw_dim().ndim() != 2 {
             panic!(
                 "Expected a 2D tensor for one-hot encoding, but got shape: {:?}",
                 one_hot.shape()
             );
         }
 
-        let rows = one_hot.shape()[0];
+        let rows = one_hot.shape().raw_dim()[0];
         let indices: Vec<f32> = one_hot
             .data
             .outer_iter()
@@ -83,7 +84,7 @@ impl SparseCategoricalCrossEntropyLoss {
             })
             .collect();
 
-        Tensor::new(indices, vec![rows])
+        Tensor::new(indices, Shape::from(IxDyn(&[rows])))
     }
 
     /// Preprocesses one-hot encoded `y_true` for use with sparse categorical cross-entropy loss.
@@ -97,15 +98,15 @@ impl SparseCategoricalCrossEntropyLoss {
     /// A tensor containing class indices.
     fn preprocess_one_hot(&self, y_true: &Tensor) -> Tensor {
         let shape = y_true.shape();
-        if shape.len() != 2 {
+        if shape.raw_dim().ndim() != 2 {
             panic!(
                 "Expected a 2D tensor for one-hot encoding, but got shape: {:?}",
                 shape
             );
         }
 
-        let rows = shape[0];
-        let cols = shape[1];
+        let rows = shape.raw_dim()[0];
+        let cols = shape.raw_dim()[1];
         let data = y_true
             .data
             .as_slice()
@@ -125,7 +126,7 @@ impl SparseCategoricalCrossEntropyLoss {
             processed_data.extend((0..cols).map(|j| if j == max_idx { 1.0 } else { 0.0 }));
         }
 
-        Tensor::new(processed_data, vec![rows, cols])
+        Tensor::new(processed_data, Shape::from(IxDyn(&[rows, cols])))
     }
 }
 
@@ -141,9 +142,9 @@ impl Loss for SparseCategoricalCrossEntropyLoss {
     ///
     /// The sparse categorical cross-entropy loss.
     fn calculate_loss(&self, y_true: &Tensor, y_pred: &Tensor) -> f32 {
-        let y_true = if y_true.shape().len() == 2 {
+        let y_true = if y_true.shape().raw_dim().ndim() == 2 {
             // Handle one-hot encoding
-            if y_true.shape()[1] != y_pred.shape()[1] {
+            if y_true.shape().raw_dim()[1] != y_pred.shape().raw_dim()[1] {
                 panic!(
                     "If y_true is one-hot encoded, it must have the same number of classes as y_pred. Got: {:?}",
                     y_true.shape()
@@ -154,7 +155,7 @@ impl Loss for SparseCategoricalCrossEntropyLoss {
             indices
         } else {
             // Validate 1D tensor
-            if y_true.shape().len() != 1 {
+            if y_true.shape().raw_dim().ndim() != 1 {
                 panic!(
                     "Expected y_true to be a 1D tensor of class indices, but got shape: {:?}",
                     y_true.shape()
@@ -168,8 +169,8 @@ impl Loss for SparseCategoricalCrossEntropyLoss {
         let clipped_pred = self.clip_tensor(y_pred, epsilon);
 
         // Compute cross-entropy loss
-        let batch_size = y_true.shape()[0];
-        let num_classes = y_pred.shape()[1];
+        let batch_size = y_true.shape().raw_dim()[0];
+        let num_classes = y_pred.shape().raw_dim()[1];
         let mut loss = 0.0;
 
         for i in 0..batch_size {
@@ -197,9 +198,9 @@ impl Loss for SparseCategoricalCrossEntropyLoss {
     ///
     /// The gradient of the sparse categorical cross-entropy loss with respect to the predicted values.
     fn calculate_loss_grad(&self, output: &Tensor, target: &Tensor) -> Tensor {
-        let target = if target.shape().len() == 2 {
+        let target = if target.shape().raw_dim().ndim() == 2 {
             // Handle one-hot encoding
-            if target.shape()[1] != output.shape()[1] {
+            if target.shape().raw_dim()[1] != output.shape().raw_dim()[1] {
                 panic!(
                     "If target is one-hot encoded, it must have the same number of classes as output. Got: {:?}",
                     target.shape()
@@ -210,7 +211,7 @@ impl Loss for SparseCategoricalCrossEntropyLoss {
             indices
         } else {
             // Validate 1D tensor
-            if target.shape().len() != 1 {
+            if target.shape().raw_dim().ndim() != 1 {
                 panic!(
                     "Expected target to be a 1D tensor of class indices, but got shape: {:?}",
                     target.shape()
@@ -219,8 +220,8 @@ impl Loss for SparseCategoricalCrossEntropyLoss {
             target.clone()
         };
 
-        let batch_size = target.shape()[0];
-        let num_classes = output.shape()[1];
+        let batch_size = target.shape().raw_dim()[0];
+        let num_classes = output.shape().raw_dim()[1];
         let epsilon = 1e-12;
         let clipped_pred = self.clip_tensor(output, epsilon);
 
@@ -243,7 +244,7 @@ impl Loss for SparseCategoricalCrossEntropyLoss {
             }
         }
 
-        let grad_shape = clipped_pred.shape().to_vec();
+        let grad_shape = clipped_pred.shape().raw_dim().as_array_view().to_vec();
         Tensor {
             data: ndarray::Array::from_shape_vec(ndarray::IxDyn(&grad_shape), grad_data)
                 .expect("Failed to create gradient tensor"),
@@ -255,13 +256,15 @@ impl Loss for SparseCategoricalCrossEntropyLoss {
 mod tests {
     use super::*;
     use crate::common::Tensor;
+    use ndarray::IxDyn;
+    use ndarray::Shape;
 
     #[test]
     fn test_sparse_categorical_cross_entropy_loss() {
-        let y_true = Tensor::new(vec![0.0, 1.0, 2.0], vec![3]);
+        let y_true = Tensor::new(vec![0.0, 1.0, 2.0], Shape::from(IxDyn(&[3])));
         let y_pred = Tensor::new(
             vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
-            vec![3, 3],
+            Shape::from(IxDyn(&[3, 3])),
         );
         let loss = SparseCategoricalCrossEntropyLoss::new();
         let loss_value = loss.calculate_loss(&y_true, &y_pred);
@@ -270,10 +273,10 @@ mod tests {
 
     #[test]
     fn test_sparse_categorical_cross_entropy_loss_grad() {
-        let y_true = Tensor::new(vec![0.0, 1.0, 2.0], vec![3]);
+        let y_true = Tensor::new(vec![0.0, 1.0, 2.0], Shape::from(IxDyn(&[3])));
         let y_pred = Tensor::new(
             vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
-            vec![3, 3],
+            Shape::from(IxDyn(&[3, 3])),
         );
         let loss = SparseCategoricalCrossEntropyLoss::new();
         let grad = loss.calculate_loss_grad(&y_pred, &y_true);
@@ -282,7 +285,7 @@ mod tests {
 
     #[test]
     fn test_preprocess_one_hot() {
-        let y_true = Tensor::new(vec![1.0, 0.0, 0.0], vec![1, 3]);
+        let y_true = Tensor::new(vec![1.0, 0.0, 0.0], Shape::from(IxDyn(&[1, 3])));
         let loss = SparseCategoricalCrossEntropyLoss::new();
         let result = loss.preprocess_one_hot(&y_true);
         assert_eq!(
