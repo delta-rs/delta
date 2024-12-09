@@ -28,11 +28,9 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 pub mod errors;
-pub mod layer;
 pub mod shape;
 pub mod tensor_ops;
 
 pub use errors::*;
-pub use layer::{Layer, LayerOutput};
 pub use shape::Shape;
 pub use tensor_ops::Tensor;

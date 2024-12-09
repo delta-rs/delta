@@ -27,10 +27,11 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::{Layer, LayerError, Shape, Tensor};
+use crate::common::{LayerError, Shape, Tensor};
 use log::debug;
 use serde_json;
 use crate::activations::Activation;
+use crate::neuralnet::layers::Layer;
 use crate::optimizers::Optimizer;
 
 /// A dense (fully connected) layer.

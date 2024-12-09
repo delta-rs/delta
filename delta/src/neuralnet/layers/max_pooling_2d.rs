@@ -27,10 +27,10 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::layer::Layer;
 use crate::common::shape::Shape;
 use crate::common::tensor_ops::Tensor;
 use crate::common::LayerError;
+use crate::neuralnet::layers::Layer;
 use crate::optimizers::Optimizer;
 
 #[derive(Debug)]

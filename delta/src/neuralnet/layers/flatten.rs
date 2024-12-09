@@ -27,7 +27,8 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::{Layer, LayerError, Shape, Tensor};
+use crate::common::{LayerError, Shape, Tensor};
+use crate::neuralnet::layers::Layer;
 
 /// A flatten layer that reshapes the input tensor to a 1D vector.
 #[derive(Debug)]

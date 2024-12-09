@@ -28,7 +28,8 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use crate::activations::Activation;
-use crate::common::{Layer, LayerError, Shape, Tensor};
+use crate::common::{LayerError, Shape, Tensor};
+use crate::neuralnet::layers::Layer;
 
 /// A struct representing a 1D convolutional layer.
 #[derive(Debug)]
