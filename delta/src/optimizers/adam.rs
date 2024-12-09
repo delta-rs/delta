@@ -30,6 +30,7 @@
 use crate::common::Tensor;
 use std::fmt;
 use std::fmt::Debug;
+use ndarray::Dimension;
 use crate::optimizers::error::OptimizerError;
 use crate::optimizers::Optimizer;
 
@@ -111,10 +112,10 @@ impl Optimizer for Adam {
         self.timestep += 1;
 
         // Initialize moving averages if not already done
-        if self.m.is_none() || self.m.as_ref().unwrap().shape().to_vec() != weights.shape().to_vec() {
+        if self.m.is_none() || self.m.as_ref().unwrap().shape().raw_dim().as_array_view().to_vec() != weights.shape().raw_dim().as_array_view().to_vec() {
             self.m = Some(Tensor::zeros(weights.shape().clone()));
         }
-        if self.v.is_none() || self.v.as_ref().unwrap().shape().to_vec() != weights.shape().to_vec() {
+        if self.v.is_none() || self.v.as_ref().unwrap().shape().raw_dim().as_array_view().to_vec() != weights.shape().raw_dim().as_array_view().to_vec() {
             self.v = Some(Tensor::zeros(weights.shape().clone()));
         }
 
@@ -122,22 +123,23 @@ impl Optimizer for Adam {
         let v = self.v.as_mut().unwrap();
 
         // Ensure gradients match the weights' shape
-        let processed_gradients = if gradients.shape().to_vec() == weights.shape().to_vec() {
+        let processed_gradients = if gradients.shape().raw_dim().as_array_view().to_vec() == weights.shape().raw_dim().as_array_view().to_vec() {
             gradients.clone()
-        } else if gradients.shape().ndim() <= weights.shape().ndim()
+        } else if gradients.shape().raw_dim().ndim() <= weights.shape().raw_dim().ndim()
             && gradients
             .shape()
+            .raw_dim()
             .as_array_view()
             .iter()
             .rev()
-            .zip(weights.shape().as_array_view().iter().rev())
+            .zip(weights.shape().raw_dim().as_array_view().iter().rev())
             .all(|(g, w)| *g == *w || *g == 1)
         {
-            gradients.broadcast(weights.shape().to_vec())
+            gradients.broadcast(weights.shape())
         } else {
             return Err(OptimizerError::IncompatibleGradientWeightShape(
-                gradients.shape().to_vec(),
-                weights.shape().to_vec(),
+                gradients.shape().raw_dim().as_array_view().to_vec(),
+                weights.shape().raw_dim().as_array_view().to_vec(),
             ));
         };
 

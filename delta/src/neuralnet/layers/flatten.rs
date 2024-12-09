@@ -49,15 +49,6 @@ impl Flatten {
     /// # Returns
     ///
     /// A new instance of the flatten layer.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use ndarray::Shape;
-    /// use deltaml::neuralnet::layers::flatten::Flatten;
-    ///
-    /// let flatten_layer = Flatten::new(Shape::new(vec![28, 28]));
-    /// ```
     pub fn new(input_shape: Shape<IxDyn>) -> Self {
         Self {
             name: "Flatten".to_string(),
