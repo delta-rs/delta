@@ -49,7 +49,8 @@ use crate::dataset::base::{Dataset, ImageDatasetOps};
 
 /// A struct representing the ImageNetV2 dataset.
 pub struct ImageNetV2Dataset {
-    data: Option<Dataset>,
+    train: Option<Dataset>,
+    val: Option<Dataset>,
 }
 
 impl ImageNetV2Dataset {
@@ -185,32 +186,74 @@ impl ImageNetV2Dataset {
             },
         ))
     }
+
+    /// Splits the training data into training and validation datasets.
+    ///
+    /// # Arguments
+    ///
+    /// * `validation_split` - The fraction of the training data to use for validation.
+    ///
+    /// # Returns
+    ///
+    /// A tuple containing the training and validation datasets.
+    fn split_train_validation(&mut self, validation_split: f32) {
+        if let Some(train_data) = &self.train {
+            let total_samples = train_data.inputs.shape().raw_dim()[0];
+            let validation_size = (total_samples as f32 * validation_split).round() as usize;
+            let train_size = total_samples - validation_size;
+
+            let (train_inputs, val_inputs) = train_data.inputs.split_at(train_size);
+            let (train_labels, val_labels) = train_data.labels.split_at(train_size);
+
+            self.train = Some(Dataset::new(train_inputs, train_labels));
+            self.val = Some(Dataset::new(val_inputs, val_labels));
+        } else {
+            panic!("Training dataset not loaded!");
+        }
+    }
 }
 
 impl ImageDatasetOps for ImageNetV2Dataset {
     type LoadFuture = Pin<Box<dyn Future<Output = ImageNetV2Dataset> + Send>>;
 
-    /// Loads the ImageNetV2 dataset.
+    /// Loads the training dataset.
     ///
     /// # Returns
     /// A future that resolves to the `ImageNetV2Dataset` with the ImageNetV2 dataset loaded.
     fn load_train() -> Self::LoadFuture {
         Box::pin(async {
             match ImageNetV2Dataset::load(0).await {
-                Ok(data) => ImageNetV2Dataset { data: Some(data) },
+                Ok(data) => ImageNetV2Dataset { train: Some(data), val: None },
                 Err(err) => panic!("Failed to load dataset: {}", err),
             }
         })
     }
 
-    /// Loads the ImageNetV2 dataset.
+    /// Loads the test dataset.
     ///
     /// # Returns
     /// A future that resolves to the `ImageNetV2Dataset` with the ImageNetV2 dataset loaded.
     fn load_test() -> Self::LoadFuture {
         Box::pin(async {
             match ImageNetV2Dataset::load(0).await {
-                Ok(data) => ImageNetV2Dataset { data: Some(data) },
+                Ok(data) => ImageNetV2Dataset { train: Some(data), val: None },
+                Err(err) => panic!("Failed to load dataset: {}", err),
+            }
+        })
+    }
+
+    /// Loads the validation dataset.
+    ///
+    /// # Returns
+    /// A future that resolves to the `ImageNetV2Dataset` with the ImageNetV2 dataset loaded.
+    fn load_val() -> Self::LoadFuture {
+        Box::pin(async {
+            match ImageNetV2Dataset::load(0).await {
+                Ok(data) => {
+                    let mut dataset = ImageNetV2Dataset { train: None, val: Some(data) };
+                    dataset.split_train_validation(0.2); // Use 20% of the training data for validation
+                    dataset
+                },
                 Err(err) => panic!("Failed to load dataset: {}", err),
             }
         })
@@ -223,7 +266,7 @@ impl ImageDatasetOps for ImageNetV2Dataset {
     /// * `max` - The maximum value of the normalized range.
     fn normalize(&mut self, min: f32, max: f32) {
         // Ensure the dataset is loaded
-        if let Some(dataset) = &mut self.data {
+        if let Some(dataset) = &mut self.train {
             let data_min = dataset
                 .inputs
                 .data
@@ -253,7 +296,7 @@ impl ImageDatasetOps for ImageNetV2Dataset {
     }
 
     fn len(&self) -> usize {
-        self.data
+        self.train
             .as_ref()
             .map(|ds| ds.inputs.shape().raw_dim()[0])
             .unwrap_or(0)
@@ -270,7 +313,7 @@ impl ImageDatasetOps for ImageNetV2Dataset {
     fn get_batch(&self, batch_idx: usize, batch_size: usize) -> (Tensor, Tensor) {
         // Ensure the dataset is loaded
         let dataset = self
-            .data
+            .train
             .as_ref()
             .expect("Dataset not loaded. Call `load_train` or `load_test` first.");
 
@@ -358,7 +401,7 @@ impl ImageDatasetOps for ImageNetV2Dataset {
 
     /// Shuffles the dataset.
     fn shuffle(&mut self) {
-        if let Some(dataset) = &mut self.data {
+        if let Some(dataset) = &mut self.train {
             // Get the number of samples
             let num_samples = dataset.inputs.shape().raw_dim()[0];
 
@@ -378,7 +421,8 @@ impl ImageDatasetOps for ImageNetV2Dataset {
 
     fn clone(&self) -> Self {
         Self {
-            data: self.data.clone(),
+            train: self.train.clone(),
+            val: self.val.clone()
         }
     }
 }
