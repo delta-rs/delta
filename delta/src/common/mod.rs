@@ -27,7 +27,6 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-pub mod activation;
 pub mod errors;
 pub mod layer;
 pub mod loss;
@@ -35,7 +34,6 @@ pub mod optimizer;
 pub mod shape;
 pub mod tensor_ops;
 
-pub use activation::Activation;
 pub use errors::*;
 pub use layer::{Layer, LayerOutput};
 pub use loss::Loss;

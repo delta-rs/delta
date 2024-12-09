@@ -27,7 +27,8 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::{Activation, Layer, LayerError, Shape, Tensor};
+use crate::activations::Activation;
+use crate::common::{Layer, LayerError, Shape, Tensor};
 
 /// A struct representing a 1D convolutional layer.
 #[derive(Debug)]

@@ -1,4 +1,5 @@
-use crate::common::{activation::Activation, tensor_ops::Tensor};
+use crate::activations::Activation;
+use crate::common::Tensor;
 
 /// A struct representing the Rectified Linear Unit (ReLU) activation function.
 #[derive(Debug)]
@@ -27,7 +28,7 @@ impl Activation for ReluActivation {
     ///
     /// ```
     /// use deltaml::activations::relu::ReluActivation;
-    /// use deltaml::common::Activation;
+    /// use deltaml::activations::Activation;
     /// use deltaml::common::tensor_ops::Tensor;
     ///
     /// let input = Tensor::new(vec![1.0, -2.0, 3.0, -4.0], vec![2, 2]);
@@ -53,7 +54,7 @@ impl Activation for ReluActivation {
     ///
     /// ```
     /// use deltaml::activations::relu::ReluActivation;
-    /// use deltaml::common::Activation;
+    /// use deltaml::activations::Activation;
     /// use deltaml::common::tensor_ops::Tensor;
     ///
     /// let input = Tensor::new(vec![1.0, -2.0, 3.0, -4.0], vec![2, 2]);

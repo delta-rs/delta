@@ -1,7 +1,7 @@
 use ndarray::s;
 
-use crate::common::tensor_ops::Tensor;
-use crate::common::Activation;
+use crate::common::Tensor;
+use crate::activations::Activation;
 
 /// A struct representing the Softmax activation function.
 #[derive(Debug)]
@@ -37,7 +37,7 @@ impl Activation for SoftmaxActivation {
     ///
     /// ```
     /// use deltaml::activations::SoftmaxActivation;
-    /// use deltaml::common::Activation;
+    /// use deltaml::activations::Activation;
     /// use deltaml::common::Tensor;
     ///
     /// let input = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
@@ -75,7 +75,7 @@ impl Activation for SoftmaxActivation {
     ///
     /// ```
     /// use deltaml::activations::SoftmaxActivation;
-    /// use deltaml::common::Activation;
+    /// use deltaml::activations::Activation;
     /// use deltaml::common::tensor_ops::Tensor;
     ///
     /// let input = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
