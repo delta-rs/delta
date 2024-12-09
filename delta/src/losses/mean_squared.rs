@@ -27,8 +27,8 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::loss::Loss;
 use crate::common::tensor_ops::Tensor;
+use crate::losses::Loss;
 
 #[derive(Debug)]
 pub struct MeanSquaredLoss;
@@ -104,7 +104,7 @@ impl Loss for MeanSquaredLoss {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::common::tensor_ops::Tensor;
+    use crate::common::Tensor;
 
     #[test]
     fn test_mean_squared_loss() {

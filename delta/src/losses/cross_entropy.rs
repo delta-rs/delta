@@ -27,8 +27,8 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::loss::Loss;
 use crate::common::Tensor;
+use crate::losses::Loss;
 
 /// A struct representing the Cross-Entropy Loss function.
 #[derive(Debug)]

@@ -31,6 +31,35 @@ pub mod cross_entropy;
 pub mod mean_squared;
 pub mod sparse_categorical_cross_entropy;
 
+use std::fmt::Debug;
 pub use cross_entropy::CrossEntropyLoss;
 pub use mean_squared::MeanSquaredLoss;
 pub use sparse_categorical_cross_entropy::SparseCategoricalCrossEntropyLoss;
+use crate::common::Tensor;
+
+/// A trait representing a loss function.
+pub trait Loss: Debug {
+    /// Calculates the loss between the output and the target tensors.
+    ///
+    /// # Arguments
+    ///
+    /// * `output` - The output tensor from the model.
+    /// * `target` - The target tensor.
+    ///
+    /// # Returns
+    ///
+    /// The calculated loss as a `f32` value.
+    fn calculate_loss(&self, output: &Tensor, target: &Tensor) -> f32;
+
+    /// Calculates the gradient of the loss with respect to the output tensor.
+    ///
+    /// # Arguments
+    ///
+    /// * `output` - The output tensor from the model.
+    /// * `target` - The target tensor.
+    ///
+    /// # Returns
+    ///
+    /// A `Tensor` containing the gradient of the loss with respect to the output tensor.
+    fn calculate_loss_grad(&self, output: &Tensor, target: &Tensor) -> Tensor;
+}

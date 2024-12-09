@@ -29,12 +29,10 @@
 
 pub mod errors;
 pub mod layer;
-pub mod loss;
 pub mod shape;
 pub mod tensor_ops;
 
 pub use errors::*;
 pub use layer::{Layer, LayerOutput};
-pub use loss::Loss;
 pub use shape::Shape;
 pub use tensor_ops::Tensor;
