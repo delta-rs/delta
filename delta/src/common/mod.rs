@@ -30,13 +30,11 @@
 pub mod errors;
 pub mod layer;
 pub mod loss;
-pub mod optimizer;
 pub mod shape;
 pub mod tensor_ops;
 
 pub use errors::*;
 pub use layer::{Layer, LayerOutput};
 pub use loss::Loss;
-pub use optimizer::{Optimizer, OptimizerConfig};
 pub use shape::Shape;
 pub use tensor_ops::Tensor;

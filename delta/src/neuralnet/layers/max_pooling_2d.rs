@@ -30,7 +30,8 @@
 use crate::common::layer::Layer;
 use crate::common::shape::Shape;
 use crate::common::tensor_ops::Tensor;
-use crate::common::{LayerError, Optimizer};
+use crate::common::LayerError;
+use crate::optimizers::Optimizer;
 
 #[derive(Debug)]
 pub struct MaxPooling2D {

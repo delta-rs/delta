@@ -31,9 +31,9 @@ use crate::common::Shape;
 use crate::common::Tensor;
 use std::fmt::Debug;
 
-use super::optimizer::Optimizer;
 use super::LayerError;
 use serde_json;
+use crate::optimizers::Optimizer;
 
 /// A trait representing a neural network layer.
 pub trait Layer: Debug {

@@ -183,7 +183,7 @@ impl Layer for Conv2D {
     /// * `optimizer` - The optimizer to use.
     fn update_weights(
         &mut self,
-        optimizer: &mut Box<dyn crate::common::optimizer::Optimizer>,
+        optimizer: &mut Box<dyn crate::optimizers::Optimizer>,
     ) -> Result<(), LayerError> {
         if !self.trainable {
             return Ok(());

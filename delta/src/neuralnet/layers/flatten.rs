@@ -144,7 +144,7 @@ impl Layer for Flatten {
     /// * `optimizer` - The optimizer to use.
     fn update_weights(
         &mut self,
-        optimizer: &mut Box<dyn crate::common::optimizer::Optimizer>,
+        optimizer: &mut Box<dyn crate::optimizers::Optimizer>,
     ) -> Result<(), LayerError> {
         let _ = optimizer;
         // Do nothing
