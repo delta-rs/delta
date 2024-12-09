@@ -34,7 +34,7 @@ use std::path::Path;
 use std::time::Instant;
 use ndarray::Dimension;
 use crate::common::Tensor;
-use crate::dataset::{Dataset, ImageDatasetOps};
+use crate::dataset::ImageDatasetOps;
 use crate::losses::Loss;
 use crate::neuralnet::layers::Layer;
 use crate::neuralnet::models::error::ModelError;
@@ -280,18 +280,40 @@ impl Sequential {
         std::io::stdout().flush().unwrap();
     }
 
-    /// Validates the model with the given test dataset.
+    /// Validates the model with the given validation dataset.
     ///
     /// # Arguments
     ///
-    /// * `test_data` - The test dataset.
+    /// * `validation_data` - The validation dataset.
+    /// * `batch_size` - The batch size to use.
     ///
     /// # Returns
     ///
-    /// The validation loss.
-    pub fn validate(&self, test_data: &Dataset) -> Result<f32, String> {
-        let _ = test_data;
-        Ok(0.0) // Placeholder
+    /// The average validation loss.
+    pub fn validate<D: ImageDatasetOps>(
+        &mut self,
+        validation_data: &D,
+        batch_size: usize,
+    ) -> Result<f32, ModelError> {
+        self.ensure_optimizer_and_loss()?;
+
+        let loss_fn = self.loss.as_ref().ok_or(ModelError::MissingLossFunction)?;
+        let num_batches = (validation_data.len() + batch_size - 1) / batch_size;
+        let mut total_loss = 0.0;
+
+        for batch_idx in 0..num_batches {
+            let (inputs, targets) = validation_data.get_batch(batch_idx, batch_size);
+
+            let mut outputs = inputs.clone();
+            for layer in &mut self.layers {
+                outputs = layer.forward(&outputs).map_err(ModelError::LayerError)?;
+            }
+
+            let batch_loss = loss_fn.calculate_loss(&outputs, &targets);
+            total_loss += batch_loss;
+        }
+
+        Ok(total_loss / num_batches as f32)
     }
 
     /// Evaluates the model with the given test dataset.
