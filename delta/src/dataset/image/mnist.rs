@@ -37,6 +37,7 @@ use std::future::Future;
 use std::io::{self, Read};
 use std::path::Path;
 use std::pin::Pin;
+use ndarray::{IxDyn, Shape};
 use tokio::fs as async_fs;
 use crate::dataset::base::{Dataset, ImageDatasetOps};
 use crate::get_workspace_dir;
@@ -115,12 +116,12 @@ impl MnistDataset {
 
         Ok(Tensor::new(
             tensor_data,
-            vec![
+            Shape::from(IxDyn(&[
                 num_images,
                 Self::MNIST_IMAGE_SIZE,
                 Self::MNIST_IMAGE_SIZE,
                 1,
-            ],
+            ])),
         ))
     }
 
@@ -149,7 +150,7 @@ impl MnistDataset {
 
         Ok(Tensor::new(
             tensor_data,
-            vec![num_labels, Self::MNIST_NUM_CLASSES],
+            Shape::from(IxDyn(&[num_labels, Self::MNIST_NUM_CLASSES])),
         ))
     }
 
@@ -283,7 +284,7 @@ impl ImageDatasetOps for MnistDataset {
         self.train
             .as_ref()
             .or(self.test.as_ref())
-            .map(|ds| ds.inputs.shape()[0])
+            .map(|ds| ds.inputs.shape().raw_dim()[0])
             .unwrap_or(0)
     }
 
@@ -304,7 +305,7 @@ impl ImageDatasetOps for MnistDataset {
         };
 
         // Get the total number of samples in the dataset
-        let total_samples = dataset.inputs.shape()[0];
+        let total_samples = dataset.inputs.shape().raw_dim()[0];
 
         // Calculate the start and end indices for the batch
         let start_idx = batch_idx * batch_size;
@@ -353,8 +354,8 @@ impl ImageDatasetOps for MnistDataset {
         let outputs_data = outputs.data.clone();
         let targets_data = targets.data.clone();
 
-        let batch_size = targets.shape()[0];
-        let num_classes = targets.shape()[1];
+        let batch_size = targets.shape().raw_dim()[0];
+        let num_classes = targets.shape().raw_dim()[1];
 
         let mut loss = 0.0;
 
@@ -383,11 +384,11 @@ impl ImageDatasetOps for MnistDataset {
         let outputs_data = outputs.data.iter().cloned().collect::<Vec<f32>>();
         let targets_data = targets.data.iter().cloned().collect::<Vec<f32>>();
 
-        let batch_size = targets.shape()[0];
-        let num_classes = targets.shape()[1];
+        let batch_size = targets.shape().raw_dim()[0];
+        let num_classes = targets.shape().raw_dim()[1];
         assert_eq!(
-            outputs.shape(),
-            targets.shape(),
+            outputs.shape().raw_dim(),
+            targets.shape().raw_dim(),
             "Outputs and targets must have the same shape"
         );
 
@@ -407,7 +408,7 @@ impl ImageDatasetOps for MnistDataset {
     /// Shuffles the dataset.
     fn shuffle(&mut self) {
         let shuffle_data = |dataset: &mut Dataset| {
-            let num_samples = dataset.inputs.shape()[0];
+            let num_samples = dataset.inputs.shape().raw_dim()[0];
             let mut indices: Vec<usize> = (0..num_samples).collect();
             indices.shuffle(&mut rand::thread_rng());
 

@@ -108,13 +108,14 @@ impl Tensor {
     /// # Returns
     ///
     /// A new tensor with the reshaped dataset.
-    pub fn reshape(&self, shape: Shape<IxDyn>) -> Tensor {
+    pub fn reshape(&self, shape: IxDyn) -> Tensor {
         Tensor {
             data: self
                 .data
                 .clone()
                 .into_shape_with_order(shape)
-                .expect("Invalid shape for reshape"),
+                .expect("Invalid shape for reshape")
+                .into_dyn(), // Convert to ArrayD
         }
     }
 
@@ -216,9 +217,9 @@ impl Tensor {
     ///
     /// # Returns
     ///
-    /// A vector representing the shape of the tensor.
+    /// The shape of the tensor as `Shape<IxDyn>`.
     pub fn shape(&self) -> Shape<IxDyn> {
-        self.data.shape().to_vec()
+        IxDyn(self.data.shape()).into()
     }
 
     /// Permutes the axes of the tensor.
@@ -416,21 +417,21 @@ impl Tensor {
     /// # Panics
     ///
     /// Panics if the current shape cannot be broadcasted to the target shape.
-    pub fn broadcast(&self, target_shape: Vec<usize>) -> Tensor {
-        let self_shape = self.shape();
-        let ndim_self = self_shape.raw_dim();
-        let ndim_target = target_shape.len();
+    pub fn broadcast(&self, target_shape: Shape<IxDyn>) -> Tensor {
+        let self_shape = self.shape().raw_dim();
+        let ndim_self = self_shape.ndim();
+        let ndim_target = target_shape.raw_dim().ndim();
 
         // Pad the current shape with leading 1s to match the target dimensions
         let mut padded_shape = vec![1; ndim_target - ndim_self];
-        padded_shape.extend(&self_shape);
+        padded_shape.extend(self_shape.slice());
 
         // Validate compatibility for broadcasting
-        for (self_dim, target_dim) in padded_shape.iter().zip(&target_shape) {
+        for (self_dim, target_dim) in padded_shape.iter().zip(target_shape.raw_dim().slice()) {
             if *self_dim != *target_dim && *self_dim != 1 {
                 panic!(
                     "Cannot broadcast shape {:?} to {:?}",
-                    self.shape(),
+                    self_shape,
                     target_shape
                 );
             }
@@ -439,8 +440,7 @@ impl Tensor {
         // Perform the broadcasting
         let broadcasted_data = self
             .data
-            .clone()
-            .broadcast(IxDyn(&target_shape))
+            .broadcast(target_shape.raw_dim().clone()) // Dereference to get Dim<IxDynImpl>
             .expect("Broadcast failed")
             .to_owned();
 
@@ -541,20 +541,18 @@ impl Tensor {
     ///
     /// A new tensor containing the selected elements.
     pub fn take(&self, indices: &[usize]) -> Tensor {
-        let mut data = Vec::with_capacity(indices.len());
-        let mut shape = self.shape();
-        shape[0] = indices.len();
+        let mut data = Vec::with_capacity(indices.len() * self.data.len() / self.shape().raw_dim()[0]);
+        let stride = self.data.len() / self.shape().raw_dim()[0];
 
-        // Flatten the tensor to make indexing easier
-        let flat_data: Vec<f32> = self.data.iter().cloned().collect();
-        let stride = flat_data.len() / self.shape()[0];
-
-        // Take elements according to indices
         for &idx in indices {
             let start = idx * stride;
             let end = start + stride;
-            data.extend_from_slice(&flat_data[start..end]);
+            data.extend_from_slice(&self.data.as_slice().unwrap()[start..end]);
         }
+
+        let mut new_shape: Vec<usize> = self.shape().raw_dim().as_array_view().to_vec();
+        new_shape[0] = indices.len();
+        let shape = Shape::from(IxDyn(&new_shape));
 
         Tensor::new(data, shape)
     }
@@ -592,7 +590,7 @@ impl Tensor {
         // Construct the Tensor with shape (height, width, 4)
         Ok(Tensor::new(
             pixel_data.iter().map(|&x| x as f32 / 255.0).collect(), // Normalize pixel values
-            vec![height as usize, width as usize, 4],               // Shape (H, W, C)
+            Shape::from(IxDyn(&[height as usize, width as usize, 4])), // Shape (H, W, C)
         ))
     }
 
@@ -615,23 +613,23 @@ impl Tensor {
         }
 
         // Ensure all tensors have the same shape
-        let first_shape = tensors[0].shape();
+        let first_shape = tensors[0].shape().raw_dim();
         for tensor in tensors {
-            if tensor.shape() != first_shape {
+            if tensor.shape().raw_dim() != first_shape {
                 return Err(format!(
                     "All tensors must have the same shape. Expected {:?}, got {:?}",
                     first_shape,
-                    tensor.shape()
+                    tensor.shape().raw_dim()
                 ));
             }
         }
 
         // Stack tensors along a new axis
         let stacked_data = ndarray::stack(
-            ndarray::Axis(0),
+            Axis(0),
             &tensors.iter().map(|t| t.data.view()).collect::<Vec<_>>(),
         )
-        .map_err(|e| e.to_string())?;
+            .map_err(|e| e.to_string())?;
 
         Ok(Tensor {
             data: stacked_data.into_dyn(),
@@ -657,7 +655,7 @@ impl Default for Tensor {
     ///
     /// A new tensor with default values.
     fn default() -> Self {
-        Self::zeros(vec![1, 1])
+        Self::zeros(Shape::from(IxDyn(&[1, 1])))
     }
 }
 

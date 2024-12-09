@@ -27,6 +27,7 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use ndarray::Dimension;
 use crate::common::Tensor;
 use crate::losses::Loss;
 
@@ -67,11 +68,11 @@ impl Loss for CrossEntropyLoss {
     ///
     /// The cross-entropy loss.
     fn calculate_loss(&self, y_true: &Tensor, y_pred: &Tensor) -> f32 {
-        if y_true.shape() != y_pred.shape() {
+        if y_true.shape().raw_dim() != y_pred.shape().raw_dim() {
             panic!(
                 "Shape mismatch: y_true.shape = {:?}, y_pred.shape = {:?}",
-                y_true.shape(),
-                y_pred.shape()
+                y_true.shape().raw_dim(),
+                y_pred.shape().raw_dim()
             );
         }
 
@@ -103,7 +104,7 @@ impl Loss for CrossEntropyLoss {
     /// The gradient of the cross-entropy loss with respect to the predicted values.
     fn calculate_loss_grad(&self, output: &Tensor, target: &Tensor) -> Tensor {
         // Ensure shapes match
-        if output.shape() != target.shape() {
+        if output.shape().raw_dim() != target.shape().raw_dim() {
             panic!(
                 "Shape mismatch: output.shape = {:?}, target.shape = {:?}",
                 output.shape(),
@@ -124,7 +125,7 @@ impl Loss for CrossEntropyLoss {
             .collect();
 
         // Create Tensor from grad_data
-        let grad_shape = clipped_pred.shape().to_vec(); // Ensure correct shape
+        let grad_shape = clipped_pred.shape().raw_dim().as_array_view().to_vec(); // Ensure correct shape
         Tensor {
             data: ndarray::Array::from_shape_vec(ndarray::IxDyn(&grad_shape), grad_data)
                 .expect("Failed to create gradient tensor"),

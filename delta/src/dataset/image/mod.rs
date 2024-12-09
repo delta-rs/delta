@@ -33,8 +33,8 @@ pub mod mnist;
 pub mod test_dataset;
 pub mod custom;
 
-pub use cifar10::Cifar10Dataset;
-pub use imagenet_v2::ImageNetV2Dataset;
+// pub use cifar10::Cifar10Dataset;
+// pub use imagenet_v2::ImageNetV2Dataset;
 pub use mnist::MnistDataset;
-pub use test_dataset::TestDataset;
-pub use custom::CustomImageDataset;
+// pub use test_dataset::TestDataset;
+// pub use custom::CustomImageDataset;
