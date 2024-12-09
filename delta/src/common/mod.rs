@@ -27,10 +27,10 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-pub mod errors;
+pub mod error;
 pub mod shape;
 pub mod tensor_ops;
 
-pub use errors::*;
+pub use error::*;
 pub use shape::Shape;
 pub use tensor_ops::Tensor;

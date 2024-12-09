@@ -42,6 +42,7 @@ use image::{DynamicImage, ImageReader};
 ///
 /// * `images` - A vector of DynamicImages containing the loaded images.
 /// * `data` - An optional Dataset containing the loaded inputs and labels.
+#[allow(dead_code)]
 pub struct CustomImageDataset {
     images: Vec<DynamicImage>,
     labels: Vec<f32>,
@@ -184,7 +185,7 @@ impl ImageDatasetOps for CustomImageDataset {
     ///
     /// * `min` - The minimum value of the normalization range.
     /// * `max` - The maximum value of the normalization range.
-    fn normalize(&mut self, min: f32, max: f32) {
+    fn normalize(&mut self, _min: f32, _max: f32) {
         unimplemented!();
     }
 
@@ -193,7 +194,7 @@ impl ImageDatasetOps for CustomImageDataset {
     /// # Arguments
     ///
     /// * `noise_level` - The level of noise to add.
-    fn add_noise(&mut self, noise_level: f32) {
+    fn add_noise(&mut self, _noise_level: f32) {
         unimplemented!();
     }
 
@@ -216,7 +217,7 @@ impl ImageDatasetOps for CustomImageDataset {
     /// # Returns
     ///
     /// A tuple containing the batch of inputs and labels.
-    fn get_batch(&self, batch_idx: usize, batch_size: usize) -> (Tensor, Tensor) {
+    fn get_batch(&self, _batch_idx: usize, _batch_size: usize) -> (Tensor, Tensor) {
         unimplemented!();
     }
 

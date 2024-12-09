@@ -28,10 +28,12 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 pub mod adam;
+pub mod error;
 
 use std::fmt::Debug;
 pub use adam::Adam;
-use crate::common::{OptimizerError, Tensor};
+use crate::common::Tensor;
+use crate::optimizers::error::OptimizerError;
 
 /// A trait representing an optimizer for training neural networks.
 pub trait Optimizer: Debug {

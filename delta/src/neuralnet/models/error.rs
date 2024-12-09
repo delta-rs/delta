@@ -27,12 +27,30 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-pub mod core_error;
-pub mod layer_error;
-pub mod model_error;
-pub mod optimizer_error;
+use std::fmt;
+use crate::neuralnet::layers::error::LayerError;
 
-pub use core_error::CoreError;
-pub use layer_error::LayerError;
-pub use model_error::ModelError;
-pub use optimizer_error::OptimizerError;
+#[derive(Debug)]
+pub enum ModelError {
+    MissingOptimizer,
+    MissingLossFunction,
+    DatasetError(String),
+    TrainingError(String),
+    LayerError(LayerError),
+}
+
+impl fmt::Display for ModelError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ModelError::MissingOptimizer => write!(f, "Optimizer must be set before training"),
+            ModelError::MissingLossFunction => {
+                write!(f, "Loss function must be set before training")
+            }
+            ModelError::DatasetError(msg) => write!(f, "Dataset error: {}", msg),
+            ModelError::TrainingError(msg) => write!(f, "Training error: {}", msg),
+            ModelError::LayerError(err) => write!(f, "Layer error: {}", err),
+        }
+    }
+}
+
+impl std::error::Error for ModelError {}

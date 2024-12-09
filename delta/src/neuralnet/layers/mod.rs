@@ -32,6 +32,7 @@ pub mod flatten;
 pub mod max_pooling_2d;
 pub mod conv_2d;
 pub mod conv_1d;
+pub mod error;
 
 use std::fmt::Debug;
 pub use dense::Dense;
@@ -39,7 +40,8 @@ pub use flatten::Flatten;
 pub use max_pooling_2d::MaxPooling2D;
 pub use conv_2d::Conv2D;
 pub use conv_1d::Conv1D;
-use crate::common::{LayerError, Shape, Tensor};
+use crate::common::{Shape, Tensor};
+use crate::neuralnet::layers::error::LayerError;
 use crate::optimizers::Optimizer;
 
 // A trait representing a neural network layer.

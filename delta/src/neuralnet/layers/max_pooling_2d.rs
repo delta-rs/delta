@@ -29,7 +29,7 @@
 
 use crate::common::shape::Shape;
 use crate::common::tensor_ops::Tensor;
-use crate::common::LayerError;
+use crate::neuralnet::layers::error::LayerError;
 use crate::neuralnet::layers::Layer;
 use crate::optimizers::Optimizer;
 

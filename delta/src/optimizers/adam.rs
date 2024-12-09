@@ -27,10 +27,10 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::OptimizerError;
 use crate::common::Tensor;
 use std::fmt;
 use std::fmt::Debug;
+use crate::optimizers::error::OptimizerError;
 use crate::optimizers::Optimizer;
 
 /// A wrapper struct for a debuggable scheduler function.

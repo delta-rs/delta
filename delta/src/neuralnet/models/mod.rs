@@ -28,5 +28,6 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 pub mod sequential;
+pub mod error;
 
 pub use sequential::Sequential;
