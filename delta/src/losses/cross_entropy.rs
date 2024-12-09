@@ -139,11 +139,12 @@ mod tests {
 
     use super::*;
     use crate::common::Tensor;
+    use ndarray::{IxDyn, Shape};
 
     #[test]
     fn test_cross_entropy_loss() {
-        let y_true = Tensor::new(vec![1.0, 0.0, 0.0], vec![1, 3]);
-        let y_pred = Tensor::new(vec![0.7, 0.2, 0.1], vec![1, 3]);
+        let y_true = Tensor::new(vec![1.0, 0.0, 0.0], Shape::from(IxDyn(&[1, 3])));
+        let y_pred = Tensor::new(vec![0.7, 0.2, 0.1], Shape::from(IxDyn(&[1, 3])));
 
         let loss = CrossEntropyLoss::new();
         let calculated_loss = loss.calculate_loss(&y_true, &y_pred);
@@ -160,8 +161,8 @@ mod tests {
 
     #[test]
     fn test_cross_entropy_loss_grad() {
-        let y_true = Tensor::new(vec![1.0, 0.0, 0.0], vec![1, 3]);
-        let y_pred = Tensor::new(vec![0.7, 0.2, 0.1], vec![1, 3]);
+        let y_true = Tensor::new(vec![1.0, 0.0, 0.0], Shape::from(IxDyn(&[1, 3])));
+        let y_pred = Tensor::new(vec![0.7, 0.2, 0.1], Shape::from(IxDyn(&[1, 3])));
 
         let loss = CrossEntropyLoss::new();
         let grad = loss.calculate_loss_grad(&y_pred, &y_true);

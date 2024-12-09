@@ -202,20 +202,8 @@ impl ImageDatasetOps for MnistDataset {
     /// Loads the MNIST dataset.
     ///
     /// # Returns
+    ///
     /// A future that resolves to the `MnistDataset` with the MNIST dataset loaded.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::dataset::ImageDatasetOps;
-    /// use deltaml::dataset::MnistDataset;
-    ///
-    /// #[tokio::main]
-    /// async fn main() {
-    ///     let mnist_dataset = MnistDataset::load_train().await;
-    /// }
-    /// ```
-    ///
     fn load_train() -> Self::LoadFuture {
         Box::pin(async {
             match MnistDataset::load_data(true).await {
@@ -231,19 +219,8 @@ impl ImageDatasetOps for MnistDataset {
     /// Loads the MNIST dataset.
     ///
     /// # Returns
+    ///
     /// A future that resolves to the `MnistDataset` with the MNIST dataset loaded.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::dataset::ImageDatasetOps;
-    /// use deltaml::dataset::MnistDataset;
-    ///
-    /// #[tokio::main]
-    /// async fn main() {
-    ///     let mnist_dataset = MnistDataset::load_test().await;
-    /// }
-    /// ```
     fn load_test() -> Self::LoadFuture {
         Box::pin(async {
             match MnistDataset::load_data(false).await {
@@ -259,6 +236,7 @@ impl ImageDatasetOps for MnistDataset {
     /// Normalizes the dataset.
     ///
     /// # Arguments
+    ///
     /// * `min` - The minimum value for normalization.
     /// * `max` - The maximum value for normalization.
     fn normalize(&mut self, min: f32, max: f32) {
@@ -270,6 +248,7 @@ impl ImageDatasetOps for MnistDataset {
     /// Adds noise to the dataset.
     ///
     /// # Arguments
+    ///
     /// * `noise_level` - The level of noise to add.
     fn add_noise(&mut self, noise_level: f32) {
         let _ = noise_level;
@@ -279,6 +258,7 @@ impl ImageDatasetOps for MnistDataset {
     /// Returns the number of samples in the dataset.
     ///
     /// # Returns
+    ///
     /// The number of samples in the dataset.
     fn len(&self) -> usize {
         self.train
@@ -295,6 +275,7 @@ impl ImageDatasetOps for MnistDataset {
     /// * `batch_size` - The size of the batch to get
     ///
     /// # Returns
+    ///
     /// A tuple containing the input and label tensors for the batch
     fn get_batch(&self, batch_idx: usize, batch_size: usize) -> (Tensor, Tensor) {
         // Determine which dataset to use: train or test

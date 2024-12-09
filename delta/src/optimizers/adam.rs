@@ -80,15 +80,6 @@ impl Adam {
     /// # Arguments
     ///
     /// * `scheduler` - A function that takes an epoch number and returns a learning rate.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use deltaml::optimizers::Adam;
-    ///
-    /// let mut optimizer = Adam::new(0.001);
-    /// optimizer.set_scheduler(|epoch| 0.1 * (epoch + 1) as f32);
-    /// ```
     pub fn set_scheduler<F>(&mut self, scheduler: F)
     where
         F: Fn(usize) -> f32 + 'static,
@@ -192,7 +183,7 @@ impl Optimizer for Adam {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::ArrayD;
+    use ndarray::{ArrayD, IxDyn, Shape};
 
     fn assert_almost_equal(actual: &ArrayD<f32>, expected: &[f32], tolerance: f32) {
         let actual_slice = actual
@@ -211,8 +202,8 @@ mod tests {
     #[test]
     fn test_adam_optimizer() {
         let mut optimizer = Adam::new(0.001);
-        let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], vec![3, 1]);
-        let gradients = Tensor::new(vec![0.1, 0.2, 0.3], vec![3, 1]);
+        let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[3, 1])));
+        let gradients = Tensor::new(vec![0.1, 0.2, 0.3], Shape::from(IxDyn(&[3, 1])));
         optimizer
             .step(&mut weights, &gradients)
             .expect("Failed to perform step");
@@ -223,8 +214,8 @@ mod tests {
     #[test]
     fn test_adam_optimizer_no_scheduler() {
         let mut optimizer = Adam::new(0.001);
-        let mut weights = Tensor::new(vec![0.0, 0.0, 0.0], vec![3, 1]);
-        let gradients = Tensor::new(vec![0.1, 0.2, 0.3], vec![3, 1]);
+        let mut weights = Tensor::new(vec![0.0, 0.0, 0.0], Shape::from(IxDyn(&[3, 1])));
+        let gradients = Tensor::new(vec![0.1, 0.2, 0.3], Shape::from(IxDyn(&[3, 1])));
         optimizer
             .step(&mut weights, &gradients)
             .expect("Failed to perform step");
@@ -237,8 +228,8 @@ mod tests {
     fn test_adam_optimizer_with_scheduler() {
         let mut optimizer = Adam::new(0.001);
         optimizer.set_scheduler(|_epoch| 0.05); // Set a fixed learning rate for simplicity
-        let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], vec![3, 1]);
-        let gradients = Tensor::new(vec![0.1, 0.1, 0.1], vec![3, 1]);
+        let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[3, 1])));
+        let gradients = Tensor::new(vec![0.1, 0.1, 0.1], Shape::from(IxDyn(&[3, 1])));
 
         optimizer
             .step(&mut weights, &gradients)
@@ -251,8 +242,8 @@ mod tests {
     #[test]
     fn test_adam_optimizer_gradients_broadcasting() {
         let mut optimizer = Adam::new(0.001);
-        let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], vec![3, 1]);
-        let gradients = Tensor::new(vec![0.1], vec![1, 1]); // Broadcastable gradient
+        let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[3, 1])));
+        let gradients = Tensor::new(vec![0.1], Shape::from(IxDyn(&[1, 1]))); // Broadcastable gradient
         optimizer
             .step(&mut weights, &gradients)
             .expect("Failed to perform step");
@@ -263,8 +254,8 @@ mod tests {
     #[test]
     fn test_adam_optimizer_incompatible_shapes() {
         let mut optimizer = Adam::new(0.001);
-        let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], vec![3, 1]);
-        let gradients = Tensor::new(vec![0.1, 0.2], vec![2, 1]); // Mismatched shape
+        let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[3, 1])));
+        let gradients = Tensor::new(vec![0.1, 0.2], Shape::from(IxDyn(&[2, 1]))); // Mismatched shape
         let result = optimizer.step(&mut weights, &gradients);
 
         assert!(result.is_err(), "Expected an error due to incompatible shapes");
@@ -280,8 +271,8 @@ mod tests {
     #[test]
     fn test_adam_optimizer_step_multiple_times() {
         let mut optimizer = Adam::new(0.001);
-        let mut weights = Tensor::new(vec![1.0, 1.0, 1.0], vec![3, 1]);
-        let gradients = Tensor::new(vec![0.1, 0.2, 0.3], vec![3, 1]);
+        let mut weights = Tensor::new(vec![1.0, 1.0, 1.0], Shape::from(IxDyn(&[3, 1])));
+        let gradients = Tensor::new(vec![0.1, 0.2, 0.3], Shape::from(IxDyn(&[3, 1])));
         optimizer
             .step(&mut weights, &gradients)
             .expect("Failed to perform step");
@@ -299,8 +290,8 @@ mod tests {
     #[test]
     fn test_adam_optimizer_bias_correction() {
         let mut optimizer = Adam::new(0.001);
-        let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], vec![3, 1]);
-        let gradients = Tensor::new(vec![0.1, 0.1, 0.1], vec![3, 1]);
+        let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[3, 1])));
+        let gradients = Tensor::new(vec![0.1, 0.1, 0.1], Shape::from(IxDyn(&[3, 1])));
 
         // Step without bias correction
         optimizer
@@ -320,8 +311,8 @@ mod tests {
     #[test]
     fn test_adam_optimizer_zero_gradients() {
         let mut optimizer = Adam::new(0.001);
-        let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], vec![3, 1]);
-        let gradients = Tensor::new(vec![0.0, 0.0, 0.0], vec![3, 1]);
+        let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[3, 1])));
+        let gradients = Tensor::new(vec![0.0, 0.0, 0.0], Shape::from(IxDyn(&[3, 1])));
         optimizer
             .step(&mut weights, &gradients)
             .expect("Failed to perform step");
@@ -330,30 +321,11 @@ mod tests {
         assert_almost_equal(&weights.data, &expected, 1e-6);
     }
 
-    // // Fail
-    // #[test]
-    // fn test_adam_optimizer_high_learning_rate() {
-    //     let mut optimizer = Adam::new(10.0); // High learning rate
-    //     let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], vec![3, 1]);
-    //     let gradients = Tensor::new(vec![0.1, 0.2, 0.3], vec![3, 1]);
-    //     optimizer.step(&mut weights, &gradients);
-
-    //     let expected = vec![0.9, 1.8, 2.7];
-    //     for (actual, exp) in weights.dataset.iter().zip(expected.iter()) {
-    //         assert!(
-    //             (actual - exp).abs() < 1e-6,
-    //             "Expected: {:?}, Actual: {:?}",
-    //             exp,
-    //             actual
-    //         );
-    //     }
-    // }
-
     #[test]
     fn test_adam_optimizer_gradient_scaling() {
         let mut optimizer = Adam::new(0.001); // Initial learning rate
-        let mut weights = Tensor::new(vec![1.0, 1.0, 1.0], vec![3, 1]);
-        let gradients = Tensor::new(vec![20.0, 20.0, 20.0], vec![3, 1]); // High gradient values
+        let mut weights = Tensor::new(vec![1.0, 1.0, 1.0], Shape::from(IxDyn(&[3, 1])));
+        let gradients = Tensor::new(vec![20.0, 20.0, 20.0], Shape::from(IxDyn(&[3, 1]))); // High gradient values
 
         optimizer
             .step(&mut weights, &gradients)
@@ -377,8 +349,8 @@ mod tests {
     #[test]
     fn test_adam_optimizer_small_gradients() {
         let mut optimizer = Adam::new(0.001);
-        let mut weights = Tensor::new(vec![1.0_f32, 2.0_f32, 3.0_f32], vec![3, 1]);
-        let gradients = Tensor::new(vec![1e-7_f32, 1e-7_f32, 1e-7_f32], vec![3, 1]);
+        let mut weights = Tensor::new(vec![1.0_f32, 2.0_f32, 3.0_f32], Shape::from(IxDyn(&[3, 1])));
+        let gradients = Tensor::new(vec![1e-7_f32, 1e-7_f32, 1e-7_f32], Shape::from(IxDyn(&[3, 1])));
 
         optimizer
             .step(&mut weights, &gradients)

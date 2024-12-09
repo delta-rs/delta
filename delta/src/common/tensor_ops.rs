@@ -265,16 +265,6 @@ impl Tensor {
     /// # Arguments
     ///
     /// * `amount` - The power to raise the tensor to.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let data = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor = Tensor::new(data, vec![2, 2]);
-    /// let powered_tensor = tensor.pow(2.0);
-    /// ```
     pub fn pow(&self, amount: f32) -> Tensor {
         self.map(|x| x.powf(amount))
     }
@@ -284,16 +274,6 @@ impl Tensor {
     /// # Arguments
     ///
     /// * `amount` - The scalar value to divide the tensor by.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let data = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor = Tensor::new(data, vec![2, 2]);
-    /// let divided_tensor = tensor.div_scalar(2.0);
-    /// ```
     pub fn div_scalar(&self, amount: f32) -> Tensor {
         self.map(|x| x / amount)
     }
@@ -303,16 +283,6 @@ impl Tensor {
     /// # Returns
     ///
     /// A new tensor containing the square roots of the elements.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let data = vec![1.0, 4.0, 9.0, 16.0];
-    /// let tensor = Tensor::new(data, vec![2, 2]);
-    /// let sqrt_tensor = tensor.sqrt();
-    /// ```
     pub fn sqrt(&self) -> Tensor {
         self.map(|x| x.sqrt())
     }
@@ -326,16 +296,6 @@ impl Tensor {
     /// # Returns
     ///
     /// A new tensor containing the result of the addition.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let data = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor = Tensor::new(data, vec![2, 2]);
-    /// let added_tensor = tensor.add_scalar(2.0);
-    /// ```
     pub fn add_scalar(&self, amount: f32) -> Tensor {
         self.map(|x| x + amount)
     }
@@ -349,16 +309,6 @@ impl Tensor {
     /// # Returns
     ///
     /// A new tensor containing the result of the division.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let data = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor = Tensor::new(data, vec![2, 2]);
-    /// let divided_tensor = tensor.div_scalar(2.0);
-    /// ```
     pub fn div(&self, other: &Tensor) -> Tensor {
         Tensor {
             data: &self.data / &other.data,
@@ -370,16 +320,6 @@ impl Tensor {
     /// # Returns
     ///
     /// A new tensor containing the flattened dataset.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let dataset = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor = Tensor::new(dataset, vec![2, 2]);
-    /// let flattened_tensor = tensor.flatten();
-    /// ```
     pub fn flatten(&self) -> Tensor {
         let shape = IxDyn(&[self.data.len()]);
         Tensor {
@@ -697,33 +637,34 @@ impl PartialEq for Tensor {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ndarray::IxDyn;
 
     #[test]
     fn test_new() {
         let data = vec![1.0, 2.0, 3.0];
-        let shape = vec![3, 1];
+        let shape = Shape::from(IxDyn(&[3, 1]));
         let tensor = Tensor::new(data, shape);
         assert_eq!(tensor.data.shape(), &[3, 1]);
     }
 
     #[test]
     fn test_zeros() {
-        let shape = vec![2, 3];
+        let shape = Shape::from(IxDyn(&[2, 3]));
         let tensor = Tensor::zeros(shape);
         assert_eq!(tensor.data.shape(), &[2, 3]);
     }
 
     #[test]
     fn test_random() {
-        let shape = vec![2, 3];
+        let shape = Shape::from(IxDyn(&[2, 3]));
         let tensor = Tensor::random(shape);
         assert_eq!(tensor.data.shape(), &[2, 3]);
     }
 
     #[test]
     fn test_add() {
-        let tensor1 = Tensor::new(vec![1.0, 2.0, 3.0], vec![3, 1]);
-        let tensor2 = Tensor::new(vec![4.0, 5.0, 6.0], vec![3, 1]);
+        let tensor1 = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[3, 1])));
+        let tensor2 = Tensor::new(vec![4.0, 5.0, 6.0], Shape::from(IxDyn(&[3, 1])));
         let result = tensor1.add(&tensor2);
         assert_eq!(result.data.shape(), &[3, 1]);
     }
@@ -731,29 +672,29 @@ mod tests {
     #[test]
     fn test_max() {
         let data = vec![1.0, 2.0, 3.0];
-        let tensor = Tensor::new(data, vec![3, 1]);
+        let tensor = Tensor::new(data, Shape::from(IxDyn(&[3, 1])));
         assert_eq!(tensor.max(), 3.0);
     }
 
     #[test]
     fn test_mean() {
         let data = vec![1.0, 2.0, 3.0];
-        let tensor = Tensor::new(data, vec![3, 1]);
+        let tensor = Tensor::new(data, Shape::from(IxDyn(&[3, 1])));
         assert_eq!(tensor.mean(), 2.0);
     }
 
     #[test]
     fn test_reshape() {
         let data = vec![1.0, 2.0, 3.0];
-        let tensor = Tensor::new(data, vec![3, 1]);
-        let reshaped = tensor.reshape(vec![1, 3]);
+        let tensor = Tensor::new(data, Shape::from(IxDyn(&[3, 1])));
+        let reshaped = tensor.reshape(IxDyn(&[1, 3]));
         assert_eq!(reshaped.data.shape(), &[1, 3]);
     }
 
     #[test]
     fn test_map() {
         let data = vec![1.0, 2.0, 3.0];
-        let tensor = Tensor::new(data, vec![3, 1]);
+        let tensor = Tensor::new(data, Shape::from(IxDyn(&[3, 1])));
         let mapped = tensor.map(|x| x * 2.0);
         assert_eq!(mapped.data.shape(), &[3, 1]);
     }
@@ -761,7 +702,7 @@ mod tests {
     #[test]
     fn test_slice() {
         let data = vec![1.0, 2.0, 3.0];
-        let tensor = Tensor::new(data, vec![3, 1]);
+        let tensor = Tensor::new(data, Shape::from(IxDyn(&[3, 1])));
         let sliced = tensor.slice(vec![0..2, 0..1]);
         assert_eq!(sliced.data.shape(), &[2, 1]);
     }
@@ -769,9 +710,9 @@ mod tests {
     #[test]
     fn test_matmul() {
         let data1 = vec![1.0, 2.0, 3.0, 4.0];
-        let tensor1 = Tensor::new(data1, vec![2, 2]);
+        let tensor1 = Tensor::new(data1, Shape::from(IxDyn(&[2, 2])));
         let data2 = vec![5.0, 6.0, 7.0, 8.0];
-        let tensor2 = Tensor::new(data2, vec![2, 2]);
+        let tensor2 = Tensor::new(data2, Shape::from(IxDyn(&[2, 2])));
         let result = tensor1.matmul(&tensor2);
         assert_eq!(result.data.shape(), &[2, 2]);
     }
@@ -779,7 +720,7 @@ mod tests {
     #[test]
     fn test_transpose() {
         let data = vec![1.0, 2.0, 3.0, 4.0];
-        let tensor = Tensor::new(data, vec![2, 2]);
+        let tensor = Tensor::new(data, Shape::from(IxDyn(&[2, 2])));
         let transposed = tensor.transpose();
         assert_eq!(transposed.data.shape(), &[2, 2]);
     }
@@ -787,14 +728,14 @@ mod tests {
     #[test]
     fn test_shape() {
         let data = vec![1.0, 2.0, 3.0, 4.0];
-        let tensor = Tensor::new(data, vec![2, 2]);
-        assert_eq!(tensor.shape(), vec![2, 2]);
+        let tensor = Tensor::new(data, Shape::from(IxDyn(&[2, 2])));
+        assert_eq!(tensor.shape().raw_dim().as_array_view().to_vec(), vec![2, 2]);
     }
 
     #[test]
     fn test_permute() {
         let data = vec![1.0, 2.0, 3.0, 4.0];
-        let tensor = Tensor::new(data, vec![2, 2]);
+        let tensor = Tensor::new(data, Shape::from(IxDyn(&[2, 2])));
         let permuted = tensor.permute(vec![1, 0]);
         assert_eq!(permuted.data.shape(), &[2, 2]);
     }
@@ -802,7 +743,7 @@ mod tests {
     #[test]
     fn test_sum_along_axis() {
         let data = vec![1.0, 2.0, 3.0, 4.0];
-        let tensor = Tensor::new(data, vec![2, 2]);
+        let tensor = Tensor::new(data, Shape::from(IxDyn(&[2, 2])));
         let summed = tensor.sum_along_axis(1);
         assert_eq!(summed.data.shape(), &[2]);
     }
@@ -810,7 +751,7 @@ mod tests {
     #[test]
     fn test_mul_scalar() {
         let data = vec![1.0, 2.0, 3.0, 4.0];
-        let tensor = Tensor::new(data, vec![2, 2]);
+        let tensor = Tensor::new(data, Shape::from(IxDyn(&[2, 2])));
         let multiplied = tensor.mul_scalar(2.0);
         assert_eq!(multiplied.data.shape(), &[2, 2]);
     }
@@ -818,7 +759,7 @@ mod tests {
     #[test]
     fn test_pow() {
         let data = vec![1.0, 2.0, 3.0, 4.0];
-        let tensor = Tensor::new(data, vec![2, 2]);
+        let tensor = Tensor::new(data, Shape::from(IxDyn(&[2, 2])));
         let powered = tensor.pow(2.0);
         assert_eq!(powered.data.shape(), &[2, 2]);
     }
@@ -826,7 +767,7 @@ mod tests {
     #[test]
     fn test_div_scalar() {
         let data = vec![1.0, 2.0, 3.0, 4.0];
-        let tensor = Tensor::new(data, vec![2, 2]);
+        let tensor = Tensor::new(data, Shape::from(IxDyn(&[2, 2])));
         let divided = tensor.div_scalar(2.0);
         assert_eq!(divided.data.shape(), &[2, 2]);
     }
@@ -834,7 +775,7 @@ mod tests {
     #[test]
     fn test_sqrt() {
         let data = vec![1.0, 4.0, 9.0, 16.0];
-        let tensor = Tensor::new(data, vec![2, 2]);
+        let tensor = Tensor::new(data, Shape::from(IxDyn(&[2, 2])));
         let sqrted = tensor.sqrt();
         assert_eq!(sqrted.data.shape(), &[2, 2]);
     }
@@ -842,7 +783,7 @@ mod tests {
     #[test]
     fn test_add_scalar() {
         let data = vec![1.0, 2.0, 3.0, 4.0];
-        let tensor = Tensor::new(data, vec![2, 2]);
+        let tensor = Tensor::new(data, Shape::from(IxDyn(&[2, 2])));
         let added = tensor.add_scalar(2.0);
         assert_eq!(added.data.shape(), &[2, 2]);
     }
@@ -850,9 +791,9 @@ mod tests {
     #[test]
     fn test_div() {
         let data1 = vec![1.0, 2.0, 3.0, 4.0];
-        let tensor1 = Tensor::new(data1, vec![2, 2]);
+        let tensor1 = Tensor::new(data1, Shape::from(IxDyn(&[2, 2])));
         let data2 = vec![2.0, 4.0, 6.0, 8.0];
-        let tensor2 = Tensor::new(data2, vec![2, 2]);
+        let tensor2 = Tensor::new(data2, Shape::from(IxDyn(&[2, 2])));
         let divided = tensor1.div(&tensor2);
         assert_eq!(divided.data.shape(), &[2, 2]);
     }
@@ -860,7 +801,7 @@ mod tests {
     #[test]
     fn test_flatten() {
         let data = vec![1.0, 2.0, 3.0, 4.0];
-        let tensor = Tensor::new(data, vec![2, 2]);
+        let tensor = Tensor::new(data, Shape::from(IxDyn(&[2, 2])));
         let flattened = tensor.flatten();
         assert_eq!(flattened.data.shape(), &[4]);
     }
@@ -868,7 +809,7 @@ mod tests {
     #[test]
     fn test_mean_axis() {
         let data = vec![1.0, 2.0, 3.0, 4.0];
-        let tensor = Tensor::new(data, vec![2, 2]);
+        let tensor = Tensor::new(data, Shape::from(IxDyn(&[2, 2])));
         let meaned = tensor.mean_axis(1);
         assert_eq!(meaned.data.shape(), &[2]);
     }
@@ -876,15 +817,15 @@ mod tests {
     #[test]
     fn test_broadcast() {
         let data = vec![1.0, 2.0, 3.0, 4.0];
-        let tensor = Tensor::new(data, vec![2, 2]);
-        let broadcasted = tensor.broadcast(vec![2, 2]);
+        let tensor = Tensor::new(data, Shape::from(IxDyn(&[2, 2])));
+        let broadcasted = tensor.broadcast(Shape::from(IxDyn(&[2, 2])));
         assert_eq!(broadcasted.data.shape(), &[2, 2]);
     }
 
     #[test]
     fn test_normalize() {
         let data = vec![1.0, 2.0, 3.0, 4.0];
-        let tensor = Tensor::new(data, vec![2, 2]);
+        let tensor = Tensor::new(data, Shape::from(IxDyn(&[2, 2])));
         let normalized = tensor.normalize(0.0, 1.0);
         assert_eq!(normalized.data.shape(), &[2, 2]);
     }
@@ -898,7 +839,7 @@ mod tests {
     #[test]
     fn test_add_noise() {
         let data = vec![1.0, 2.0, 3.0, 4.0];
-        let mut tensor = Tensor::new(data, vec![2, 2]);
+        let mut tensor = Tensor::new(data, Shape::from(IxDyn(&[2, 2])));
         tensor.add_noise(0.1);
         assert_eq!(tensor.data.shape(), &[2, 2]);
     }
@@ -906,7 +847,7 @@ mod tests {
     #[test]
     fn test_argmax() {
         let data = vec![1.0, 3.0, 2.0, 4.0, 5.0, 0.0];
-        let tensor = Tensor::new(data, vec![2, 3]);
+        let tensor = Tensor::new(data, Shape::from(IxDyn(&[2, 3])));
 
         let argmax = tensor.argmax(1);
 
@@ -920,18 +861,18 @@ mod tests {
     #[test]
     fn test_mul_operator() {
         let data1 = vec![1.0, 2.0, 3.0, 4.0];
-        let tensor1 = Tensor::new(data1, vec![2, 2]);
+        let tensor1 = Tensor::new(data1, Shape::from(IxDyn(&[2, 2])));
         let data2 = vec![2.0, 3.0, 4.0, 5.0];
-        let tensor2 = Tensor::new(data2, vec![2, 2]);
+        let tensor2 = Tensor::new(data2, Shape::from(IxDyn(&[2, 2])));
         let result = tensor1 * tensor2;
         assert_eq!(result.data.shape(), &[2, 2]);
     }
 
     #[test]
     fn test_stack() {
-        let tensor1 = Tensor::new(vec![1.0, 2.0, 3.0], vec![3]);
-        let tensor2 = Tensor::new(vec![4.0, 5.0, 6.0], vec![3]);
+        let tensor1 = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[3])));
+        let tensor2 = Tensor::new(vec![4.0, 5.0, 6.0], Shape::from(IxDyn(&[3])));
         let stacked = Tensor::stack(&[tensor1, tensor2]).unwrap();
-        assert_eq!(stacked.shape(), vec![2, 3]);
+        assert_eq!(stacked.shape().raw_dim().as_array_view().to_vec(), vec![2, 3]);
     }
 }

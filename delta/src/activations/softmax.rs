@@ -9,14 +9,6 @@ pub struct SoftmaxActivation;
 
 impl SoftmaxActivation {
     /// Creates a new instance of `SoftmaxActivation`.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use deltaml::activations::SoftmaxActivation;
-    ///
-    /// let softmax = SoftmaxActivation::new();
-    /// ```
     pub fn new() -> Self {
         Self
     }

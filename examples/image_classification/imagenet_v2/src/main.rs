@@ -56,3 +56,5 @@
 //
 //     println!("Model training and evaluation complete.");
 // }
+
+fn main() {}

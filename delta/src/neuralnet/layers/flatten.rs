@@ -167,7 +167,7 @@ mod tests {
         let flatten_layer = Flatten::new(input_shape.clone());
 
         let output_shape = flatten_layer.output_shape().unwrap();
-        assert_eq!(output_shape.raw_dim().as_array_view(), &[12]);
+        assert_eq!(output_shape.raw_dim().as_array_view().to_vec(), vec![12]);
     }
 
     #[test]

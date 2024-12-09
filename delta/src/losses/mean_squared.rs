@@ -105,11 +105,12 @@ impl Loss for MeanSquaredLoss {
 mod tests {
     use super::*;
     use crate::common::Tensor;
+    use ndarray::{IxDyn, Shape};
 
     #[test]
     fn test_mean_squared_loss() {
-        let y_true = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]);
-        let y_pred = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]);
+        let y_true = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], Shape::from(IxDyn(&[2, 3])));
+        let y_pred = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], Shape::from(IxDyn(&[2, 3])));
         let loss = MeanSquaredLoss::new();
         let result = loss.calculate_loss(&y_true, &y_pred);
         assert_eq!(result, 0.0);
@@ -117,8 +118,8 @@ mod tests {
 
     #[test]
     fn test_mean_squared_loss_with_mismatch() {
-        let y_true = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2]);
-        let y_pred = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]);
+        let y_true = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], Shape::from(IxDyn(&[2, 2])));
+        let y_pred = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], Shape::from(IxDyn(&[2, 3])));
         let loss = MeanSquaredLoss::new();
 
         let result = std::panic::catch_unwind(|| {
@@ -133,8 +134,8 @@ mod tests {
 
     #[test]
     fn test_mean_squared_loss_with_nan() {
-        let y_true = Tensor::new(vec![1.0, 2.0, f32::NAN, 4.0], vec![2, 2]);
-        let y_pred = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2]);
+        let y_true = Tensor::new(vec![1.0, 2.0, f32::NAN, 4.0], Shape::from(IxDyn(&[2, 2])));
+        let y_pred = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], Shape::from(IxDyn(&[2, 2])));
         let loss = MeanSquaredLoss::new();
 
         let result = std::panic::catch_unwind(|| {
@@ -149,8 +150,8 @@ mod tests {
 
     #[test]
     fn test_mean_squared_loss_with_actual_values() {
-        let y_true = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2]);
-        let y_pred = Tensor::new(vec![2.0, 3.0, 4.0, 5.0], vec![2, 2]);
+        let y_true = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], Shape::from(IxDyn(&[2, 2])));
+        let y_pred = Tensor::new(vec![2.0, 3.0, 4.0, 5.0], Shape::from(IxDyn(&[2, 2])));
         let loss = MeanSquaredLoss::new();
         let result = loss.calculate_loss(&y_true, &y_pred);
 

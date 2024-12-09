@@ -47,3 +47,5 @@
 //     // Save the model
 //     model.save("model_path").unwrap();
 // }
+
+fn main() {}
