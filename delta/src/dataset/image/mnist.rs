@@ -46,6 +46,7 @@ use crate::get_workspace_dir;
 pub struct MnistDataset {
     train: Option<Dataset>,
     test: Option<Dataset>,
+    val: Option<Dataset>,
 }
 
 impl MnistDataset {
@@ -194,12 +195,37 @@ impl MnistDataset {
         debug!("Decompressed file: {}", file_path);
         Ok(decompressed_data)
     }
+
+    /// Splits the training data into training and validation datasets.
+    ///
+    /// # Arguments
+    ///
+    /// * `validation_split` - The fraction of the training data to use for validation.
+    ///
+    /// # Returns
+    ///
+    /// A tuple containing the training and validation datasets.
+    fn split_train_validation(&mut self, validation_split: f32) {
+        if let Some(train_data) = &self.train {
+            let total_samples = train_data.inputs.shape().raw_dim()[0];
+            let validation_size = (total_samples as f32 * validation_split).round() as usize;
+            let train_size = total_samples - validation_size;
+
+            let (train_inputs, val_inputs) = train_data.inputs.split_at(train_size);
+            let (train_labels, val_labels) = train_data.labels.split_at(train_size);
+
+            self.train = Some(Dataset::new(train_inputs, train_labels));
+            self.val = Some(Dataset::new(val_inputs, val_labels));
+        } else {
+            panic!("Training dataset not loaded!");
+        }
+    }
 }
 
 impl ImageDatasetOps for MnistDataset {
     type LoadFuture = Pin<Box<dyn Future<Output = MnistDataset> + Send>>;
 
-    /// Loads the MNIST dataset.
+    /// Loads the training dataset.
     ///
     /// # Returns
     ///
@@ -210,13 +236,14 @@ impl ImageDatasetOps for MnistDataset {
                 Ok(train_data) => MnistDataset {
                     train: Some(train_data),
                     test: None,
+                    val: None,
                 },
                 Err(err) => panic!("Failed to load train dataset: {}", err),
             }
         })
     }
 
-    /// Loads the MNIST dataset.
+    /// Loads the test dataset.
     ///
     /// # Returns
     ///
@@ -227,8 +254,31 @@ impl ImageDatasetOps for MnistDataset {
                 Ok(test_data) => MnistDataset {
                     train: None,
                     test: Some(test_data),
+                    val: None,
                 },
                 Err(err) => panic!("Failed to load test dataset: {}", err),
+            }
+        })
+    }
+
+    /// Loads the validation dataset.
+    ///
+    /// # Returns
+    ///
+    /// A future that resolves to the `MnistDataset` with the MNIST dataset loaded.
+    fn load_val() -> Self::LoadFuture {
+        Box::pin(async {
+            match MnistDataset::load_data(true).await {
+                Ok(train_data) => {
+                    let mut dataset = MnistDataset {
+                        train: Some(train_data),
+                        test: None,
+                        val: None,
+                    };
+                    dataset.split_train_validation(0.2);
+                    dataset
+                },
+                Err(err) => panic!("Failed to load train dataset: {}", err),
             }
         })
     }
@@ -415,6 +465,7 @@ impl ImageDatasetOps for MnistDataset {
         Self {
             train: self.train.clone(),
             test: self.test.clone(),
+            val: self.val.clone()
         }
     }
 }
