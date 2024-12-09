@@ -36,9 +36,9 @@ pub use models::Sequential;
 /// Putting tests here since it's using a collection of everything
 #[cfg(test)]
 mod tests {
+    use ndarray::{IxDyn, Shape};
     use crate::{
         activations::{ReluActivation, SoftmaxActivation},
-        common::Shape,
         losses::MeanSquaredLoss,
         neuralnet::{Dense, Flatten, Sequential},
         optimizers::Adam,
@@ -53,7 +53,7 @@ mod tests {
     #[test]
     fn test_sequential_add() {
         let model = Sequential::new()
-            .add(Flatten::new(Shape::new(vec![28, 28])))
+            .add(Flatten::new(Shape::from(IxDyn(&[28, 28]))))
             .add(Dense::new(128, Some(ReluActivation::new()), true))
             .add(Dense::new(10, None::<SoftmaxActivation>, false));
         assert_eq!(model.layers.len(), 3);
@@ -62,7 +62,7 @@ mod tests {
     #[test]
     fn test_sequential_compile() {
         let mut model = Sequential::new()
-            .add(Flatten::new(Shape::new(vec![28, 28])))
+            .add(Flatten::new(Shape::from(IxDyn(&[28, 28]))))
             .add(Dense::new(128, Some(ReluActivation::new()), true))
             .add(Dense::new(10, None::<SoftmaxActivation>, false));
 

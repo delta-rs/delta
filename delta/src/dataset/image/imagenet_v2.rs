@@ -255,7 +255,7 @@ impl ImageDatasetOps for ImageNetV2Dataset {
     fn len(&self) -> usize {
         self.data
             .as_ref()
-            .map(|ds| ds.inputs.shape()[0])
+            .map(|ds| ds.inputs.shape().raw_dim()[0])
             .unwrap_or(0)
     }
 
@@ -274,7 +274,7 @@ impl ImageDatasetOps for ImageNetV2Dataset {
             .as_ref()
             .expect("Dataset not loaded. Call `load_train` or `load_test` first.");
 
-        let num_samples = dataset.inputs.shape()[0];
+        let num_samples = dataset.inputs.shape().raw_dim()[0];
         let start_idx = batch_idx * batch_size;
         let end_idx = (start_idx + batch_size).min(num_samples);
 
@@ -360,7 +360,7 @@ impl ImageDatasetOps for ImageNetV2Dataset {
     fn shuffle(&mut self) {
         if let Some(dataset) = &mut self.data {
             // Get the number of samples
-            let num_samples = dataset.inputs.shape()[0];
+            let num_samples = dataset.inputs.shape().raw_dim()[0];
 
             // Create an index array and shuffle it
             let mut indices: Vec<usize> = (0..num_samples).collect();

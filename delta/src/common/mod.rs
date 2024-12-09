@@ -28,9 +28,9 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 pub mod error;
-pub mod shape;
 pub mod tensor_ops;
 
 pub use error::*;
-pub use shape::Shape;
 pub use tensor_ops::Tensor;
+
+pub use ndarray::{Shape, IxDyn};

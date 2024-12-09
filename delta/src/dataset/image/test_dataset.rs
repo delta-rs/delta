@@ -32,7 +32,7 @@ use std::{
     pin::Pin,
 };
 
-use ndarray::s;
+use ndarray::{s, IxDyn, Shape};
 
 use crate::common::{Tensor};
 use crate::dataset::base::{Dataset, ImageDatasetOps};
@@ -67,9 +67,9 @@ impl TestDataset {
     fn generate_dummy_dataset(size: usize, features: usize) -> Dataset {
         let inputs = Tensor::new(
             (0..size * features).map(|x| x as f32).collect(),
-            vec![size, features],
+            Shape::from(IxDyn(&[size, features])),
         );
-        let labels = Tensor::new((0..size).map(|x| (x % 2) as f32).collect(), vec![size]);
+        let labels = Tensor::new((0..size).map(|x| (x % 2) as f32).collect(), Shape::from(IxDyn(&[size])));
         Dataset { inputs, labels }
     }
 }
@@ -166,9 +166,9 @@ impl ImageDatasetOps for TestDataset {
             return (
                 Tensor::new(
                     inputs.iter().cloned().collect(),
-                    vec![end - start, dataset.inputs.shape()[1]],
+                    Shape::from(IxDyn(&[end - start, dataset.inputs.shape().raw_dim()[1]])),
                 ),
-                Tensor::new(labels.iter().cloned().collect(), vec![end - start]),
+                Tensor::new(labels.iter().cloned().collect(), Shape::from(IxDyn(&[end - start]))),
             );
         }
 

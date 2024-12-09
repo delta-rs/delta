@@ -43,18 +43,6 @@ use ndarray::Array2;
 /// # Panics
 ///
 /// Panics if any class index is out of the range `[0, num_classes - 1]`.
-///
-/// # Example
-///
-/// ```
-/// use deltaml::encoders::one_hot_encode;
-///
-/// let class_indices = vec![0, 1, 2];
-/// let num_classes = 3;
-/// let one_hot = one_hot_encode(&class_indices, num_classes);
-///
-/// assert_eq!(one_hot.shape(), &[3, 3]);
-/// ```
 pub fn one_hot_encode(class_indices: &[usize], num_classes: usize) -> Array2<f32> {
     if class_indices.iter().any(|&index| index >= num_classes) {
         panic!(

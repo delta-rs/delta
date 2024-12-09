@@ -32,7 +32,7 @@ use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 use std::time::Instant;
-
+use ndarray::Dimension;
 use crate::common::Tensor;
 use crate::dataset::{Dataset, ImageDatasetOps};
 use crate::losses::Loss;
@@ -192,7 +192,7 @@ impl Sequential {
                 .zip(actuals.data.iter())
                 .filter(|(pred, actual)| pred == actual)
                 .count();
-            total_samples += targets.shape()[0];
+            total_samples += targets.shape().raw_dim()[0];
 
             let accuracy = correct_predictions as f32 / total_samples as f32;
             self.display_progress(batch_idx, num_batches, epoch_loss, accuracy, start_time);
@@ -332,7 +332,7 @@ impl Sequential {
                 .filter(|(pred, actual)| pred == actual)
                 .count();
 
-            total_samples += targets.shape()[0];
+            total_samples += targets.shape().raw_dim()[0];
         }
 
         if total_samples == 0 {
@@ -413,10 +413,9 @@ impl Sequential {
             let layer_type = &self.layer_names[i];
             let layer_type_only = layer_type.split('_').next().unwrap();
             let display_name = format!("{} ({})", layer_type, layer_type_only);
-            let output_shape = format!(
-                "{:?}",
-                layer.output_shape().expect("Failed to get output shape")
-            );
+            let output_shape = layer.output_shape().expect("Failed to get output shape");
+            let mut output_shape_vec = output_shape.raw_dim().as_array_view().to_vec();
+            output_shape_vec.resize(4, 0); // Ensure the shape has 4 dimensions
             let (trainable, non_trainable) =
                 layer.param_count().expect("Failed to get param count");
             total_params += trainable + non_trainable;
@@ -425,7 +424,7 @@ impl Sequential {
             println!(
                 "{:<30} {:<25} {:<10}",
                 display_name,
-                output_shape,
+                format!("{:?}", output_shape_vec),
                 trainable + non_trainable
             );
         }

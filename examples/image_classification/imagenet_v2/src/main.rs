@@ -1,6 +1,6 @@
 use deltaml::activations::relu::ReluActivation;
 use deltaml::activations::softmax::SoftmaxActivation;
-use deltaml::common::shape::Shape;
+use deltaml::common::{IxDyn, Shape};
 use deltaml::dataset::base::ImageDatasetOps;
 use deltaml::dataset::ImageNetV2Dataset;
 use deltaml::losses::SparseCategoricalCrossEntropyLoss;
@@ -12,7 +12,7 @@ use deltaml::optimizers::Adam;
 async fn main() {
     // Create a neural network
     let mut model = Sequential::new()
-        .add(Flatten::new(Shape::new(vec![224, 224, 3]))) // Input: 224x224x3 (ImageNet images)
+        .add(Flatten::new(Shape::from(IxDyn(&[224, 224, 3])))) // Input: 224x224x3 (ImageNet images)
         .add(Dense::new(512, Some(ReluActivation::new()), true)) // Hidden layer: 512 units
         .add(Dense::new(256, Some(ReluActivation::new()), true)) // Hidden layer: 256 units
         .add(Dense::new(1000, None::<SoftmaxActivation>, false)); // Output: 1000 classes (ImageNet categories)

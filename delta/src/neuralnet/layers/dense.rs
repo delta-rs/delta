@@ -27,8 +27,9 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::{Shape, Tensor};
+use crate::common::Tensor;
 use log::debug;
+use ndarray::{Dimension, IxDyn, Shape};
 use serde_json;
 use crate::activations::Activation;
 use crate::neuralnet::layers::error::LayerError;
@@ -82,14 +83,16 @@ impl Layer for Dense {
     /// # Arguments
     ///
     /// * `input_shape` - The shape of the input tensor.
-    fn build(&mut self, input_shape: Shape) -> Result<(), LayerError> {
+    fn build(&mut self, input_shape: Shape<IxDyn>) -> Result<(), LayerError> {
         debug!(
             "Building Dense layer with input shape: {:?} and units: {}",
             input_shape, self.units
         );
-        let input_units = input_shape.0.last().expect("Input shape must not be empty");
-        self.weights = Some(Tensor::random(vec![*input_units, self.units]));
-        self.bias = Some(Tensor::zeros(vec![self.units]));
+        let raw_dim = input_shape.raw_dim();
+        let array_view = raw_dim.as_array_view();
+        let input_units = array_view.last().expect("Input shape must not be empty");
+        self.weights = Some(Tensor::random(Shape::from(IxDyn(&[*input_units, self.units]))));
+        self.bias = Some(Tensor::zeros(Shape::from(IxDyn(&[self.units]))));
         Ok(())
     }
 
@@ -156,8 +159,8 @@ impl Layer for Dense {
     /// # Returns
     ///
     /// A `Shape` representing the output shape of the layer.
-    fn output_shape(&self) -> Result<Shape, LayerError> {
-        let shape = Shape::new(vec![self.units]);
+    fn output_shape(&self) -> Result<Shape<IxDyn>, LayerError> {
+        let shape = Shape::from(IxDyn(&[self.units]));
         Ok(shape)
     }
 
@@ -235,10 +238,10 @@ mod tests {
 
     #[test]
     fn test_dense_layer() {
-        let input = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
+        let input = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[1, 3])));
         let mut dense_layer = Dense::new(2, Some(ReluActivation::new()), true);
         dense_layer
-            .build(Shape::new(vec![1, 3]))
+            .build(Shape::from(IxDyn(&[1, 3])))
             .expect("Failed to build layer");
 
         let output = dense_layer.forward(&input).unwrap();
@@ -249,10 +252,10 @@ mod tests {
 
     #[test]
     fn test_dense_layer_forward_pass() {
-        let input = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
+        let input = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[1, 3])));
         let mut dense_layer = Dense::new(2, Some(ReluActivation::new()), true);
         dense_layer
-            .build(Shape::new(vec![1, 3]))
+            .build(Shape::from(IxDyn(&[1, 3])))
             .expect("Failed to build layer");
 
         let output = dense_layer.forward(&input).unwrap();
@@ -263,14 +266,14 @@ mod tests {
 
     #[test]
     fn test_dense_layer_backward_pass() {
-        let input = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
+        let input = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[1, 3])));
         let mut dense_layer = Dense::new(2, Some(ReluActivation::new()), true);
         dense_layer.input = Some(input.clone());
         dense_layer
-            .build(Shape::new(vec![1, 3]))
+            .build(Shape::from(IxDyn(&[1, 3])))
             .expect("Failed to build layer");
 
-        let grad = Tensor::new(vec![1.0, 2.0], vec![1, 2]);
+        let grad = Tensor::new(vec![1.0, 2.0], Shape::from(IxDyn(&[1, 2])));
         let output = dense_layer.backward(&grad).unwrap();
 
         assert_eq!(output.data.shape(), &[1, 3]);
@@ -287,10 +290,10 @@ mod tests {
 
     #[test]
     fn test_dense_layer_with_no_activation() {
-        let input = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
+        let input = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[1, 3])));
         let mut dense_layer = Dense::new(4, None::<ReluActivation>, true);
         dense_layer
-            .build(Shape::new(vec![1, 3]))
+            .build(Shape::from(IxDyn(&[1, 3])))
             .expect("Failed to build layer");
 
         let output = dense_layer.forward(&input).unwrap();
@@ -303,14 +306,14 @@ mod tests {
     #[test]
     fn test_dense_layer_output_shape() {
         let dense_layer = Dense::new(10, Some(ReluActivation::new()), true);
-        assert_eq!(dense_layer.output_shape().unwrap().0, vec![10]);
+        assert_eq!(dense_layer.output_shape().unwrap().raw_dim().as_array_view().to_vec(), vec![10]);
     }
 
     #[test]
     fn test_dense_layer_param_count() {
         let mut dense_layer = Dense::new(6, None::<ReluActivation>, true);
         dense_layer
-            .build(Shape::new(vec![1, 4]))
+            .build(Shape::from(IxDyn(&[1, 4])))
             .expect("Failed to build layer");
 
         let (weights_count, bias_count) = dense_layer.param_count().unwrap();
@@ -322,13 +325,13 @@ mod tests {
     fn test_dense_layer_backward_with_no_trainable() {
         let mut dense_layer = Dense::new(4, None::<ReluActivation>, false);
         dense_layer
-            .build(Shape::new(vec![1, 3]))
+            .build(Shape::from(IxDyn(&[1, 3])))
             .expect("Failed to build layer");
 
-        let input = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
+        let input = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[1, 3])));
         dense_layer.input = Some(input);
 
-        let grad = Tensor::new(vec![0.5, -0.5, 1.0, -1.0], vec![1, 4]);
+        let grad = Tensor::new(vec![0.5, -0.5, 1.0, -1.0], Shape::from(IxDyn(&[1, 4])));
         let output_grad = dense_layer.backward(&grad).unwrap();
 
         // Ensure gradients are not stored when `trainable` is false.
@@ -343,21 +346,21 @@ mod tests {
     fn test_dense_layer_with_zero_units() {
         let mut dense_layer = Dense::new(0, None::<ReluActivation>, true);
         dense_layer
-            .build(Shape::new(vec![1, 3]))
+            .build(Shape::from(IxDyn(&[1, 3])))
             .expect("Failed to build layer");
 
         // Ensure the layer initializes with zero units without crashing.
-        assert_eq!(dense_layer.output_shape().unwrap().0, vec![0]);
+        assert_eq!(dense_layer.output_shape().unwrap().raw_dim().as_array_view().to_vec(), vec![0]);
         assert!(dense_layer.weights.is_some());
         assert!(dense_layer.bias.is_some());
     }
 
     #[test]
     fn test_dense_layer_with_large_input() {
-        let input = Tensor::random(vec![1000, 512]); // Large input tensor
+        let input = Tensor::random(Shape::from(IxDyn(&[1000, 512])));
         let mut dense_layer = Dense::new(256, Some(ReluActivation::new()), true);
         dense_layer
-            .build(Shape::new(vec![1000, 512]))
+            .build(Shape::from(IxDyn(&[1000, 512])))
             .expect("Failed to build layer");
 
         let output = dense_layer.forward(&input).unwrap();

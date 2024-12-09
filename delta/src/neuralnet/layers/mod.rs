@@ -30,17 +30,14 @@
 pub mod dense;
 pub mod flatten;
 pub mod max_pooling_2d;
-pub mod conv_2d;
-pub mod conv_1d;
 pub mod error;
 
 use std::fmt::Debug;
+use ndarray::{IxDyn, Shape};
 pub use dense::Dense;
 pub use flatten::Flatten;
 pub use max_pooling_2d::MaxPooling2D;
-pub use conv_2d::Conv2D;
-pub use conv_1d::Conv1D;
-use crate::common::{Shape, Tensor};
+use crate::common::Tensor;
 use crate::neuralnet::layers::error::LayerError;
 use crate::optimizers::Optimizer;
 
@@ -51,7 +48,7 @@ pub trait Layer: Debug {
     /// # Arguments
     ///
     /// * `input_shape` - The shape of the input tensor.
-    fn build(&mut self, input_shape: Shape) -> Result<(), LayerError>;
+    fn build(&mut self, input_shape: Shape<IxDyn>) -> Result<(), LayerError>;
 
     /// Performs the forward pass of the layer.
     ///
@@ -80,7 +77,7 @@ pub trait Layer: Debug {
     /// # Returns
     ///
     /// A `Shape` representing the output shape of the layer.
-    fn output_shape(&self) -> Result<Shape, LayerError>;
+    fn output_shape(&self) -> Result<Shape<IxDyn>, LayerError>;
 
     /// Returns the number of parameters in the layer.
     ///

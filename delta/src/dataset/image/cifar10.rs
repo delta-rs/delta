@@ -37,6 +37,7 @@ use std::future::Future;
 use std::io::Read;
 use std::path::Path;
 use std::pin::Pin;
+use ndarray::{IxDyn, Shape};
 use tar::Archive;
 use crate::dataset::base::{Dataset, ImageDatasetOps};
 use crate::get_workspace_dir;
@@ -163,14 +164,14 @@ impl Cifar10Dataset {
         Dataset::new(
             Tensor::new(
                 images,
-                vec![
+                Shape::from(IxDyn(&[
                     total_examples,
                     Self::CIFAR10_IMAGE_SIZE,
                     Self::CIFAR10_IMAGE_SIZE,
                     3,
-                ],
+                ])),
             ),
-            Tensor::new(labels, vec![total_examples, Self::CIFAR10_NUM_CLASSES]),
+            Tensor::new(labels, Shape::from(IxDyn(&[total_examples, Self::CIFAR10_NUM_CLASSES]))),
         )
     }
 }
@@ -257,7 +258,7 @@ impl ImageDatasetOps for Cifar10Dataset {
             _ => panic!("Dataset not loaded!"),
         };
 
-        let total_samples = dataset.inputs.shape()[0];
+        let total_samples = dataset.inputs.shape().raw_dim()[0];
         let start_idx = batch_idx * batch_size;
         let end_idx = start_idx + batch_size;
 
@@ -294,8 +295,8 @@ impl ImageDatasetOps for Cifar10Dataset {
         let outputs_data = outputs.data.clone();
         let targets_data = targets.data.clone();
 
-        let batch_size = targets.shape()[0];
-        let num_classes = targets.shape()[1];
+        let batch_size = targets.shape().raw_dim()[0];
+        let num_classes = targets.shape().raw_dim()[1];
 
         let mut loss = 0.0;
 
@@ -322,11 +323,11 @@ impl ImageDatasetOps for Cifar10Dataset {
         let outputs_data = outputs.data.iter().cloned().collect::<Vec<f32>>();
         let targets_data = targets.data.iter().cloned().collect::<Vec<f32>>();
 
-        let batch_size = targets.shape()[0];
-        let num_classes = targets.shape()[1];
+        let batch_size = targets.shape().raw_dim()[0];
+        let num_classes = targets.shape().raw_dim()[1];
         assert_eq!(
-            outputs.shape(),
-            targets.shape(),
+            outputs.shape().raw_dim(),
+            targets.shape().raw_dim(),
             "Outputs and targets must have the same shape"
         );
 

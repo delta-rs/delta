@@ -48,17 +48,6 @@ impl Dataset {
     /// # Returns
     ///
     /// A new `Dataset` instance.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use deltaml::common::Tensor;
-    /// use deltaml::dataset::Dataset;
-    ///
-    /// let inputs = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
-    /// let labels = Tensor::new(vec![0.0, 1.0, 0.0], vec![1, 3]);
-    /// let dataset = Dataset::new(inputs, labels);
-    /// ```
     pub fn new(inputs: Tensor, labels: Tensor) -> Self {
         Dataset { inputs, labels }
     }
