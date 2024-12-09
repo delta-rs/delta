@@ -1,6 +1,6 @@
 //! BSD 3-Clause License
 //!
-//! Copyright (c) 2024, Marcus Cvjeticanin, Chase Willden
+//! Copyright (c) 2024, The Delta Project Δ
 //!
 //! Redistribution and use in source and binary forms, with or without
 //! modification, are permitted provided that the following conditions are met:
@@ -27,8 +27,8 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::loss::Loss;
 use crate::common::Tensor;
+use crate::losses::Loss;
 
 /// A struct representing the Sparse Categorical Cross-Entropy Loss function.
 #[derive(Debug)]

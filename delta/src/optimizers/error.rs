@@ -1,6 +1,6 @@
 //! BSD 3-Clause License
 //!
-//! Copyright (c) 2024, Marcus Cvjeticanin, Chase Willden
+//! Copyright (c) 2024, The Delta Project Δ
 //!
 //! Redistribution and use in source and binary forms, with or without
 //! modification, are permitted provided that the following conditions are met:
@@ -27,32 +27,28 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::tensor_ops::Tensor;
-use std::fmt::Debug;
+use std::fmt;
 
-/// A trait representing a loss function.
-pub trait Loss: Debug {
-    /// Calculates the loss between the output and the target tensors.
-    ///
-    /// # Arguments
-    ///
-    /// * `output` - The output tensor from the model.
-    /// * `target` - The target tensor.
-    ///
-    /// # Returns
-    ///
-    /// The calculated loss as a `f32` value.
-    fn calculate_loss(&self, output: &Tensor, target: &Tensor) -> f32;
-
-    /// Calculates the gradient of the loss with respect to the output tensor.
-    ///
-    /// # Arguments
-    ///
-    /// * `output` - The output tensor from the model.
-    /// * `target` - The target tensor.
-    ///
-    /// # Returns
-    ///
-    /// A `Tensor` containing the gradient of the loss with respect to the output tensor.
-    fn calculate_loss_grad(&self, output: &Tensor, target: &Tensor) -> Tensor;
+/// Errors that can occur in the Optimizer.
+#[derive(Debug)]
+pub enum OptimizerError {
+    /// Error when learning rate is not set or is invalid.
+    InvalidLearningRate,
+    /// Error when the gradient and weight shapes are incompatible.
+    IncompatibleGradientWeightShape(Vec<usize>, Vec<usize>),
 }
+
+impl fmt::Display for OptimizerError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            OptimizerError::InvalidLearningRate => write!(f, "Invalid or unset learning rate"),
+            OptimizerError::IncompatibleGradientWeightShape(g, w) => write!(
+                f,
+                "Gradient shape {:?} is incompatible with weight shape {:?}",
+                g, w
+            ),
+        }
+    }
+}
+
+impl std::error::Error for OptimizerError {}

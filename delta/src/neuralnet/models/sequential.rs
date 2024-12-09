@@ -1,6 +1,6 @@
 //! BSD 3-Clause License
 //!
-//! Copyright (c) 2024, Marcus Cvjeticanin, Chase Willden
+//! Copyright (c) 2024, The Delta Project Δ
 //!
 //! Redistribution and use in source and binary forms, with or without
 //! modification, are permitted provided that the following conditions are met:
@@ -33,11 +33,12 @@ use std::io::Write;
 use std::path::Path;
 use std::time::Instant;
 
-use crate::common::layer::Layer;
-use crate::common::loss::Loss;
-use crate::common::optimizer::Optimizer;
-use crate::common::{ModelError, Tensor};
+use crate::common::Tensor;
 use crate::dataset::{Dataset, ImageDatasetOps};
+use crate::losses::Loss;
+use crate::neuralnet::layers::Layer;
+use crate::neuralnet::models::error::ModelError;
+use crate::optimizers::Optimizer;
 
 /// A sequential model that contains a list of layers, an optimizer, and a loss function.
 #[derive(Debug)]

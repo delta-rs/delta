@@ -1,6 +1,6 @@
 //! BSD 3-Clause License
 //!
-//! Copyright (c) 2024, Marcus Cvjeticanin, Chase Willden
+//! Copyright (c) 2024, The Delta Project Δ
 //!
 //! Redistribution and use in source and binary forms, with or without
 //! modification, are permitted provided that the following conditions are met:
@@ -28,27 +28,29 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use std::fmt;
+use crate::neuralnet::layers::error::LayerError;
 
-/// Errors that can occur in the Optimizer.
 #[derive(Debug)]
-pub enum OptimizerError {
-    /// Error when learning rate is not set or is invalid.
-    InvalidLearningRate,
-    /// Error when the gradient and weight shapes are incompatible.
-    IncompatibleGradientWeightShape(Vec<usize>, Vec<usize>),
+pub enum ModelError {
+    MissingOptimizer,
+    MissingLossFunction,
+    DatasetError(String),
+    TrainingError(String),
+    LayerError(LayerError),
 }
 
-impl fmt::Display for OptimizerError {
+impl fmt::Display for ModelError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            OptimizerError::InvalidLearningRate => write!(f, "Invalid or unset learning rate"),
-            OptimizerError::IncompatibleGradientWeightShape(g, w) => write!(
-                f,
-                "Gradient shape {:?} is incompatible with weight shape {:?}",
-                g, w
-            ),
+            ModelError::MissingOptimizer => write!(f, "Optimizer must be set before training"),
+            ModelError::MissingLossFunction => {
+                write!(f, "Loss function must be set before training")
+            }
+            ModelError::DatasetError(msg) => write!(f, "Dataset error: {}", msg),
+            ModelError::TrainingError(msg) => write!(f, "Training error: {}", msg),
+            ModelError::LayerError(err) => write!(f, "Layer error: {}", err),
         }
     }
 }
 
-impl std::error::Error for OptimizerError {}
+impl std::error::Error for ModelError {}

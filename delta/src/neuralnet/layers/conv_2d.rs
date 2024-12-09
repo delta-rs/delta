@@ -1,6 +1,6 @@
 //! BSD 3-Clause License
 //!
-//! Copyright (c) 2024, Marcus Cvjeticanin, Chase Willden
+//! Copyright (c) 2024, The Delta Project Δ
 //!
 //! Redistribution and use in source and binary forms, with or without
 //! modification, are permitted provided that the following conditions are met:
@@ -27,10 +27,11 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::layer::Layer;
+use crate::activations::Activation;
 use crate::common::shape::Shape;
 use crate::common::tensor_ops::Tensor;
-use crate::common::{Activation, LayerError};
+use crate::neuralnet::layers::error::LayerError;
+use crate::neuralnet::layers::Layer;
 
 /// A struct representing a 2D convolutional layer.
 #[derive(Debug)]
@@ -182,7 +183,7 @@ impl Layer for Conv2D {
     /// * `optimizer` - The optimizer to use.
     fn update_weights(
         &mut self,
-        optimizer: &mut Box<dyn crate::common::optimizer::Optimizer>,
+        optimizer: &mut Box<dyn crate::optimizers::Optimizer>,
     ) -> Result<(), LayerError> {
         if !self.trainable {
             return Ok(());

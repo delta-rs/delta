@@ -1,6 +1,6 @@
 //! BSD 3-Clause License
 //!
-//! Copyright (c) 2024, Marcus Cvjeticanin
+//! Copyright (c) 2024, The Delta Project Δ
 //!
 //! Redistribution and use in source and binary forms, with or without
 //! modification, are permitted provided that the following conditions are met:
@@ -30,5 +30,41 @@
 pub mod softmax;
 pub mod relu;
 
+use std::fmt::Debug;
 pub use softmax::SoftmaxActivation;
 pub use relu::ReluActivation;
+use crate::common::Tensor;
+
+/// A trait representing an activation function.
+pub trait Activation: Debug {
+    /// Applies the activation function to the input tensor.
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - The input tensor.
+    ///
+    /// # Returns
+    ///
+    /// The output tensor after applying the activation function.
+    fn activate(&self, input: &Tensor) -> Tensor;
+
+    /// Computes the derivative of the activation function.
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - The input tensor.
+    ///
+    /// # Returns
+    ///
+    /// The derivative tensor of the activation function.
+    fn derivative(&self, input: &Tensor) -> Tensor;
+
+    /// Returns the name of the activation function.
+    ///
+    /// # Returns
+    ///
+    /// A string slice containing the name of the activation function.
+    fn name(&self) -> &str {
+        std::any::type_name::<Self>().split("::").last().unwrap_or("Unknown")
+    }
+}

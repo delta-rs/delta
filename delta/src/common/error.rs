@@ -1,6 +1,6 @@
 //! BSD 3-Clause License
 //!
-//! Copyright (c) 2024, Marcus Cvjeticanin, Chase Willden
+//! Copyright (c) 2024, The Delta Project Δ
 //!
 //! Redistribution and use in source and binary forms, with or without
 //! modification, are permitted provided that the following conditions are met:
@@ -27,12 +27,16 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-pub mod core_error;
-pub mod layer_error;
-pub mod model_error;
-pub mod optimizer_error;
+/// An enumeration of possible core errors.
+#[derive(Debug)]
+pub enum CoreError {
+    /// Indicates an invalid shape error.
+    InvalidShape,
+    /// Indicates a gradient mismatch error.
+    GradientMismatch,
+    /// Represents other types of errors with a message.
+    Other(String),
+}
 
-pub use core_error::CoreError;
-pub use layer_error::LayerError;
-pub use model_error::ModelError;
-pub use optimizer_error::OptimizerError;
+/// A type alias for results returned by core operations.
+pub type Result<T> = std::result::Result<T, CoreError>;

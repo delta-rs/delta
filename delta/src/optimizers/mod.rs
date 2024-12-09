@@ -1,6 +1,6 @@
 //! BSD 3-Clause License
 //!
-//! Copyright (c) 2024, Marcus Cvjeticanin
+//! Copyright (c) 2024, The Delta Project Δ
 //!
 //! Redistribution and use in source and binary forms, with or without
 //! modification, are permitted provided that the following conditions are met:
@@ -28,5 +28,27 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 pub mod adam;
+pub mod error;
 
+use std::fmt::Debug;
 pub use adam::Adam;
+use crate::common::Tensor;
+use crate::optimizers::error::OptimizerError;
+
+/// A trait representing an optimizer for training neural networks.
+pub trait Optimizer: Debug {
+    /// Performs an optimization step using the given weights and gradients.
+    ///
+    /// # Arguments
+    ///
+    /// * `weights` - A mutable reference to the weights tensor.
+    /// * `gradients` - A reference to the gradients tensor.
+    fn step(&mut self, weights: &mut Tensor, gradients: &Tensor) -> Result<(), OptimizerError>;
+}
+
+/// A struct representing the configuration for an optimizer.
+#[derive(Debug)]
+pub struct OptimizerConfig {
+    /// The learning rate for the optimizer.
+    pub learning_rate: f32,
+}

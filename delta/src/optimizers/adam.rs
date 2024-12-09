@@ -1,6 +1,6 @@
 //! BSD 3-Clause License
 //!
-//! Copyright (c) 2024, Marcus Cvjeticanin, Chase Willden
+//! Copyright (c) 2024, The Delta Project Δ
 //!
 //! Redistribution and use in source and binary forms, with or without
 //! modification, are permitted provided that the following conditions are met:
@@ -27,11 +27,11 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::Optimizer;
-use crate::common::OptimizerError;
 use crate::common::Tensor;
 use std::fmt;
 use std::fmt::Debug;
+use crate::optimizers::error::OptimizerError;
+use crate::optimizers::Optimizer;
 
 /// A wrapper struct for a debuggable scheduler function.
 #[allow(dead_code)]
