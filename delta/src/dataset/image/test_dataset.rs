@@ -41,6 +41,7 @@ use crate::dataset::base::{Dataset, ImageDatasetOps};
 pub struct TestDataset {
     train: Option<Dataset>,
     test: Option<Dataset>,
+    val: Option<Dataset>,
 }
 
 impl TestDataset {
@@ -50,6 +51,7 @@ impl TestDataset {
         TestDataset {
             train: None,
             test: None,
+            val: None,
         }
     }
 
@@ -72,6 +74,31 @@ impl TestDataset {
         let labels = Tensor::new((0..size).map(|x| (x % 2) as f32).collect(), Shape::from(IxDyn(&[size])));
         Dataset { inputs, labels }
     }
+
+    /// Splits the training data into training and validation datasets.
+    ///
+    /// # Arguments
+    ///
+    /// * `validation_split` - The fraction of the training data to use for validation.
+    ///
+    /// # Returns
+    ///
+    /// A tuple containing the training and validation datasets.
+    fn split_train_validation(&mut self, validation_split: f32) {
+        if let Some(train_data) = &self.train {
+            let total_samples = train_data.inputs.shape().raw_dim()[0];
+            let validation_size = (total_samples as f32 * validation_split).round() as usize;
+            let train_size = total_samples - validation_size;
+
+            let (train_inputs, val_inputs) = train_data.inputs.split_at(train_size);
+            let (train_labels, val_labels) = train_data.labels.split_at(train_size);
+
+            self.train = Some(Dataset::new(train_inputs, train_labels));
+            self.val = Some(Dataset::new(val_inputs, val_labels));
+        } else {
+            panic!("Training dataset not loaded!");
+        }
+    }
 }
 
 impl ImageDatasetOps for TestDataset {
@@ -86,6 +113,7 @@ impl ImageDatasetOps for TestDataset {
         Box::pin(future::ready(Self {
             train: Some(Self::generate_dummy_dataset(100, 10)),
             test: None,
+            val: None
         }))
     }
 
@@ -98,7 +126,22 @@ impl ImageDatasetOps for TestDataset {
         Box::pin(future::ready(Self {
             train: None,
             test: Some(Self::generate_dummy_dataset(50, 10)),
+            val: None
         }))
+    }
+
+    /// Loads the validation dataset.
+    ///
+    /// # Returns
+    ///
+    /// A future that resolves to a `TestDataset` instance with the test dataset loaded.
+    fn load_val() -> Self::LoadFuture {
+        Box::pin(async {
+            let mut dataset = TestDataset::new();
+            dataset.train = Some(Self::generate_dummy_dataset(100, 10));
+            dataset.split_train_validation(0.2); // Use 20% of the training data for validation
+            dataset
+        })
     }
 
     /// Normalizes the dataset to the given range.
@@ -229,6 +272,7 @@ impl ImageDatasetOps for TestDataset {
         Self {
             train: self.train.clone(),
             test: self.test.clone(),
+            val: self.val.clone()
         }
     }
 }
