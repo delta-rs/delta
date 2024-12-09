@@ -111,10 +111,10 @@ impl Optimizer for Adam {
         self.timestep += 1;
 
         // Initialize moving averages if not already done
-        if self.m.is_none() || self.m.as_ref().unwrap().shape() != weights.shape() {
+        if self.m.is_none() || self.m.as_ref().unwrap().shape().to_vec() != weights.shape().to_vec() {
             self.m = Some(Tensor::zeros(weights.shape().clone()));
         }
-        if self.v.is_none() || self.v.as_ref().unwrap().shape() != weights.shape() {
+        if self.v.is_none() || self.v.as_ref().unwrap().shape().to_vec() != weights.shape().to_vec() {
             self.v = Some(Tensor::zeros(weights.shape().clone()));
         }
 
@@ -122,21 +122,22 @@ impl Optimizer for Adam {
         let v = self.v.as_mut().unwrap();
 
         // Ensure gradients match the weights' shape
-        let processed_gradients = if gradients.shape() == weights.shape() {
+        let processed_gradients = if gradients.shape().to_vec() == weights.shape().to_vec() {
             gradients.clone()
-        } else if gradients.shape().len() <= weights.shape().len()
+        } else if gradients.shape().ndim() <= weights.shape().ndim()
             && gradients
-                .shape()
-                .iter()
-                .rev()
-                .zip(weights.shape().iter().rev())
-                .all(|(g, w)| *g == *w || *g == 1)
+            .shape()
+            .as_array_view()
+            .iter()
+            .rev()
+            .zip(weights.shape().as_array_view().iter().rev())
+            .all(|(g, w)| *g == *w || *g == 1)
         {
-            gradients.broadcast(weights.shape())
+            gradients.broadcast(weights.shape().to_vec())
         } else {
             return Err(OptimizerError::IncompatibleGradientWeightShape(
-                gradients.shape().clone(),
-                weights.shape().clone(),
+                gradients.shape().to_vec(),
+                weights.shape().to_vec(),
             ));
         };
 

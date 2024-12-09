@@ -27,7 +27,7 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::shape::Shape;
+use ndarray::{IxDyn, Shape};
 use crate::common::tensor_ops::Tensor;
 use crate::neuralnet::layers::error::LayerError;
 use crate::neuralnet::layers::Layer;
@@ -39,7 +39,7 @@ pub struct MaxPooling2D {
     pool_size: usize,
     #[allow(dead_code)]
     stride: usize,
-    input_shape: Option<Shape>,
+    input_shape: Option<Shape<IxDyn>>,
 }
 
 impl MaxPooling2D {
@@ -53,7 +53,7 @@ impl MaxPooling2D {
 }
 
 impl Layer for MaxPooling2D {
-    fn build(&mut self, input_shape: Shape) -> Result<(), LayerError> {
+    fn build(&mut self, input_shape: Shape<IxDyn>) -> Result<(), LayerError> {
         self.input_shape = Some(input_shape);
         Ok(())
     }
@@ -66,7 +66,7 @@ impl Layer for MaxPooling2D {
         unimplemented!()
     }
 
-    fn output_shape(&self) -> Result<Shape, LayerError> {
+    fn output_shape(&self) -> Result<Shape<IxDyn>, LayerError> {
         unimplemented!()
     }
 

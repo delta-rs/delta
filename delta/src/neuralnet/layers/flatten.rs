@@ -27,7 +27,8 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::{Shape, Tensor};
+use ndarray::{IxDyn, Shape};
+use crate::common::Tensor;
 use crate::neuralnet::layers::error::LayerError;
 use crate::neuralnet::layers::Layer;
 
@@ -35,7 +36,7 @@ use crate::neuralnet::layers::Layer;
 #[derive(Debug)]
 pub struct Flatten {
     name: String,
-    input_shape: Shape,
+    input_shape: Shape<IxDyn>,
 }
 
 impl Flatten {
@@ -52,12 +53,12 @@ impl Flatten {
     /// # Example
     ///
     /// ```
+    /// use ndarray::Shape;
     /// use deltaml::neuralnet::layers::flatten::Flatten;
-    /// use deltaml::common::Shape;
     ///
     /// let flatten_layer = Flatten::new(Shape::new(vec![28, 28]));
     /// ```
-    pub fn new(input_shape: Shape) -> Self {
+    pub fn new(input_shape: Shape<IxDyn>) -> Self {
         Self {
             name: "Flatten".to_string(),
             input_shape,
@@ -71,7 +72,7 @@ impl Layer for Flatten {
     /// # Arguments
     ///
     /// * `input_shape` - The shape of the input tensor.
-    fn build(&mut self, input_shape: Shape) -> Result<(), LayerError> {
+    fn build(&mut self, input_shape: Shape<IxDyn>) -> Result<(), LayerError> {
         self.input_shape = input_shape;
         Ok(())
     }
@@ -116,7 +117,7 @@ impl Layer for Flatten {
     /// # Returns
     ///
     /// A `Shape` representing the output shape of the layer.
-    fn output_shape(&self) -> Result<Shape, LayerError> {
+    fn output_shape(&self) -> Result<Shape<IxDyn>, LayerError> {
         let shape = Shape::new(vec![self.input_shape.0.iter().product()]);
         Ok(shape)
     }
@@ -157,7 +158,7 @@ impl Layer for Flatten {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::common::Shape;
+    use ndarray::Shape;
 
     #[test]
     fn test_flatten_new() {

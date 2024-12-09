@@ -2,7 +2,7 @@ use std::io::Cursor;
 use std::ops::{Mul, Range, SubAssign};
 
 use image::{GenericImageView, ImageReader};
-use ndarray::{Array, ArrayD, Axis, IxDyn};
+use ndarray::{Array, ArrayD, Axis, IxDyn, Shape};
 use ndarray::{Dimension, Ix2};
 use rand::Rng;
 
@@ -24,19 +24,7 @@ impl Tensor {
     /// # Returns
     ///
     /// A new `Tensor` instance.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let dataset = vec![1.0, 2.0, 3.0, 4.0];
-    /// let shape = vec![2, 2];
-    ///
-    /// let tensor = Tensor::new(dataset, shape);
-    /// ```
-    pub fn new(data: Vec<f32>, shape: Vec<usize>) -> Self {
-        let shape = IxDyn(&shape);
+    pub fn new(data: Vec<f32>, shape: Shape<IxDyn>) -> Self {
         Self {
             data: Array::from_shape_vec(shape, data).expect("Invalid shape for dataset"),
         }
@@ -51,17 +39,7 @@ impl Tensor {
     /// # Returns
     ///
     /// A tensor filled with zeros.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let shape = vec![2, 3];
-    /// let tensor = Tensor::zeros(shape);
-    /// ```
-    pub fn zeros(shape: Vec<usize>) -> Self {
-        let shape = IxDyn(&shape);
+    pub fn zeros(shape: Shape<IxDyn>) -> Self {
         Self {
             data: Array::zeros(shape),
         }
@@ -76,18 +54,8 @@ impl Tensor {
     /// # Returns
     ///
     /// A tensor filled with random values.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let shape = vec![2, 3];
-    /// let tensor = Tensor::random(shape);
-    /// ```
-    pub fn random(shape: Vec<usize>) -> Self {
+    pub fn random(shape: Shape<IxDyn>) -> Self {
         let mut rng = rand::thread_rng();
-        let shape = IxDyn(&shape); // Convert shape to dynamic dimension
         let data: Vec<f32> = (0..shape.size()).map(|_| rng.gen::<f32>()).collect(); // Use size() method
         Self {
             data: Array::from_shape_vec(shape, data).expect("Invalid shape for random dataset"),
@@ -103,18 +71,6 @@ impl Tensor {
     /// # Returns
     ///
     /// A new tensor containing the result of the addition.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let data1 = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor1 = Tensor::new(data1, vec![2, 2]);
-    /// let data2 = vec![5.0, 6.0, 7.0, 8.0];
-    /// let tensor2 = Tensor::new(data2, vec![2, 2]);
-    /// let result = tensor1.add(&tensor2);
-    /// ```
     pub fn add(&self, other: &Tensor) -> Tensor {
         Tensor {
             data: &self.data + &other.data,
@@ -126,16 +82,6 @@ impl Tensor {
     /// # Returns
     ///
     /// The maximum value in the tensor.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let data = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor = Tensor::new(data, vec![2, 2]);
-    /// let max_value = tensor.max();
-    /// ```
     pub fn max(&self) -> f32 {
         *self
             .data
@@ -149,16 +95,6 @@ impl Tensor {
     /// # Returns
     ///
     /// The mean of the tensor.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let data = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor = Tensor::new(data, vec![2, 2]);
-    /// let mean = tensor.mean();
-    /// ```
     pub fn mean(&self) -> f32 {
         self.data.mean().unwrap_or(0.0)
     }
@@ -172,19 +108,7 @@ impl Tensor {
     /// # Returns
     ///
     /// A new tensor with the reshaped dataset.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let dataset = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor = Tensor::new(dataset, vec![2, 2]);
-    /// let new_shape = vec![1, 4];
-    /// let reshaped_tensor = tensor.reshape(new_shape);
-    /// ```
-    pub fn reshape(&self, shape: Vec<usize>) -> Tensor {
-        let shape = IxDyn(&shape);
+    pub fn reshape(&self, shape: Shape<IxDyn>) -> Tensor {
         Tensor {
             data: self
                 .data
@@ -203,16 +127,6 @@ impl Tensor {
     /// # Returns
     ///
     /// A new tensor with the result of applying the function.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let data = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor = Tensor::new(data, vec![2, 2]);
-    /// let result = tensor.map(|x| x * 2.0);
-    /// ```
     pub fn map<F>(&self, f: F) -> Tensor
     where
         F: Fn(f32) -> f32,
@@ -232,17 +146,6 @@ impl Tensor {
     /// # Returns
     ///
     /// A new tensor containing the sliced dataset.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let dataset = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor = Tensor::new(dataset, vec![2, 2]);
-    /// let indices = vec![0..2, 0..2];
-    /// let sliced_tensor = tensor.slice(indices);
-    /// ```
     pub fn slice(&self, indices: Vec<Range<usize>>) -> Tensor {
         let slices: Vec<_> = indices.iter().map(|r| r.clone().into()).collect();
         let view = self.data.slice(slices.as_slice());
@@ -260,18 +163,6 @@ impl Tensor {
     /// # Returns
     ///
     /// A new tensor containing the result of the matrix multiplication.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let data1 = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor1 = Tensor::new(data1, vec![2, 2]);
-    /// let data2 = vec![5.0, 6.0, 7.0, 8.0];
-    /// let tensor2 = Tensor::new(data2, vec![2, 2]);
-    /// let result = tensor1.matmul(&tensor2);
-    /// ```
     pub fn matmul(&self, other: &Tensor) -> Tensor {
         // Ensure both tensors have at least 2 dimensions for matrix multiplication
         if self.data.ndim() < 2 || other.data.ndim() < 2 {
@@ -308,16 +199,6 @@ impl Tensor {
     /// # Panics
     ///
     /// This method assumes the tensor is at least 2D.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let dataset = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor = Tensor::new(dataset, vec![2, 2]);
-    /// let transposed_tensor = tensor.transpose();
-    /// ```
     pub fn transpose(&self) -> Tensor {
         let ndim = self.data.ndim();
         if ndim < 2 {
@@ -336,17 +217,7 @@ impl Tensor {
     /// # Returns
     ///
     /// A vector representing the shape of the tensor.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let data = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor = Tensor::new(data, vec![2, 2]);
-    /// let shape = tensor.shape();
-    /// ```
-    pub fn shape(&self) -> Vec<usize> {
+    pub fn shape(&self) -> Shape<IxDyn> {
         self.data.shape().to_vec()
     }
 
@@ -359,16 +230,6 @@ impl Tensor {
     /// # Returns
     ///
     /// A new tensor with the permuted axes.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let data = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor = Tensor::new(data, vec![2, 2]);
-    /// let permuted_tensor = tensor.permute(vec![1, 0]);
-    /// ```
     pub fn permute(&self, axes: Vec<usize>) -> Tensor {
         Tensor {
             data: self.data.clone().permuted_axes(axes),
@@ -384,16 +245,6 @@ impl Tensor {
     /// # Returns
     ///
     /// A new tensor containing the summed dataset.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let dataset = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor = Tensor::new(dataset, vec![2, 2]);
-    /// let summed_tensor = tensor.sum_along_axis(1);
-    /// ```
     pub fn sum_along_axis(&self, axis: usize) -> Tensor {
         let sum = self.data.sum_axis(Axis(axis));
         Tensor { data: sum }
@@ -404,16 +255,6 @@ impl Tensor {
     /// # Arguments
     ///
     /// * `amount` - The scalar value to multiply the tensor by.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let data = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor = Tensor::new(data, vec![2, 2]);
-    /// let multiplied_tensor = tensor.mul_scalar(2.0);
-    /// ```
     pub fn mul_scalar(&self, amount: f32) -> Tensor {
         self.map(|x| x * amount)
     }
@@ -554,16 +395,6 @@ impl Tensor {
     /// # Returns
     ///
     /// A new tensor containing the mean dataset.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let dataset = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor = Tensor::new(dataset, vec![2, 2]);
-    /// let mean_tensor = tensor.mean_axis(1);
-    /// ```
     pub fn mean_axis(&self, axis: usize) -> Tensor {
         let mean = self
             .data
@@ -585,19 +416,9 @@ impl Tensor {
     /// # Panics
     ///
     /// Panics if the current shape cannot be broadcasted to the target shape.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let data = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor = Tensor::new(data, vec![2, 2]);
-    /// let broadcasted_tensor = tensor.broadcast(vec![2, 2]);
-    /// ```
     pub fn broadcast(&self, target_shape: Vec<usize>) -> Tensor {
         let self_shape = self.shape();
-        let ndim_self = self_shape.len();
+        let ndim_self = self_shape.raw_dim();
         let ndim_target = target_shape.len();
 
         // Pad the current shape with leading 1s to match the target dimensions
@@ -638,15 +459,6 @@ impl Tensor {
     /// # Returns
     ///
     /// A new tensor containing the normalized dataset.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let dataset = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor = Tensor::new(dataset, vec![2, 2]);
-    /// let normalized_tensor = tensor.normalize(0.0, 1.0);
     pub fn normalize(&self, min: f32, max: f32) -> Tensor {
         let normalized_data = self.data.mapv(|x| (x - min) / (max - min));
         Tensor {
@@ -659,16 +471,6 @@ impl Tensor {
     /// # Arguments
     ///
     /// * `noise_level` - The level of noise to add.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let data = vec![1.0, 2.0, 3.0, 4.0];
-    /// let mut tensor = Tensor::new(data, vec![2, 2]);
-    /// tensor.add_noise(0.1);
-    /// ```
     pub fn add_noise(&mut self, noise_level: f32) {
         let mut rng = rand::thread_rng();
         for value in self.data.iter_mut() {
@@ -686,16 +488,6 @@ impl Tensor {
     /// # Returns
     ///
     /// A new tensor containing the reduced dataset.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let dataset = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor = Tensor::new(dataset, vec![2, 2]);
-    /// let reduced_tensor = tensor.reduce_sum(1);
-    /// ```
     pub fn reduce_sum(&self, axis: usize) -> Tensor {
         let sum = self.data.sum_axis(Axis(axis));
         Tensor { data: sum }
@@ -714,16 +506,6 @@ impl Tensor {
     /// # Panics
     ///
     /// Panics if the axis is out of bounds.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let data = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor = Tensor::new(data, vec![2, 2]);
-    /// let max_indices = tensor.argmax(1);
-    /// ```
     pub fn argmax(&self, axis: usize) -> Tensor {
         // Ensure the axis is valid
         if axis >= self.data.ndim() {
@@ -758,17 +540,6 @@ impl Tensor {
     /// # Returns
     ///
     /// A new tensor containing the selected elements.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let data = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor = Tensor::new(data, vec![4]);
-    /// let indices = vec![2, 0, 3, 1];
-    /// let selected = tensor.take(&indices);
-    /// ```
     pub fn take(&self, indices: &[usize]) -> Tensor {
         let mut data = Vec::with_capacity(indices.len());
         let mut shape = self.shape();
@@ -838,17 +609,6 @@ impl Tensor {
     /// # Panics
     ///
     /// Panics if the tensors do not have the same shape.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let tensor1 = Tensor::new(vec![1.0, 2.0, 3.0], vec![3]);
-    /// let tensor2 = Tensor::new(vec![4.0, 5.0, 6.0], vec![3]);
-    /// let stacked = Tensor::stack(&[tensor1, tensor2]).unwrap();
-    /// assert_eq!(stacked.shape(), vec![2, 3]);
-    /// ```
     pub fn stack(tensors: &[Tensor]) -> Result<Tensor, String> {
         if tensors.is_empty() {
             return Err("Cannot stack an empty list of tensors.".to_string());
@@ -885,18 +645,6 @@ impl SubAssign for Tensor {
     /// # Arguments
     ///
     /// * `rhs` - The tensor to subtract from the current tensor.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let data1 = vec![1.0, 2.0, 3.0, 4.0];
-    /// let data2 = vec![4.0, 3.0, 2.0, 1.0];
-    /// let mut tensor1 = Tensor::new(data1, vec![2, 2]);
-    /// let tensor2 = Tensor::new(data2, vec![2, 2]);
-    /// tensor1 -= tensor2;
-    /// ```
     fn sub_assign(&mut self, rhs: Self) {
         self.data -= &rhs.data;
     }
@@ -908,14 +656,6 @@ impl Default for Tensor {
     /// # Returns
     ///
     /// A new tensor with default values.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let tensor = Tensor::default();
-    /// ```
     fn default() -> Self {
         Self::zeros(vec![1, 1])
     }
@@ -933,18 +673,6 @@ impl Mul for Tensor {
     /// # Returns
     ///
     /// A new tensor containing the result of the multiplication.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let data1 = vec![1.0, 2.0, 3.0, 4.0];
-    /// let data2 = vec![2.0, 3.0, 4.0, 5.0];
-    /// let tensor1 = Tensor::new(data1, vec![2, 2]);
-    /// let tensor2 = Tensor::new(data2, vec![2, 2]);
-    /// let multiplied_tensor = tensor1 * tensor2;
-    /// ```
     fn mul(self, rhs: Self) -> Self::Output {
         self.matmul(&rhs)
     }
@@ -960,18 +688,6 @@ impl PartialEq for Tensor {
     /// # Returns
     ///
     /// `true` if the tensors are equal, `false` otherwise.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use deltaml::common::Tensor;
-    ///
-    /// let data1 = vec![1.0, 2.0, 3.0, 4.0];
-    /// let data2 = vec![1.0, 2.0, 3.0, 4.0];
-    /// let tensor1 = Tensor::new(data1, vec![2, 2]);
-    /// let tensor2 = Tensor::new(data2, vec![2, 2]);
-    /// let is_equal = tensor1 == tensor2;
-    /// ```
     fn eq(&self, other: &Self) -> bool {
         self.data == other.data
     }

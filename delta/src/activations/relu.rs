@@ -23,18 +23,6 @@ impl Activation for ReluActivation {
     /// # Returns
     ///
     /// The output tensor after applying ReLU activation.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use deltaml::activations::relu::ReluActivation;
-    /// use deltaml::activations::Activation;
-    /// use deltaml::common::tensor_ops::Tensor;
-    ///
-    /// let input = Tensor::new(vec![1.0, -2.0, 3.0, -4.0], vec![2, 2]);
-    /// let relu = ReluActivation::new();
-    /// let output = relu.activate(&input);
-    /// ```
     #[inline(always)]
     fn activate(&self, input: &Tensor) -> Tensor {
         input.map(|x| x.max(0.0))
@@ -49,18 +37,6 @@ impl Activation for ReluActivation {
     /// # Returns
     ///
     /// A tensor representing the derivative of ReLU activation.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use deltaml::activations::relu::ReluActivation;
-    /// use deltaml::activations::Activation;
-    /// use deltaml::common::tensor_ops::Tensor;
-    ///
-    /// let input = Tensor::new(vec![1.0, -2.0, 3.0, -4.0], vec![2, 2]);
-    /// let relu = ReluActivation::new();
-    /// let derivative = relu.derivative(&input);
-    /// ```
     #[inline(always)]
     fn derivative(&self, input: &Tensor) -> Tensor {
         input.map(|x| if x > 0.0 { 1.0 } else { 0.0 })
@@ -69,11 +45,12 @@ impl Activation for ReluActivation {
 
 #[cfg(test)]
 mod tests {
+    use ndarray::{IxDyn, Shape};
     use super::*;
 
     #[test]
     fn test_relu_activation() {
-        let input = Tensor::new(vec![1.0, -2.0, 3.0, -4.0], vec![2, 2]);
+        let input = Tensor::new(vec![1.0, -2.0, 3.0, -4.0], Shape::from(IxDyn(&[2, 2])));
         let relu = ReluActivation::new();
         let output = relu.activate(&input);
 
@@ -86,7 +63,7 @@ mod tests {
 
     #[test]
     fn test_relu_derivative() {
-        let input = Tensor::new(vec![1.0, -2.0, 3.0, -4.0], vec![2, 2]);
+        let input = Tensor::new(vec![1.0, -2.0, 3.0, -4.0], Shape::from(IxDyn(&[2, 2])));
         let relu = ReluActivation::new();
         let derivative = relu.derivative(&input);
 

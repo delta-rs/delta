@@ -1,6 +1,5 @@
 use deltaml::activations::relu::ReluActivation;
 use deltaml::activations::softmax::SoftmaxActivation;
-use deltaml::common::shape::Shape;
 use deltaml::dataset::base::ImageDatasetOps;
 use deltaml::dataset::ImageNetV2Dataset;
 use deltaml::losses::SparseCategoricalCrossEntropyLoss;

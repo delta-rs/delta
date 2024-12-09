@@ -1,4 +1,4 @@
-use ndarray::s;
+use ndarray::{s, IxDyn, Shape};
 
 use crate::common::Tensor;
 use crate::activations::Activation;
@@ -32,18 +32,6 @@ impl Activation for SoftmaxActivation {
     /// # Returns
     ///
     /// The output tensor after applying the Softmax activation function.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use deltaml::activations::SoftmaxActivation;
-    /// use deltaml::activations::Activation;
-    /// use deltaml::common::Tensor;
-    ///
-    /// let input = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
-    /// let softmax = SoftmaxActivation::new();
-    /// let output = softmax.activate(&input);
-    /// ```
     fn activate(&self, input: &Tensor) -> Tensor {
         // Find the maximum value in the input tensor
         let max_value = input.max();
@@ -70,18 +58,6 @@ impl Activation for SoftmaxActivation {
     /// # Returns
     ///
     /// A tensor representing the Jacobian matrix of the Softmax function.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use deltaml::activations::SoftmaxActivation;
-    /// use deltaml::activations::Activation;
-    /// use deltaml::common::tensor_ops::Tensor;
-    ///
-    /// let input = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
-    /// let softmax = SoftmaxActivation::new();
-    /// let jacobian = softmax.derivative(&input);
-    /// ```
     fn derivative(&self, input: &Tensor) -> Tensor {
         // Step 1: Compute the softmax output
         let softmax_output = self.activate(input);
@@ -112,25 +88,25 @@ impl Activation for SoftmaxActivation {
         }
 
         // Step 4: Return the Jacobian tensor
-        Tensor::new(jacobian_data, vec![batch_size, num_classes, num_classes])
+        Tensor::new(jacobian_data, Shape::from(IxDyn(&[batch_size, num_classes, num_classes])))
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use ndarray::{Array, IxDyn};
+    use ndarray::{Array, IxDyn, Shape};
 
     use super::*;
 
     #[test]
     fn test_softmax_activation() {
-        let input = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
+        let input = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[1, 3])));
         let softmax = SoftmaxActivation::new();
         let output = softmax.activate(&input);
 
         let expected = Tensor::new(
             vec![0.09003057317038025, 0.24472847105479776, 0.6652409557758217],
-            vec![1, 3],
+            Shape::from(IxDyn(&[1, 3])),
         );
 
         assert_eq!(output.data, expected.data);
@@ -138,7 +114,7 @@ mod tests {
 
     #[test]
     fn test_softmax_derivative() {
-        let input = Tensor::new(vec![1.0, 2.0, 3.0], vec![1, 3]);
+        let input = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[1, 3])));
         let softmax = SoftmaxActivation::new();
         let derivative = softmax.derivative(&input);
 
