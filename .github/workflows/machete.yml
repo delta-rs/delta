@@ -22,8 +22,13 @@ jobs:
       - name: Install cargo-machete
         run: cargo install cargo-machete
 
+      - name: Find Unused Dependencies
+        run: cargo machete --with-metadata
+        continue-on-error: true
+
       - name: Fix Unused Dependencies
         run: cargo machete --fix
+        continue-on-error: true
 
       - name: Create a new branch for the changes
         id: create_branch
