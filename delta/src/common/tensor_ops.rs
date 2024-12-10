@@ -2,7 +2,7 @@ use std::io::Cursor;
 use std::ops::{Mul, Range, SubAssign};
 
 use image::{GenericImageView, ImageReader};
-use ndarray::{s, Array, ArrayD, Axis, IxDyn, Shape};
+use ndarray::{Array, ArrayD, Axis, IxDyn, Shape};
 use ndarray::{Dimension, Ix2};
 use rand::Rng;
 
@@ -372,8 +372,7 @@ impl Tensor {
             if *self_dim != *target_dim && *self_dim != 1 {
                 panic!(
                     "Cannot broadcast shape {:?} to {:?}",
-                    self_shape,
-                    target_shape
+                    self_shape, target_shape
                 );
             }
         }
@@ -482,7 +481,8 @@ impl Tensor {
     ///
     /// A new tensor containing the selected elements.
     pub fn take(&self, indices: &[usize]) -> Tensor {
-        let mut data = Vec::with_capacity(indices.len() * self.data.len() / self.shape().raw_dim()[0]);
+        let mut data =
+            Vec::with_capacity(indices.len() * self.data.len() / self.shape().raw_dim()[0]);
         let stride = self.data.len() / self.shape().raw_dim()[0];
 
         for &idx in indices {
@@ -572,7 +572,7 @@ impl Tensor {
             Axis(0),
             &tensors.iter().map(|t| t.data.view()).collect::<Vec<_>>(),
         )
-            .map_err(|e| e.to_string())?;
+        .map_err(|e| e.to_string())?;
 
         Ok(Tensor {
             data: stacked_data.into_dyn(),
@@ -599,15 +599,35 @@ impl Tensor {
         assert!(index <= shape[0], "Index out of bounds for tensor split");
 
         // Ensure the tensor has at least two dimensions for slicing
-        assert!(shape.ndim() >= 2, "Tensor must have at least two dimensions for slicing");
+        assert!(
+            shape.ndim() >= 2,
+            "Tensor must have at least two dimensions for slicing"
+        );
 
-        let data1 = self.data.slice(s![0..index, ..]).to_owned().into_dyn();
-        let data2 = self.data.slice(s![index.., ..]).to_owned().into_dyn();
+        println!("shape: {:?}", shape);
 
-        (
-            Tensor { data: data1 },
-            Tensor { data: data2 },
-        )
+        // Create dynamic slice patterns based on shape dimensions
+        let mut slice1 = vec![ndarray::Slice::new(0, Some(index.try_into().unwrap()), 1)];
+        let mut slice2 = vec![ndarray::Slice::new(index.try_into().unwrap(), None, 1)];
+
+        // Add full slices (..) for remaining dimensions
+        for _ in 1..shape.ndim() {
+            slice1.push(ndarray::Slice::from(..));
+            slice2.push(ndarray::Slice::from(..));
+        }
+
+        let data1 = self
+            .data
+            .slice_each_axis(|ax| slice1[ax.axis.0].clone())
+            .to_owned()
+            .into_dyn();
+        let data2 = self
+            .data
+            .slice_each_axis(|ax| slice2[ax.axis.0].clone())
+            .to_owned()
+            .into_dyn();
+
+        (Tensor { data: data1 }, Tensor { data: data2 })
     }
 }
 
@@ -760,7 +780,10 @@ mod tests {
     fn test_shape() {
         let data = vec![1.0, 2.0, 3.0, 4.0];
         let tensor = Tensor::new(data, Shape::from(IxDyn(&[2, 2])));
-        assert_eq!(tensor.shape().raw_dim().as_array_view().to_vec(), vec![2, 2]);
+        assert_eq!(
+            tensor.shape().raw_dim().as_array_view().to_vec(),
+            vec![2, 2]
+        );
     }
 
     #[test]
@@ -904,6 +927,18 @@ mod tests {
         let tensor1 = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[3])));
         let tensor2 = Tensor::new(vec![4.0, 5.0, 6.0], Shape::from(IxDyn(&[3])));
         let stacked = Tensor::stack(&[tensor1, tensor2]).unwrap();
-        assert_eq!(stacked.shape().raw_dim().as_array_view().to_vec(), vec![2, 3]);
+        assert_eq!(
+            stacked.shape().raw_dim().as_array_view().to_vec(),
+            vec![2, 3]
+        );
+    }
+
+    #[test]
+    fn test_split_at() {
+        let data = vec![1.0, 2.0, 3.0, 4.0];
+        let tensor = Tensor::new(data, Shape::from(IxDyn(&[2, 2])));
+        let (tensor1, tensor2) = tensor.split_at(1);
+        assert_eq!(tensor1.data.shape(), &[1, 2]);
+        assert_eq!(tensor2.data.shape(), &[1, 2]);
     }
 }
