@@ -27,9 +27,8 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
-use std::fmt;
 use crate::optimizers::error::OptimizerError;
+use std::fmt;
 
 /// Errors that can occur in the Dense layer.
 #[derive(Debug)]
@@ -42,7 +41,8 @@ pub enum LayerError {
     UninitializedInput,
     /// Error when input is not set.
     MissingInput,
-
+    /// Error when the input shape is invalid.
+    InvalidInputShape,
     /// Error when an optimizer error occurs.
     OptimizerError(OptimizerError),
 }
@@ -55,6 +55,7 @@ impl fmt::Display for LayerError {
             LayerError::UninitializedInput => write!(f, "Input must be initialized"),
             LayerError::MissingInput => write!(f, "Input must be set"),
             LayerError::OptimizerError(err) => write!(f, "Optimizer error: {}", err),
+            LayerError::InvalidInputShape => write!(f, "Invalid input shape"),
         }
     }
 }
