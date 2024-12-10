@@ -27,13 +27,15 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-pub mod softmax;
+pub mod leaky_relu;
 pub mod relu;
+pub mod softmax;
 
-use std::fmt::Debug;
-pub use softmax::SoftmaxActivation;
-pub use relu::ReluActivation;
 use crate::common::Tensor;
+pub use leaky_relu::LeakyReluActivation;
+pub use relu::ReluActivation;
+pub use softmax::SoftmaxActivation;
+use std::fmt::Debug;
 
 /// A trait representing an activation function.
 pub trait Activation: Debug {
@@ -65,6 +67,9 @@ pub trait Activation: Debug {
     ///
     /// A string slice containing the name of the activation function.
     fn name(&self) -> &str {
-        std::any::type_name::<Self>().split("::").last().unwrap_or("Unknown")
+        std::any::type_name::<Self>()
+            .split("::")
+            .last()
+            .unwrap_or("Unknown")
     }
 }
