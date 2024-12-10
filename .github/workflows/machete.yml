@@ -22,9 +22,6 @@ jobs:
       - name: Install cargo-machete
         run: cargo install cargo-machete
 
-      - name: Find Unused Dependencies
-        run: cargo machete --with-metadata
-
       - name: Fix Unused Dependencies
         run: cargo machete --fix
 
