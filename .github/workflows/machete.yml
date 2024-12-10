@@ -48,7 +48,9 @@ jobs:
           if [[ -n "$(git status --porcelain)" ]]; then
             git add .
             git commit -m "Fix unused dependencies using cargo machete"
-            git push --set-upstream origin $BRANCH_NAME
+
+            # Push changes and set upstream branch
+            git push --set-upstream origin ${{ env.branch_name }}
           else
             echo "No changes to commit."
           fi
