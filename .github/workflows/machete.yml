@@ -51,12 +51,12 @@ jobs:
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
 
-          # Check if there are changes to commit
           if [[ -n "$(git status --porcelain)" ]]; then
             git add .
             git commit -m "Fix unused dependencies using cargo machete"
 
-            # Push changes and set upstream branch
+            # Use DELTA_GH_TOKEN for authentication
+            git remote set-url origin https://x-access-token:${{ secrets.DELTA_GH_TOKEN }}@github.com/${{ github.repository }}
             git push --set-upstream origin ${{ env.branch_name }}
           else
             echo "No changes to commit."
