@@ -27,12 +27,14 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+pub mod gelu;
 pub mod leaky_relu;
 pub mod prelu;
 pub mod relu;
 pub mod softmax;
 
 use crate::common::Tensor;
+pub use gelu::GeluActivation;
 pub use leaky_relu::LeakyReluActivation;
 pub use prelu::PreluActivation;
 pub use relu::ReluActivation;

@@ -29,6 +29,7 @@ walkdir = "2.5.0"
 image = "0.25.5"
 serial_test = "3.2"
 rand_distr = "0.4.3"
+libm = "0.2.11"
 
 [profile.dev]
 opt-level = 0
