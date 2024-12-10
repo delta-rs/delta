@@ -8,7 +8,7 @@ license = "BSD-3-Clause"
 documentation = "https://docs.rs/delta/latest/delta/"
 repository = "https://github.com/delta-rs/delta"
 readme = "../README.md"
-rust-version = "1.81.0"
+rust-version = "1.83.0"
 homepage = "https://github.com/delta-rs"
 keywords = ["machine-learning", "ml", "framework"]
 
