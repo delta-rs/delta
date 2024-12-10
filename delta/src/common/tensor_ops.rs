@@ -113,10 +113,10 @@ impl Tensor {
         Tensor {
             data: self
                 .data
-                .clone()
+                .view() // Prevent cloning
                 .into_shape_with_order(shape)
                 .expect("Invalid shape for reshape")
-                .into_dyn(),
+                .to_owned(), // Only create a new allocation if necessary
         }
     }
 
@@ -401,7 +401,17 @@ impl Tensor {
     ///
     /// A new tensor containing the normalized dataset.
     pub fn normalize(&self, min: f32, max: f32) -> Tensor {
-        let normalized_data = self.data.mapv(|x| (x - min) / (max - min));
+        let current_min = self.data.iter().cloned().fold(f32::INFINITY, f32::min);
+        let current_max = self.data.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
+
+        if current_min == current_max {
+            return Tensor::zeros(self.shape());
+        }
+
+        let normalized_data = self
+            .data
+            .mapv(|x| (x - current_min) / (current_max - current_min) * (max - min) + min);
+
         Tensor {
             data: normalized_data,
         }
@@ -414,10 +424,10 @@ impl Tensor {
     /// * `noise_level` - The level of noise to add.
     pub fn add_noise(&mut self, noise_level: f32) {
         let mut rng = rand::thread_rng();
-        for value in self.data.iter_mut() {
+        self.data.mapv_inplace(|value| {
             let noise: f32 = rng.gen_range(-noise_level..noise_level);
-            *value += noise;
-        }
+            value + noise
+        });
     }
 
     /// Reduces the tensor along the specified axis.
@@ -465,11 +475,13 @@ impl Tensor {
                     .indexed_iter()
                     .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
                     .map(|(index, _)| index)
-                    .unwrap() as f32 // Store indices as f32
+                    .unwrap() as usize
             })
-            .into_dyn(); // Convert to dynamic dimensionality
+            .into_dyn();
 
-        Tensor { data: max_indices }
+        Tensor {
+            data: max_indices.mapv(|x| x as f32),
+        }
     }
 
     /// Takes elements from the tensor according to the given indices.
