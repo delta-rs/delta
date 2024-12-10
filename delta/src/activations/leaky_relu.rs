@@ -30,20 +30,26 @@
 use crate::activations::Activation;
 use crate::common::Tensor;
 
-/// A struct representing the Rectified Linear Unit (ReLU) activation function.
+/// A struct representing the Leaky Rectified Linear Unit (Leaky ReLU) activation function.
 #[derive(Debug)]
-pub struct ReluActivation;
+pub struct LeakyReluActivation {
+    alpha: f32,
+}
 
-impl ReluActivation {
-    /// Creates a new instance of `ReluActivation`.
+impl LeakyReluActivation {
+    /// Creates a new instance of `LeakyReluActivation` with the given alpha value.
+    ///
+    /// # Arguments
+    ///
+    /// * `alpha` - The slope for negative input values.
     #[inline(always)]
-    pub fn new() -> Self {
-        Self
+    pub fn new(alpha: f32) -> Self {
+        Self { alpha }
     }
 }
 
-impl Activation for ReluActivation {
-    /// Applies ReLU activation to the input tensor.
+impl Activation for LeakyReluActivation {
+    /// Applies Leaky ReLU activation to the input tensor.
     ///
     /// # Arguments
     ///
@@ -51,13 +57,14 @@ impl Activation for ReluActivation {
     ///
     /// # Returns
     ///
-    /// The output tensor after applying ReLU activation.
+    /// The output tensor after applying Leaky ReLU activation.
     #[inline(always)]
     fn activate(&self, input: &Tensor) -> Tensor {
-        input.map(|x| x.max(0.0))
+        let alpha = self.alpha;
+        input.map(|x| if x > 0.0 { x } else { alpha * x })
     }
 
-    /// Computes the derivative of ReLU activation for the input tensor.
+    /// Computes the derivative of Leaky ReLU activation for the input tensor.
     ///
     /// # Arguments
     ///
@@ -65,10 +72,11 @@ impl Activation for ReluActivation {
     ///
     /// # Returns
     ///
-    /// A tensor representing the derivative of ReLU activation.
+    /// A tensor representing the derivative of Leaky ReLU activation.
     #[inline(always)]
     fn derivative(&self, input: &Tensor) -> Tensor {
-        input.map(|x| if x > 0.0 { 1.0 } else { 0.0 })
+        let alpha = self.alpha;
+        input.map(|x| if x > 0.0 { 1.0 } else { alpha })
     }
 }
 
@@ -78,27 +86,27 @@ mod tests {
     use ndarray::{IxDyn, Shape};
 
     #[test]
-    fn test_relu_activation() {
+    fn test_leaky_relu_activation() {
         let input = Tensor::new(vec![1.0, -2.0, 3.0, -4.0], Shape::from(IxDyn(&[2, 2])));
-        let relu = ReluActivation::new();
-        let output = relu.activate(&input);
+        let leaky_relu = LeakyReluActivation::new(0.01);
+        let output = leaky_relu.activate(&input);
 
         assert_eq!(
             output.data.iter().cloned().collect::<Vec<f32>>(),
-            vec![1.0, 0.0, 3.0, 0.0]
+            vec![1.0, -0.02, 3.0, -0.04]
         );
         assert_eq!(output.data.shape().to_vec(), vec![2, 2]);
     }
 
     #[test]
-    fn test_relu_derivative() {
+    fn test_leaky_relu_derivative() {
         let input = Tensor::new(vec![1.0, -2.0, 3.0, -4.0], Shape::from(IxDyn(&[2, 2])));
-        let relu = ReluActivation::new();
-        let derivative = relu.derivative(&input);
+        let leaky_relu = LeakyReluActivation::new(0.01);
+        let derivative = leaky_relu.derivative(&input);
 
         assert_eq!(
             derivative.data.iter().cloned().collect::<Vec<f32>>(),
-            vec![1.0, 0.0, 1.0, 0.0]
+            vec![1.0, 0.01, 1.0, 0.01]
         );
         assert_eq!(derivative.data.shape().to_vec(), vec![2, 2]);
     }
