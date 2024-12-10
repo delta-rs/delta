@@ -28,11 +28,13 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 pub mod leaky_relu;
+pub mod prelu;
 pub mod relu;
 pub mod softmax;
 
 use crate::common::Tensor;
 pub use leaky_relu::LeakyReluActivation;
+pub use prelu::PreluActivation;
 pub use relu::ReluActivation;
 pub use softmax::SoftmaxActivation;
 use std::fmt::Debug;
