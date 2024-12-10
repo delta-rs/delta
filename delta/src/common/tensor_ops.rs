@@ -4,7 +4,8 @@ use std::ops::{Mul, Range, SubAssign};
 use image::{GenericImageView, ImageReader};
 use ndarray::{Array, ArrayD, Axis, IxDyn, Shape};
 use ndarray::{Dimension, Ix2};
-use rand::Rng;
+use rand::{thread_rng, Rng};
+use rand_distr::{Distribution, Normal};
 
 /// A struct representing a tensor.
 #[derive(Debug, Clone)]
@@ -629,6 +630,32 @@ impl Tensor {
 
         (Tensor { data: data1 }, Tensor { data: data2 })
     }
+
+    /// Creates a tensor filled with random values sampled from a normal distribution.
+    ///
+    /// # Arguments
+    ///
+    /// * `shape` - The shape of the tensor.
+    /// * `mean` - The mean of the normal distribution.
+    /// * `stddev` - The standard deviation of the normal distribution.
+    ///
+    /// # Returns
+    ///
+    /// A new tensor filled with random values sampled from the normal distribution.
+    pub fn random_normal(shape: Shape<IxDyn>, mean: f32, stddev: f32) -> Self {
+        let normal = Normal::new(mean, stddev).expect("Failed to create normal distribution");
+        let mut rng = thread_rng();
+
+        // Generate random values from the normal distribution
+        let data: Vec<f32> = (0..shape.size())
+            .map(|_| normal.sample(&mut rng) as f32)
+            .collect();
+
+        // Create a tensor from the generated data
+        Tensor {
+            data: Array::from_shape_vec(shape, data).expect("Invalid shape for random dataset"),
+        }
+    }
 }
 
 impl SubAssign for Tensor {
@@ -940,5 +967,11 @@ mod tests {
         let (tensor1, tensor2) = tensor.split_at(1);
         assert_eq!(tensor1.data.shape(), &[1, 2]);
         assert_eq!(tensor2.data.shape(), &[1, 2]);
+    }
+
+    #[test]
+    fn test_random_normal() {
+        let tensor = Tensor::random_normal(Shape::from(IxDyn(&[2, 2])), 0.0, 1.0);
+        assert_eq!(tensor.data.shape(), &[2, 2]);
     }
 }

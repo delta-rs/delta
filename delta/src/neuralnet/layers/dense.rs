@@ -27,14 +27,14 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::Tensor;
-use log::debug;
-use ndarray::{Dimension, IxDyn, Shape};
-use serde_json;
 use crate::activations::Activation;
+use crate::common::Tensor;
 use crate::neuralnet::layers::error::LayerError;
 use crate::neuralnet::layers::Layer;
 use crate::optimizers::Optimizer;
+use log::debug;
+use ndarray::{Dimension, IxDyn, Shape};
+use serde_json;
 
 /// A dense (fully connected) layer.
 #[derive(Debug)]
@@ -88,11 +88,31 @@ impl Layer for Dense {
             "Building Dense layer with input shape: {:?} and units: {}",
             input_shape, self.units
         );
+
         let raw_dim = input_shape.raw_dim();
         let array_view = raw_dim.as_array_view();
-        let input_units = array_view.last().expect("Input shape must not be empty");
-        self.weights = Some(Tensor::random(Shape::from(IxDyn(&[*input_units, self.units]))));
+        let input_units = array_view.last().ok_or(LayerError::InvalidInputShape)?;
+
+        // Choose initialization strategy based on the activation function
+        let stddev = if let Some(ref activation) = self.activation {
+            match activation.name() {
+                "relu" | "leaky_relu" => (2.0 / *input_units as f32).sqrt(), // He initialization
+                _ => (1.0 / *input_units as f32).sqrt(), // Xavier initialization
+            }
+        } else {
+            (1.0 / *input_units as f32).sqrt() // Xavier initialization for no activation
+        };
+
+        // Initialize weights using random normal distribution
+        self.weights = Some(Tensor::random_normal(
+            Shape::from(IxDyn(&[*input_units, self.units])),
+            0.0,
+            stddev,
+        ));
+
+        // Initialize bias to zeros
         self.bias = Some(Tensor::zeros(Shape::from(IxDyn(&[self.units]))));
+
         Ok(())
     }
 
@@ -306,7 +326,15 @@ mod tests {
     #[test]
     fn test_dense_layer_output_shape() {
         let dense_layer = Dense::new(10, Some(ReluActivation::new()), true);
-        assert_eq!(dense_layer.output_shape().unwrap().raw_dim().as_array_view().to_vec(), vec![10]);
+        assert_eq!(
+            dense_layer
+                .output_shape()
+                .unwrap()
+                .raw_dim()
+                .as_array_view()
+                .to_vec(),
+            vec![10]
+        );
     }
 
     #[test]
@@ -350,7 +378,15 @@ mod tests {
             .expect("Failed to build layer");
 
         // Ensure the layer initializes with zero units without crashing.
-        assert_eq!(dense_layer.output_shape().unwrap().raw_dim().as_array_view().to_vec(), vec![0]);
+        assert_eq!(
+            dense_layer
+                .output_shape()
+                .unwrap()
+                .raw_dim()
+                .as_array_view()
+                .to_vec(),
+            vec![0]
+        );
         assert!(dense_layer.weights.is_some());
         assert!(dense_layer.bias.is_some());
     }
