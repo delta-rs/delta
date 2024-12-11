@@ -2,6 +2,7 @@
 
 ![build](https://img.shields.io/github/actions/workflow/status/delta-rs/delta/core.yml?branch=master)
 [![deltaml: rustc 1.83.0+](https://img.shields.io/badge/deltaml-rustc_1.83.0+-lightgray.svg)](https://blog.rust-lang.org/2024/11/28/Rust-1.83.0.html)
+![GitHub Discussions](https://img.shields.io/github/discussions/delta-rs/delta)
 
 [//]: # "![crates.io](https://img.shields.io/crates/v/delta.svg)"
 [//]: # "[![documentation](https://img.shields.io/badge/docs-delta-blue?logo=rust)](https://docs.rs/delta/latest/)"
