@@ -5,11 +5,11 @@ edition = "2021"
 authors = ["Marcus Cvjeticanin <mjovanc@icloud.com>", "Chase Willden <chase.willden@gmail.com>"]
 description = "An Open-Source Machine Learning Framework in Rust Δ"
 license = "BSD-3-Clause"
-documentation = "https://docs.rs/delta/latest/delta/"
+documentation = "https://docs.rs/deltaml/latest/delta/"
 repository = "https://github.com/delta-rs/delta"
 readme = "../README.md"
 rust-version = "1.83.0"
-homepage = "https://github.com/delta-rs"
+homepage = "https://deltaml.org"
 keywords = ["machine-learning", "ml", "framework"]
 
 [badges]
