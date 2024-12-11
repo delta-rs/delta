@@ -1,11 +1,4 @@
-# Delta <!-- omit in toc --> 
-
-![build](https://img.shields.io/github/actions/workflow/status/delta-rs/delta/core.yml?branch=master)
-[![deltaml: rustc 1.83.0+](https://img.shields.io/badge/deltaml-rustc_1.83.0+-lightgray.svg)](https://blog.rust-lang.org/2024/11/28/Rust-1.83.0.html)
-[![GitHub Discussions](https://img.shields.io/github/discussions/delta-rs/delta)](https://github.com/delta-rs/delta/discussions)
-
-[//]: # "![crates.io](https://img.shields.io/crates/v/delta.svg)"
-[//]: # "[![documentation](https://img.shields.io/badge/docs-delta-blue?logo=rust)](https://docs.rs/delta/latest/)"
+# Delta <!-- omit in toc --> ![build](https://img.shields.io/github/actions/workflow/status/delta-rs/delta/core.yml?branch=master) ![crates.io](https://img.shields.io/crates/v/deltaml.svg) [![documentation](https://img.shields.io/badge/docs-deltaml-blue?logo=rust)](https://docs.rs/deltaml/latest/) 
 
 An open-source machine learning framework in Rust Δ. It is designed to be fast, with APIs that are easy to use while allowing advanced usage to customize and extend functionality. It provides efficient and scalable tools for building and training neural networks. The framework aims to offer a comprehensive set of features, including various neural network layers, activation functions, loss functions, optimizers, and data handling utilities.
 
