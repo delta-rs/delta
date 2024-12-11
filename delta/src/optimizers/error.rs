@@ -33,20 +33,23 @@ use std::fmt;
 #[derive(Debug)]
 pub enum OptimizerError {
     /// Error when learning rate is not set or is invalid.
-    InvalidLearningRate,
+    InvalidLearningRate(String),
     /// Error when the gradient and weight shapes are incompatible.
     IncompatibleGradientWeightShape(Vec<usize>, Vec<usize>),
+    /// Error when epsilon is not set or is invalid.
+    InvalidEpsilon(String),
 }
 
 impl fmt::Display for OptimizerError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            OptimizerError::InvalidLearningRate => write!(f, "Invalid or unset learning rate"),
+            OptimizerError::InvalidLearningRate(s) => write!(f, "{}", s),
             OptimizerError::IncompatibleGradientWeightShape(g, w) => write!(
                 f,
                 "Gradient shape {:?} is incompatible with weight shape {:?}",
                 g, w
             ),
+            OptimizerError::InvalidEpsilon(s) => write!(f, "{}", s),
         }
     }
 }

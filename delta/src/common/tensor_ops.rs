@@ -1,5 +1,5 @@
 use std::io::Cursor;
-use std::ops::{Mul, Range, SubAssign};
+use std::ops::{AddAssign, Mul, Range, SubAssign};
 
 use image::{GenericImageView, ImageReader};
 use ndarray::{Array, ArrayD, Axis, IxDyn, Shape};
@@ -668,6 +668,32 @@ impl Tensor {
             data: Array::from_shape_vec(shape, data).expect("Invalid shape for random dataset"),
         }
     }
+
+    /// Subtracts another tensor from this tensor element-wise.
+    ///
+    /// # Arguments
+    ///
+    /// * `other` - The tensor to subtract.
+    ///
+    /// # Returns
+    ///
+    /// A new tensor containing the element-wise subtraction result.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the shapes are incompatible and cannot be broadcast.
+    pub fn sub(&self, other: &Tensor) -> Tensor {
+        // Attempt broadcasting
+        let broadcasted_other = other
+            .data
+            .broadcast(self.data.raw_dim())
+            .expect("Shapes are incompatible for broadcasting");
+
+        // Perform the element-wise subtraction
+        Tensor {
+            data: &self.data - &broadcasted_other,
+        }
+    }
 }
 
 impl SubAssign for Tensor {
@@ -678,6 +704,17 @@ impl SubAssign for Tensor {
     /// * `rhs` - The tensor to subtract from the current tensor.
     fn sub_assign(&mut self, rhs: Self) {
         self.data -= &rhs.data;
+    }
+}
+
+impl AddAssign for Tensor {
+    /// Adds another tensor to the current tensor in-place.
+    ///
+    /// # Arguments
+    ///
+    /// * `rhs` - The tensor to add to the current tensor.
+    fn add_assign(&mut self, rhs: Self) {
+        self.data += &rhs.data;
     }
 }
 
@@ -985,5 +1022,13 @@ mod tests {
     fn test_random_normal() {
         let tensor = Tensor::random_normal(Shape::from(IxDyn(&[2, 2])), 0.0, 1.0);
         assert_eq!(tensor.data.shape(), &[2, 2]);
+    }
+
+    #[test]
+    fn test_sub() {
+        let tensor1 = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[3])));
+        let tensor2 = Tensor::new(vec![4.0, 5.0, 6.0], Shape::from(IxDyn(&[3])));
+        let result = tensor1.sub(&tensor2);
+        assert_eq!(result.data.shape(), &[3]);
     }
 }

@@ -28,13 +28,25 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 pub mod ada_delta;
+pub mod ada_grad;
 pub mod adam;
 pub mod error;
+pub mod gradient_descent;
+pub mod mini_batch_gd;
+pub mod rms_prop;
+pub mod sgd;
+pub mod sgd_momentum;
 
 use crate::common::Tensor;
 use crate::optimizers::error::OptimizerError;
 pub use ada_delta::AdaDelta;
+pub use ada_grad::AdaGrad;
 pub use adam::Adam;
+pub use gradient_descent::GradientDescent;
+pub use mini_batch_gd::MiniBatchGD;
+pub use rms_prop::RMSProp;
+pub use sgd::SGD;
+pub use sgd_momentum::SGDWithMomentum;
 use std::fmt::Debug;
 
 /// A trait representing an optimizer for training neural networks.

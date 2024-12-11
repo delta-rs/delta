@@ -28,11 +28,11 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use crate::common::Tensor;
-use std::fmt;
-use std::fmt::Debug;
-use ndarray::Dimension;
 use crate::optimizers::error::OptimizerError;
 use crate::optimizers::Optimizer;
+use ndarray::Dimension;
+use std::fmt;
+use std::fmt::Debug;
 
 /// A wrapper struct for a debuggable scheduler function.
 #[allow(dead_code)]
@@ -97,16 +97,38 @@ impl Optimizer for Adam {
     /// * `gradients` - A reference to the gradients tensor.
     fn step(&mut self, weights: &mut Tensor, gradients: &Tensor) -> Result<(), OptimizerError> {
         if self.learning_rate <= 0.0 {
-            return Err(OptimizerError::InvalidLearningRate);
+            return Err(OptimizerError::InvalidLearningRate(
+                "Learning rate must be greater than 0.".to_string(),
+            ));
         }
 
         self.timestep += 1;
 
         // Initialize moving averages if not already done
-        if self.m.is_none() || self.m.as_ref().unwrap().shape().raw_dim().as_array_view().to_vec() != weights.shape().raw_dim().as_array_view().to_vec() {
+        if self.m.is_none()
+            || self
+                .m
+                .as_ref()
+                .unwrap()
+                .shape()
+                .raw_dim()
+                .as_array_view()
+                .to_vec()
+                != weights.shape().raw_dim().as_array_view().to_vec()
+        {
             self.m = Some(Tensor::zeros(weights.shape().clone()));
         }
-        if self.v.is_none() || self.v.as_ref().unwrap().shape().raw_dim().as_array_view().to_vec() != weights.shape().raw_dim().as_array_view().to_vec() {
+        if self.v.is_none()
+            || self
+                .v
+                .as_ref()
+                .unwrap()
+                .shape()
+                .raw_dim()
+                .as_array_view()
+                .to_vec()
+                != weights.shape().raw_dim().as_array_view().to_vec()
+        {
             self.v = Some(Tensor::zeros(weights.shape().clone()));
         }
 
@@ -114,17 +136,19 @@ impl Optimizer for Adam {
         let v = self.v.as_mut().unwrap();
 
         // Ensure gradients match the weights' shape
-        let processed_gradients = if gradients.shape().raw_dim().as_array_view().to_vec() == weights.shape().raw_dim().as_array_view().to_vec() {
+        let processed_gradients = if gradients.shape().raw_dim().as_array_view().to_vec()
+            == weights.shape().raw_dim().as_array_view().to_vec()
+        {
             gradients.clone()
         } else if gradients.shape().raw_dim().ndim() <= weights.shape().raw_dim().ndim()
             && gradients
-            .shape()
-            .raw_dim()
-            .as_array_view()
-            .iter()
-            .rev()
-            .zip(weights.shape().raw_dim().as_array_view().iter().rev())
-            .all(|(g, w)| *g == *w || *g == 1)
+                .shape()
+                .raw_dim()
+                .as_array_view()
+                .iter()
+                .rev()
+                .zip(weights.shape().raw_dim().as_array_view().iter().rev())
+                .all(|(g, w)| *g == *w || *g == 1)
         {
             gradients.broadcast(weights.shape())
         } else {
@@ -258,7 +282,10 @@ mod tests {
         let gradients = Tensor::new(vec![0.1, 0.2], Shape::from(IxDyn(&[2, 1]))); // Mismatched shape
         let result = optimizer.step(&mut weights, &gradients);
 
-        assert!(result.is_err(), "Expected an error due to incompatible shapes");
+        assert!(
+            result.is_err(),
+            "Expected an error due to incompatible shapes"
+        );
 
         if let Err(OptimizerError::IncompatibleGradientWeightShape(g_shape, w_shape)) = result {
             assert_eq!(g_shape, vec![2, 1]);
@@ -350,7 +377,10 @@ mod tests {
     fn test_adam_optimizer_small_gradients() {
         let mut optimizer = Adam::new(0.001);
         let mut weights = Tensor::new(vec![1.0_f32, 2.0_f32, 3.0_f32], Shape::from(IxDyn(&[3, 1])));
-        let gradients = Tensor::new(vec![1e-7_f32, 1e-7_f32, 1e-7_f32], Shape::from(IxDyn(&[3, 1])));
+        let gradients = Tensor::new(
+            vec![1e-7_f32, 1e-7_f32, 1e-7_f32],
+            Shape::from(IxDyn(&[3, 1])),
+        );
 
         optimizer
             .step(&mut weights, &gradients)
