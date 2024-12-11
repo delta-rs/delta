@@ -27,7 +27,8 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::{Tensor};
+use crate::common::Tensor;
+use crate::dataset::base::{Dataset, ImageDatasetOps};
 use crate::encoders::one_hot_encode;
 use flate2::read::GzDecoder;
 use log::debug;
@@ -45,7 +46,6 @@ use std::{
 };
 use tokio::fs as async_fs;
 use walkdir::WalkDir;
-use crate::dataset::base::{Dataset, ImageDatasetOps};
 
 /// A struct representing the ImageNetV2 dataset.
 pub struct ImageNetV2Dataset {
@@ -73,7 +73,11 @@ impl ImageNetV2Dataset {
         }
 
         let url = Self::IMAGENETV2_URLS[variant_index];
-        let dataset_path = format!("{}/.cache/dataset/imagenetv2/variant_{}", env!("CARGO_MANIFEST_DIR"), variant_index);
+        let dataset_path = format!(
+            "{}/.cache/dataset/imagenetv2/variant_{}",
+            env!("CARGO_MANIFEST_DIR"),
+            variant_index
+        );
         let archive_path = format!("{}.tar.gz", dataset_path);
         debug!("Downloading ImageNetV2 dataset from {}", &url);
 
@@ -236,7 +240,10 @@ impl ImageDatasetOps for ImageNetV2Dataset {
     fn load_train() -> Self::LoadFuture {
         Box::pin(async {
             match ImageNetV2Dataset::load(0).await {
-                Ok(data) => ImageNetV2Dataset { train: Some(data), val: None },
+                Ok(data) => ImageNetV2Dataset {
+                    train: Some(data),
+                    val: None,
+                },
                 Err(err) => panic!("Failed to load dataset: {}", err),
             }
         })
@@ -249,7 +256,10 @@ impl ImageDatasetOps for ImageNetV2Dataset {
     fn load_test() -> Self::LoadFuture {
         Box::pin(async {
             match ImageNetV2Dataset::load(0).await {
-                Ok(data) => ImageNetV2Dataset { train: Some(data), val: None },
+                Ok(data) => ImageNetV2Dataset {
+                    train: Some(data),
+                    val: None,
+                },
                 Err(err) => panic!("Failed to load dataset: {}", err),
             }
         })
@@ -263,10 +273,13 @@ impl ImageDatasetOps for ImageNetV2Dataset {
         Box::pin(async {
             match ImageNetV2Dataset::load(0).await {
                 Ok(data) => {
-                    let mut dataset = ImageNetV2Dataset { train: None, val: Some(data) };
+                    let mut dataset = ImageNetV2Dataset {
+                        train: None,
+                        val: Some(data),
+                    };
                     dataset.split_train_validation(0.2); // Use 20% of the training data for validation
                     dataset
-                },
+                }
                 Err(err) => panic!("Failed to load dataset: {}", err),
             }
         })
@@ -454,7 +467,7 @@ impl ImageDatasetOps for ImageNetV2Dataset {
     fn clone(&self) -> Self {
         Self {
             train: self.train.clone(),
-            val: self.val.clone()
+            val: self.val.clone(),
         }
     }
 }
@@ -462,11 +475,11 @@ impl ImageDatasetOps for ImageNetV2Dataset {
 // #[cfg(test)]
 // mod tests {
 //     use super::*;
-//     use serial_test::serial;
-//     use tokio::runtime::Runtime;
-//     use std::fs;
 //     use crate::get_workspace_dir;
-//
+//     use serial_test::serial;
+//     use std::fs;
+//     use tokio::runtime::Runtime;
+
 //     fn setup() {
 //         let workspace_dir = get_workspace_dir();
 //         let cache_path = format!("{}/.cache/dataset/imagenetv2", workspace_dir.display());
@@ -474,7 +487,7 @@ impl ImageDatasetOps for ImageNetV2Dataset {
 //             fs::remove_dir_all(&cache_path).expect("Failed to delete cache directory");
 //         }
 //     }
-//
+
 //     #[test]
 //     #[serial]
 //     fn test_download_and_extract() {
@@ -483,42 +496,48 @@ impl ImageDatasetOps for ImageNetV2Dataset {
 //         rt.block_on(async {
 //             let _ = ImageNetV2Dataset::load(0).await;
 //             let workspace_dir = get_workspace_dir();
-//             let cache_path = format!("{}/.cache/dataset/imagenetv2/variant_0", workspace_dir.display());
-//             assert!(Path::new(&cache_path).exists(), "ImageNetV2 dataset should be downloaded and extracted");
+//             let cache_path = format!(
+//                 "{}/.cache/dataset/imagenetv2/variant_0",
+//                 workspace_dir.display()
+//             );
+//             assert!(
+//                 Path::new(&cache_path).exists(),
+//                 "ImageNetV2 dataset should be downloaded and extracted"
+//             );
 //         });
 //     }
-//
+
 //     #[test]
 //     #[serial]
 //     fn test_parse_images_and_labels() {
 //         // Ensure the dataset is downloaded before parsing
 //         test_download_and_extract();
-//
+
 //         let rt = Runtime::new().unwrap();
 //         rt.block_on(async {
 //             let dataset = ImageNetV2Dataset::load(0).await.unwrap();
-//             assert!(dataset.inputs.data.len() > 0, "Images should be parsed correctly");
-//             assert!(dataset.labels.data.len() > 0, "Labels should be parsed correctly");
+//             assert!(
+//                 dataset.inputs.data.len() > 0,
+//                 "Images should be parsed correctly"
+//             );
+//             assert!(
+//                 dataset.labels.data.len() > 0,
+//                 "Labels should be parsed correctly"
+//             );
 //         });
 //     }
-//
-//     #[test]
+
+//     #[tokio::test]
 //     #[serial]
-//     fn test_load_train() {
-//         let rt = Runtime::new().unwrap();
-//         rt.block_on(async {
-//             let dataset = ImageNetV2Dataset::load_train().await;
-//             assert!(dataset.data.is_some(), "Training dataset should be loaded");
-//         });
+//     async fn test_load_train() {
+//         let dataset = ImageNetV2Dataset::load_train().await;
+//         assert!(dataset.train.is_some(), "Training dataset should be loaded");
 //     }
-//
-//     #[test]
+
+//     #[tokio::test]
 //     #[serial]
-//     fn test_load_test() {
-//         let rt = Runtime::new().unwrap();
-//         rt.block_on(async {
-//             let dataset = ImageNetV2Dataset::load_test().await;
-//             assert!(dataset.data.is_some(), "Test dataset should be loaded");
-//         });
+//     async fn test_load_test() {
+//         let dataset = ImageNetV2Dataset::load_test().await;
+//         assert!(dataset.val.is_some(), "Test dataset should be loaded");
 //     }
 // }
