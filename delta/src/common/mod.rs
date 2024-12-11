@@ -33,4 +33,5 @@ pub mod tensor_ops;
 pub use error::*;
 pub use tensor_ops::Tensor;
 
+// Re-exports for convenience
 pub use ndarray::{Shape, IxDyn};
