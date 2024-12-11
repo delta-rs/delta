@@ -27,13 +27,15 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+pub mod ada_delta;
 pub mod adam;
 pub mod error;
 
-use std::fmt::Debug;
-pub use adam::Adam;
 use crate::common::Tensor;
 use crate::optimizers::error::OptimizerError;
+pub use ada_delta::AdaDelta;
+pub use adam::Adam;
+use std::fmt::Debug;
 
 /// A trait representing an optimizer for training neural networks.
 pub trait Optimizer: Debug {
