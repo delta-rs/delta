@@ -28,14 +28,18 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 pub mod cross_entropy;
+pub mod huber;
+pub mod mean_absolute_error;
 pub mod mean_squared;
 pub mod sparse_categorical_cross_entropy;
 
-use std::fmt::Debug;
+use crate::common::Tensor;
 pub use cross_entropy::CrossEntropyLoss;
+pub use huber::HuberLoss;
+pub use mean_absolute_error::MeanAbsoluteError;
 pub use mean_squared::MeanSquaredLoss;
 pub use sparse_categorical_cross_entropy::SparseCategoricalCrossEntropyLoss;
-use crate::common::Tensor;
+use std::fmt::Debug;
 
 /// A trait representing a loss function.
 pub trait Loss: Debug {
