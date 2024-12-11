@@ -95,7 +95,20 @@ impl ImageNetV2Dataset {
         Self::parse_images_and_labels(&dataset_path).await
     }
 
-    /// Decompress a gzip file
+    /// Decompresses a gzip file and extracts its contents to the specified output directory.
+    ///
+    /// This function first attempts to use the Rust implementation to decompress and extract the
+    /// contents of the gzip file. If the Rust implementation fails, it falls back to using the
+    /// system `tar` command.
+    ///
+    /// # Arguments
+    ///
+    /// * `file_path` - The path to the gzip file to be decompressed.
+    /// * `output_path` - The path to the directory where the contents should be extracted.
+    ///
+    /// # Returns
+    ///
+    /// An `io::Result<()>` indicating the success or failure of the operation.
     fn decompress_and_untar(file_path: &str, output_path: &str) -> io::Result<()> {
         // First try using the Rust implementation
         let tar_gz = File::open(file_path)?;
@@ -290,11 +303,21 @@ impl ImageDatasetOps for ImageNetV2Dataset {
         }
     }
 
+    /// Adds noise to the dataset inputs.
+    ///
+    /// # Arguments
+    ///
+    /// * `noise_level` - The level of noise to add.
     fn add_noise(&mut self, noise_level: f32) {
         let _ = noise_level;
         todo!();
     }
 
+    /// Returns the number of samples in the dataset.
+    ///
+    /// # Returns
+    ///
+    /// The number of samples in the dataset.
     fn len(&self) -> usize {
         self.train
             .as_ref()
@@ -400,6 +423,8 @@ impl ImageDatasetOps for ImageNetV2Dataset {
     }
 
     /// Shuffles the dataset.
+    ///
+    /// This method shuffles the training dataset by randomly permuting the indices of the samples.
     fn shuffle(&mut self) {
         if let Some(dataset) = &mut self.train {
             // Get the number of samples
@@ -419,6 +444,13 @@ impl ImageDatasetOps for ImageNetV2Dataset {
         }
     }
 
+    /// Clones the `ImageNetV2Dataset`.
+    ///
+    /// This method creates a deep copy of the `ImageNetV2Dataset`, including the training and validation datasets.
+    ///
+    /// # Returns
+    ///
+    /// A new instance of `ImageNetV2Dataset` with the same data as the original.
     fn clone(&self) -> Self {
         Self {
             train: self.train.clone(),

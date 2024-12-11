@@ -40,6 +40,10 @@ pub mod neuralnet;
 pub mod optimizers;
 
 /// Returns the path to the workspace directory.
+///
+/// # Returns
+///
+/// A `PathBuf` representing the path to the workspace directory.
 pub fn get_workspace_dir() -> PathBuf {
     let mut path = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
     path.pop();

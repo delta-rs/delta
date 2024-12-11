@@ -10,6 +10,7 @@ impl HuberLoss {
     /// Creates a new HuberLoss instance with the specified delta value.
     ///
     /// # Arguments
+    ///
     /// * `delta` - The delta value for the Huber loss.
     pub fn new(delta: f32) -> Self {
         if delta <= 0.0 {
@@ -27,6 +28,7 @@ impl Loss for HuberLoss {
     /// * `y_pred` - The predicted tensor.
     ///
     /// # Returns
+    ///
     /// The Huber loss between the two tensors.
     fn calculate_loss(&self, y_true: &Tensor, y_pred: &Tensor) -> f32 {
         // Step 1: Ensure the shapes of y_true and y_pred match
@@ -74,6 +76,7 @@ impl Loss for HuberLoss {
     /// * `target` - The target tensor.
     ///
     /// # Returns
+    ///
     /// A `Tensor` containing the gradient of the Huber loss with respect to the output tensor.
     fn calculate_loss_grad(&self, output: &Tensor, target: &Tensor) -> Tensor {
         // Ensure shapes match

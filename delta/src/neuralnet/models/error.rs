@@ -30,16 +30,31 @@
 use std::fmt;
 use crate::neuralnet::layers::error::LayerError;
 
+/// An enumeration of possible errors that can occur in a model.
 #[derive(Debug)]
 pub enum ModelError {
+    /// Error indicating that the optimizer is missing.
     MissingOptimizer,
+    /// Error indicating that the loss function is missing.
     MissingLossFunction,
+    /// Error related to the dataset, with a message describing the issue.
     DatasetError(String),
+    /// Error that occurs during training, with a message describing the issue.
     TrainingError(String),
+    /// Error related to a specific layer in the model.
     LayerError(LayerError),
 }
 
 impl fmt::Display for ModelError {
+    /// Formats the `ModelError` for display purposes.
+    ///
+    /// # Arguments
+    ///
+    /// * `f` - The formatter.
+    ///
+    /// # Returns
+    ///
+    /// A `fmt::Result` indicating the success or failure of the formatting operation.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ModelError::MissingOptimizer => write!(f, "Optimizer must be set before training"),

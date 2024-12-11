@@ -30,16 +30,28 @@
 use crate::common::tensor_ops::Tensor;
 use crate::losses::Loss;
 
+/// A struct representing the Mean Squared Loss function.
 #[derive(Debug)]
 pub struct MeanSquaredLoss;
 
 impl MeanSquaredLoss {
+    /// Creates a new instance of `MeanSquaredLoss`.
     pub fn new() -> Self {
         Self
     }
 }
 
 impl Loss for MeanSquaredLoss {
+    /// Calculates the mean squared error (MSE) between two tensors.
+    ///
+    /// # Arguments
+    ///
+    /// * `y_true` - The ground truth tensor.
+    /// * `y_pred` - The predicted tensor.
+    ///
+    /// # Returns
+    ///
+    /// The mean squared error between the two tensors.
     fn calculate_loss(&self, y_true: &Tensor, y_pred: &Tensor) -> f32 {
         // Step 1: Ensure the shapes of y_true and y_pred match
         if y_true.data.shape() != y_pred.data.shape() {

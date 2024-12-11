@@ -258,6 +258,8 @@ impl ImageDatasetOps for TestDataset {
     }
 
     /// Shuffles the dataset.
+    ///
+    /// This method shuffles the training dataset by randomly permuting the indices of the samples.
     fn shuffle(&mut self) {
         todo!();
     }

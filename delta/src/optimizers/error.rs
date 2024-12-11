@@ -41,6 +41,15 @@ pub enum OptimizerError {
 }
 
 impl fmt::Display for OptimizerError {
+    /// Formats the `OptimizerError` for display purposes.
+    ///
+    /// # Arguments
+    ///
+    /// * `f` - The formatter.
+    ///
+    /// # Returns
+    ///
+    /// A `fmt::Result` indicating the success or failure of the formatting operation.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             OptimizerError::InvalidLearningRate(s) => write!(f, "{}", s),

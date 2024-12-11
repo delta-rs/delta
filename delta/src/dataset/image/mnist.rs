@@ -60,7 +60,18 @@ impl MnistDataset {
     const TRAIN_EXAMPLES: usize = 60_000;
     const TEST_EXAMPLES: usize = 10_000;
 
-    /// Load the MNIST dataset
+    /// Asynchronously loads the MNIST dataset.
+    ///
+    /// This function downloads and parses the MNIST dataset, either for training or testing,
+    /// depending on the `is_train` parameter.
+    ///
+    /// # Arguments
+    ///
+    /// * `is_train` - A boolean indicating whether to load the training dataset (`true`) or the test dataset (`false`).
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the loaded `Dataset` or an error message if the operation fails.
     async fn load_data(is_train: bool) -> Result<Dataset, String> {
         let (data_filename, labels_filename, num_examples) = if is_train {
             (
@@ -186,7 +197,17 @@ impl MnistDataset {
         Self::decompress_gz(&file_path).map_err(|e| e.to_string())
     }
 
-    /// Decompress a gzip file
+    /// Decompresses a gzip file.
+    ///
+    /// This function opens a gzip file, decompresses its contents, and returns the decompressed data as a `Vec<u8>`.
+    ///
+    /// # Arguments
+    ///
+    /// * `file_path` - A string slice that holds the path to the gzip file.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing a vector of bytes with the decompressed data, or an `io::Error` if the operation fails.
     fn decompress_gz(file_path: &str) -> io::Result<Vec<u8>> {
         let file = File::open(file_path)?;
         let mut decoder = GzDecoder::new(file);
