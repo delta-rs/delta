@@ -2,9 +2,8 @@ name: machete
 
 on:
   schedule:
-    # Runs every Monday at 10:00 AM CET (which is 9:00 AM UTC)
     - cron: '0 9 * * 1'
-  workflow_dispatch: # Allow manual triggering of the workflow
+  workflow_dispatch:
 
 jobs:
   cleanup:
@@ -21,48 +20,64 @@ jobs:
         with:
           toolchain: stable
 
-      - name: Verify DELTA_GH_TOKEN permissions
-        run: |
-          echo "Testing DELTA_GH_TOKEN permissions..."
-          git ls-remote https://github.com/${{ github.repository }} || exit 1
-
       - name: Install cargo-machete
         run: cargo install cargo-machete
 
       - name: Find Unused Dependencies
-        run: cargo machete --with-metadata
+        id: find_dependencies
+        run: |
+          echo "Running cargo machete..."
+          cargo machete --with-metadata
         continue-on-error: true
 
+      - name: Check for unused dependencies
+        id: check_dependencies
+        run: |
+          if [[ ${{ steps.find_dependencies.outcome }} == "failure" ]]; then
+            echo "Unused dependencies were found."
+            echo "dependencies_found=true" >> $GITHUB_ENV
+          else
+            echo "No unused dependencies were found."
+            echo "dependencies_found=false" >> $GITHUB_ENV
+          fi
+
       - name: Fix Unused Dependencies
+        if: env.dependencies_found == 'true'
         run: cargo machete --fix
         continue-on-error: true
 
+      - name: Check for changes
+        id: check_changes
+        if: env.dependencies_found == 'true'
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "Changes were made."
+            echo "changes_made=true" >> $GITHUB_ENV
+          else
+            echo "No changes were made."
+            echo "changes_made=false" >> $GITHUB_ENV
+          fi
+
       - name: Create a new branch for the changes
         id: create_branch
+        if: env.changes_made == 'true'
         run: |
-          # Generate a unique branch name based on the current date and time
           BRANCH_NAME="cleanup-$(date +%Y%m%d%H%M%S)"
           git checkout -b "$BRANCH_NAME"
-          echo "Created new branch $BRANCH_NAME"
-          echo "branch_name=$BRANCH_NAME" >> $GITHUB_ENV  # Set output for later steps
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_ENV
 
       - name: Commit Changes
+        if: env.changes_made == 'true'
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
-
-          if [[ -n "$(git status --porcelain)" ]]; then
-            git add .
-            git commit -m "Fix unused dependencies using cargo machete"
-
-            # Use DELTA_GH_TOKEN for authentication
-            git remote set-url origin https://x-access-token:${{ secrets.DELTA_GH_TOKEN }}@github.com/${{ github.repository }}
-            git push --set-upstream origin ${{ env.branch_name }}
-          else
-            echo "No changes to commit."
-          fi
+          git add .
+          git commit -m "Fix unused dependencies using cargo machete"
+          git remote set-url origin https://x-access-token:${{ secrets.DELTA_GH_TOKEN }}@github.com/${{ github.repository }}
+          git push --set-upstream origin ${{ env.branch_name }}
 
       - name: Create Pull Request
+        if: env.changes_made == 'true'
         uses: peter-evans/create-pull-request@v4
         with:
           token: ${{ secrets.DELTA_GH_TOKEN }}
@@ -74,4 +89,3 @@ jobs:
           draft: "false"
           labels: "dependencies, automated pr"
           assignees: "mjovanc"
-        continue-on-error: true
