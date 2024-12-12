@@ -64,6 +64,7 @@ jobs:
           echo "Changes committed and pushed to $BRANCH_NAME"
 
       - name: Create Pull Request
+        if: steps.update_step.outputs.changes_detected == 'true'
         run: |
           # Compare outdated dependencies before and after update
           UPDATED_DEPS=$(diff -u outdated_before.txt outdated_after.txt | grep '^+[^+]' | sed 's/^+//')
