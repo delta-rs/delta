@@ -31,7 +31,7 @@ jobs:
           echo "Branch created: $BRANCH_NAME"
 
           # Run cargo machete --fix and capture its exit code
-          cargo machete --fix
+          cargo machete --fix || true
           EXIT_CODE=$?  # Capture the exit code
 
           # Now suppress the exit code to avoid failing the step
