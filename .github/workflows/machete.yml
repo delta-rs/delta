@@ -78,6 +78,13 @@ jobs:
           git add .
           git commit -m "Fix unused dependencies using cargo machete" || echo "No changes to commit"
 
+      # Push to the remote branch before creating a PR
+      - name: Push to Branch
+        if: env.changes_made == 'true'
+        run: |
+          git remote set-url origin https://x-access-token:${{ secrets.DELTA_BOT_GH_TOKEN }}@github.com/${{ github.repository }}
+          git push --set-upstream origin ${{ env.branch_name }}
+
       # Only create a PR if changes were made
       - name: Create Pull Request
         if: env.changes_made == 'true'
@@ -92,20 +99,3 @@ jobs:
           draft: "false"
           labels: "dependencies, automated pr"
           assignees: "mjovanc, chaseWillden"
-
-      # Push changes only if the PR was created
-      - name: Push to Branch
-        if: env.changes_made == 'true'
-        run: |
-          git remote set-url origin https://x-access-token:${{ secrets.DELTA_BOT_GH_TOKEN }}@github.com/${{ github.repository }}
-          git push --set-upstream origin ${{ env.branch_name }}
-
-      - name: Check if branch differs from master
-        if: env.changes_made == 'true'
-        run: |
-          git fetch origin master
-          if [[ -n "$(git diff origin/master..${{ env.branch_name }})" ]]; then
-            echo "Changes detected, branch differs from master."
-          else
-            echo "No changes detected between the branch and master."
-          fi
