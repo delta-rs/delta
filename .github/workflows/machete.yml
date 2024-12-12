@@ -32,17 +32,6 @@ jobs:
 
           # Run cargo machete --fix and capture its exit code
           cargo machete --fix || true
-          EXIT_CODE=$?  # Capture the exit code
-
-          # Now suppress the exit code to avoid failing the step
-          if [ $EXIT_CODE -eq 0 ]; then
-            echo "No unused dependencies found, skipping further steps."
-          elif [ $EXIT_CODE -eq 1 ]; then
-            echo "Unused dependencies found. Proceeding with commit and push."
-          elif [ $EXIT_CODE -eq 2 ]; then
-            echo "An error occurred while running cargo machete."
-            exit 1  # Exit the workflow with a failure code if error occurs
-          fi
 
           # Check if there are changes after fixing
           if [[ -n "$(git status --porcelain)" ]]; then
@@ -50,7 +39,7 @@ jobs:
             git config --global user.email "deltaml@icloud.com"
             git add .
             git commit -m "Fix unused dependencies using cargo machete"
-            git push --set-upstream origin $BRANCH_NAME
+            git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} $BRANCH_NAME
             echo "Changes committed and pushed to $BRANCH_NAME"
           else
             echo "No changes detected. No commit or push."
