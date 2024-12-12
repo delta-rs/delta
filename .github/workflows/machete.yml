@@ -41,15 +41,12 @@ jobs:
             git config --global user.name "dmlops"
             git config --global user.email "deltaml@icloud.com"
             git add .
-            git commit -m "Fix unused dependencies using cargo machete"
+            git commit -m "Fixing unused dependencies"
             git push https://x-access-token:${{ secrets.DELTA_BOT_GH_TOKEN }}@github.com/${{ github.repository }} $BRANCH_NAME
             echo "Changes committed and pushed to $BRANCH_NAME"
+            echo "Attempting to create a pull request..."
+            gh pr create --base master --head $BRANCH_NAME --title "Fix Unused Dependencies" --body "This PR fixes unused dependencies found by cargo machete." --draft=false --label "dependencies, automated pr"
+            echo "Pull request created..."
           else
             echo "No changes detected. No commit or push."
-          fi
-
-          # Create a pull request (no need for token here)
-          if [[ -n "$(git status --porcelain)" ]]; then
-            gh pr create --base master --head $BRANCH_NAME --title "Fix Unused Dependencies" --body "This PR fixes unused dependencies found by cargo machete." --draft=false --label "dependencies, automated pr"
-            echo "Pull request created."
           fi
