@@ -26,7 +26,6 @@ jobs:
       - name: Find Unused Dependencies
         id: find_dependencies
         run: |
-          git pull
           echo "Running cargo machete..."
           cargo machete --with-metadata
         continue-on-error: true
@@ -41,6 +40,14 @@ jobs:
             echo "No unused dependencies were found."
             echo "dependencies_found=false" >> $GITHUB_ENV
           fi
+
+      - name: Create a new branch for the changes
+        id: create_branch
+        if: env.dependencies_found == 'true'
+        run: |
+          BRANCH_NAME="cleanup-$(date +%Y%m%d%H%M%S)"
+          git checkout -b "$BRANCH_NAME"
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_ENV
 
       - name: Fix Unused Dependencies
         if: env.dependencies_found == 'true'
@@ -62,14 +69,6 @@ jobs:
             echo "changes_made=false" >> $GITHUB_ENV
           fi
 
-      - name: Create a new branch for the changes
-        id: create_branch
-        if: env.changes_made == 'true'
-        run: |
-          BRANCH_NAME="cleanup-$(date +%Y%m%d%H%M%S)"
-          git checkout -b "$BRANCH_NAME"
-          echo "branch_name=$BRANCH_NAME" >> $GITHUB_ENV
-
       # Only commit changes if changes were made
       - name: Force Commit Changes
         if: env.changes_made == 'true'
@@ -78,8 +77,6 @@ jobs:
           git config --global user.email "deltaml@icloud.com"
           git add .
           git commit -m "Fix unused dependencies using cargo machete" || echo "No changes to commit"
-          git remote set-url origin https://x-access-token:${{ secrets.DELTA_BOT_GH_TOKEN }}@github.com/${{ github.repository }}
-          git push --set-upstream origin ${{ env.branch_name }}
 
       # Only create a PR if changes were made
       - name: Create Pull Request
@@ -95,6 +92,13 @@ jobs:
           draft: "false"
           labels: "dependencies, automated pr"
           assignees: "mjovanc, chaseWillden"
+
+      # Push changes only if the PR was created
+      - name: Push to Branch
+        if: env.changes_made == 'true'
+        run: |
+          git remote set-url origin https://x-access-token:${{ secrets.DELTA_BOT_GH_TOKEN }}@github.com/${{ github.repository }}
+          git push --set-upstream origin ${{ env.branch_name }}
 
       - name: Check if branch differs from master
         if: env.changes_made == 'true'
