@@ -58,6 +58,7 @@ jobs:
             echo "changes_made=false" >> $GITHUB_ENV
           fi
 
+      # Only create a branch if changes were made
       - name: Create a new branch for the changes
         id: create_branch
         if: env.changes_made == 'true'
@@ -66,26 +67,28 @@ jobs:
           git checkout -b "$BRANCH_NAME"
           echo "branch_name=$BRANCH_NAME" >> $GITHUB_ENV
 
+      # Only commit changes if changes were made
       - name: Commit Changes
         if: env.changes_made == 'true'
         run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
+          git config --global user.name "dmlops"
+          git config --global user.email "deltaml@icloud.com"
           git add .
           git commit -m "Fix unused dependencies using cargo machete"
-          git remote set-url origin https://x-access-token:${{ secrets.DELTA_GH_TOKEN }}@github.com/${{ github.repository }}
+          git remote set-url origin https://x-access-token:${{ secrets.DELTA_BOT_GH_TOKEN }}@github.com/${{ github.repository }}
           git push --set-upstream origin ${{ env.branch_name }}
 
+      # Only create a PR if changes were made
       - name: Create Pull Request
         if: env.changes_made == 'true'
         uses: peter-evans/create-pull-request@v4
         with:
-          token: ${{ secrets.DELTA_GH_TOKEN }}
+          token: ${{ secrets.DELTA_BOT_GH_TOKEN }}
           branch: ${{ env.branch_name }}
           base: master
-          title: "Fix unused dependencies"
+          title: "Fix Unused Dependencies"
           body: "This PR fixes unused dependencies found by cargo machete."
-          commit-message: "machete: removing unused dependencies"
+          commit-message: "Removing Unused Dependencies"
           draft: "false"
           labels: "dependencies, automated pr"
-          assignees: "mjovanc"
+          assignees: "mjovanc, chaseWillden"
