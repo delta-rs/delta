@@ -36,7 +36,6 @@ jobs:
 
           if [ $EXIT_CODE -eq 0 ]; then
             echo "No unused dependencies found, skipping further steps."
-            exit 0
           elif [ $EXIT_CODE -eq 1 ]; then
             echo "Unused dependencies found. Proceeding with commit and push."
           elif [ $EXIT_CODE -eq 2 ]; then
