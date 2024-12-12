@@ -49,7 +49,7 @@ jobs:
             echo "Attempting to create a pull request..."
             
             # Create a pull request
-            PR_URL=$(gh pr create --base master --head $BRANCH_NAME --title "Fix unused dependencies" --body "This PR fixes unused dependencies found by cargo machete." --draft=false --label "dependencies" --json url -q .)
+            PR_URL=$(gh pr create --base master --head $BRANCH_NAME --title "Fix unused dependencies" --body "This PR fixes unused dependencies found by cargo machete." --draft=false --label "dependencies")
             echo "Pull request created: $PR_URL"
   
             # Automatically merge the pull request
