@@ -11,6 +11,8 @@ permissions:
 jobs:
   cleanup:
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.DELTA_BOT_GH_TOKEN }}
 
     steps:
       - name: Checkout Code
