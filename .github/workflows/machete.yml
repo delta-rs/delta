@@ -41,6 +41,14 @@ jobs:
             echo "dependencies_found=false" >> $GITHUB_ENV
           fi
 
+      - name: Create a new branch for the changes
+        id: create_branch
+        if: env.changes_made == 'true'
+        run: |
+          BRANCH_NAME="cleanup-$(date +%Y%m%d%H%M%S)"
+          git checkout -b "$BRANCH_NAME"
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_ENV
+
       - name: Fix Unused Dependencies
         if: env.dependencies_found == 'true'
         run: cargo machete --fix
@@ -60,15 +68,6 @@ jobs:
             echo "No changes were made."
             echo "changes_made=false" >> $GITHUB_ENV
           fi
-
-      # Only create a branch if changes were made
-      - name: Create a new branch for the changes
-        id: create_branch
-        if: env.changes_made == 'true'
-        run: |
-          BRANCH_NAME="cleanup-$(date +%Y%m%d%H%M%S)"
-          git checkout -b "$BRANCH_NAME"
-          echo "branch_name=$BRANCH_NAME" >> $GITHUB_ENV
 
       # Only commit changes if changes were made
       - name: Force Commit Changes
