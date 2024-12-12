@@ -46,8 +46,8 @@ jobs:
         run: cargo machete --fix
         continue-on-error: true
 
-      - name: List modified files
-        run: git status --porcelain
+      - name: Fetch latest master
+        run: git fetch origin master
 
       - name: Check for changes
         id: check_changes
@@ -97,6 +97,11 @@ jobs:
           assignees: "mjovanc, chaseWillden"
 
       - name: Check if branch differs from master
+        if: env.changes_made == 'true'
         run: |
           git fetch origin master
-          git diff origin/master
+          if [[ -n "$(git diff origin/master..${{ env.branch_name }})" ]]; then
+            echo "Changes detected, branch differs from master."
+          else
+            echo "No changes detected between the branch and master."
+          fi
