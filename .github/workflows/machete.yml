@@ -28,7 +28,6 @@ jobs:
         run: |
           echo "Running cargo machete..."
           cargo machete --with-metadata
-        continue-on-error: true
 
       - name: Check for unused dependencies
         id: check_dependencies
@@ -44,7 +43,9 @@ jobs:
       - name: Fix Unused Dependencies
         if: env.dependencies_found == 'true'
         run: cargo machete --fix
-        continue-on-error: true
+
+      - name: List modified files
+        run: git status --porcelain
 
       - name: Check for changes
         id: check_changes
@@ -68,13 +69,13 @@ jobs:
           echo "branch_name=$BRANCH_NAME" >> $GITHUB_ENV
 
       # Only commit changes if changes were made
-      - name: Commit Changes
+      - name: Force Commit Changes
         if: env.changes_made == 'true'
         run: |
           git config --global user.name "dmlops"
           git config --global user.email "deltaml@icloud.com"
           git add .
-          git commit -m "Fix unused dependencies using cargo machete"
+          git commit -m "Fix unused dependencies using cargo machete" || echo "No changes to commit"
           git remote set-url origin https://x-access-token:${{ secrets.DELTA_BOT_GH_TOKEN }}@github.com/${{ github.repository }}
           git push --set-upstream origin ${{ env.branch_name }}
 
@@ -92,3 +93,8 @@ jobs:
           draft: "false"
           labels: "dependencies, automated pr"
           assignees: "mjovanc, chaseWillden"
+
+      - name: Check if branch differs from master
+        run: |
+          git fetch origin master
+          git diff origin/master
