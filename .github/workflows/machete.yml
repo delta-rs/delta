@@ -41,61 +41,31 @@ jobs:
             echo "dependencies_found=false" >> $GITHUB_ENV
           fi
 
-      - name: Create a new branch for the changes
-        id: create_branch
+      - name: Create Branch and Fix Unused Dependencies
+        id: cleanup_step
         if: env.dependencies_found == 'true'
         run: |
           BRANCH_NAME="cleanup-$(date +%Y%m%d%H%M%S)"
           git checkout -b "$BRANCH_NAME"
-          echo "branch_name=$BRANCH_NAME" >> $GITHUB_ENV
+          echo "Branch created: $BRANCH_NAME"
+          
+          # Fix dependencies using cargo machete
+          cargo machete --fix
 
-      - name: Fix Unused Dependencies
-        if: env.dependencies_found == 'true'
-        run: cargo machete --fix
-        continue-on-error: true
-
-      - name: Fetch latest master
-        run: git fetch origin master
-
-      - name: Check for changes
-        id: check_changes
-        if: env.dependencies_found == 'true'
-        run: |
+          # Check if there are changes
           if [[ -n "$(git status --porcelain)" ]]; then
-            echo "Changes were made."
-            echo "changes_made=true" >> $GITHUB_ENV
+            git config --global user.name "dmlops"
+            git config --global user.email "deltaml@icloud.com"
+            git add .
+            git commit -m "Fix unused dependencies using cargo machete"
+            git push --set-upstream origin $BRANCH_NAME
+            echo "Changes committed and pushed to $BRANCH_NAME"
           else
-            echo "No changes were made."
-            echo "changes_made=false" >> $GITHUB_ENV
+            echo "No changes detected. No commit or push."
           fi
 
-      # Only commit changes if changes were made
-      - name: Force Commit Changes
-        if: env.changes_made == 'true'
-        run: |
-          git config --global user.name "dmlops"
-          git config --global user.email "deltaml@icloud.com"
-          git add .
-          git commit -m "Fix unused dependencies using cargo machete" || echo "No changes to commit"
-
-      # Push to the remote branch before creating a PR
-      - name: Push to Branch
-        if: env.changes_made == 'true'
-        run: |
-          git remote set-url origin https://x-access-token:${{ secrets.DELTA_BOT_GH_TOKEN }}@github.com/${{ github.repository }}
-          git push --set-upstream origin ${{ env.branch_name }}
-
-      # Only create a PR if changes were made
-      - name: Create Pull Request
-        if: env.changes_made == 'true'
-        uses: peter-evans/create-pull-request@v4
-        with:
-          token: ${{ secrets.DELTA_BOT_GH_TOKEN }}
-          branch: ${{ env.branch_name }}
-          base: master
-          title: "Fix Unused Dependencies"
-          body: "This PR fixes unused dependencies found by cargo machete."
-          commit-message: "Removing Unused Dependencies"
-          draft: "false"
-          labels: "dependencies, automated pr"
-          assignees: "mjovanc, chaseWillden"
+          # Create a pull request using GitHub CLI (gh)
+          if [[ -n "$(git status --porcelain)" ]]; then
+            gh pr create --base master --head $BRANCH_NAME --title "Fix Unused Dependencies" --body "This PR fixes unused dependencies found by cargo machete." --draft=false --label "dependencies, automated pr"
+            echo "Pull request created."
+          fi
