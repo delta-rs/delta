@@ -25,7 +25,6 @@ jobs:
 
       - name: Create Branch and Fix Unused Dependencies
         id: cleanup_step
-        if: env.dependencies_found == 'true'
         run: |
           BRANCH_NAME="cleanup-$(date +%Y%m%d%H%M%S)"
           git checkout -b "$BRANCH_NAME"
@@ -37,8 +36,7 @@ jobs:
 
           if [ $EXIT_CODE -eq 0 ]; then
             echo "No unused dependencies found, skipping further steps."
-            # Skip further steps without failing the workflow
-            echo "skip_steps=true" >> $GITHUB_ENV
+            exit 0
           elif [ $EXIT_CODE -eq 1 ]; then
             echo "Unused dependencies found. Proceeding with commit and push."
           elif [ $EXIT_CODE -eq 2 ]; then
@@ -46,14 +44,6 @@ jobs:
             exit 1
           fi
 
-      - name: Skip Steps If No Changes
-        if: env.skip_steps == 'true'
-        run: |
-          echo "Skipping commit, push, and PR creation due to no unused dependencies."
-
-      - name: Check for Changes, Commit, Push, and Create PR
-        if: env.skip_steps != 'true' && env.dependencies_found == 'true'
-        run: |
           # Check if there are changes after fixing
           if [[ -n "$(git status --porcelain)" ]]; then
             git config --global user.name "dmlops"
