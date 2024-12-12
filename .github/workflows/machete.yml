@@ -52,8 +52,8 @@ jobs:
             PR_URL=$(gh pr create --base master --head $BRANCH_NAME --title "Fix unused dependencies" --body "This PR fixes unused dependencies found by cargo machete." --draft=false --label "dependencies")
             echo "Pull request created: $PR_URL"
   
-            # Automatically merge the pull request
-            gh pr merge "$PR_URL" --merge --delete-branch --auto --admin
+            # Automatically merge the pull request after it meets the requirements
+            gh pr merge "$PR_URL" --auto --delete-branch
             echo "Pull request merged and branch deleted."
           else
             echo "No changes detected. No commit or push."
