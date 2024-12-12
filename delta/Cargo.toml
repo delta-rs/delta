@@ -22,7 +22,6 @@ flate2 = "1.0.35"
 log = "0.4.22"
 reqwest = "0.12.9"
 ndarray = "0.16.1"
-approx = "0.5.1"
 tar = "0.4.43"
 serde_json = "1.0.133"
 walkdir = "2.5.0"
@@ -30,7 +29,6 @@ image = "0.25.5"
 serial_test = "3.2"
 rand_distr = "0.4.3"
 libm = "0.2.11"
-njord = "0.4.0"
 
 [profile.dev]
 opt-level = 0
