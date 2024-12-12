@@ -2,11 +2,14 @@ name: machete
 
 on:
   schedule:
-    - cron: '0 9 * * 1'
+    - cron: '0 8 * * *'
   workflow_dispatch:
 
 permissions:
   contents: write
+
+env:
+  TZ: Europe/Stockholm
 
 jobs:
   cleanup:

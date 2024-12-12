@@ -1,0 +1,78 @@
+name: cargo update
+
+on:
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  TZ: Europe/Stockholm
+
+jobs:
+  update-dependencies:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.DELTA_BOT_GH_TOKEN }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Install cargo-edit and cargo-outdated
+        run: |
+          cargo install cargo-edit
+          cargo install cargo-outdated
+
+      - name: Get Outdated Dependencies
+        id: outdated_before
+        run: cargo outdated > outdated_before.txt
+
+      - name: Update Dependencies
+        id: update_step
+        run: |
+          BRANCH_NAME="update-dependencies-$(date +%Y%m%d%H%M%S)"
+          git checkout -b "$BRANCH_NAME"
+          echo "Branch created: $BRANCH_NAME"
+
+          # Update all dependencies
+          cargo update
+
+      - name: Get Updated Dependencies
+        id: outdated_after
+        run: cargo outdated > outdated_after.txt
+
+      - name: Commit and Push Changes
+        if: steps.update_step.outputs.changes_detected == 'true'
+        run: |
+          git config --global user.name "dmlops"
+          git config --global user.email "deltaml@icloud.com"
+          git add .
+          UPDATED_DEPS=$(diff -u outdated_before.txt outdated_after.txt | grep '^+[^+]' | sed 's/^+//')
+          COMMIT_MSG="Bump dependencies\n\n$UPDATED_DEPS"
+          git commit -m "$COMMIT_MSG"
+          git push https://x-access-token:${{ secrets.DELTA_BOT_GH_TOKEN }}@github.com/${{ github.repository }} $BRANCH_NAME
+          echo "Changes committed and pushed to $BRANCH_NAME"
+
+      - name: Create Pull Request
+        run: |
+          # Compare outdated dependencies before and after update
+          UPDATED_DEPS=$(diff -u outdated_before.txt outdated_after.txt | grep '^+[^+]' | sed 's/^+//')
+          PR_BODY="Bump dependencies\n\n$UPDATED_DEPS"
+
+          # Create a pull request
+          PR_URL=$(gh pr create --base master --head $BRANCH_NAME --title "Update dependencies" --body "$PR_BODY" --draft=false --label "dependencies")
+          echo "Pull request created: $PR_URL"
+
+          # Automatically merge the pull request after it meets the requirements
+          gh pr merge "$PR_URL" --merge --delete-branch
+          echo "Pull request merged and branch deleted."
