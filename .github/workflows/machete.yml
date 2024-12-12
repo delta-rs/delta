@@ -23,24 +23,6 @@ jobs:
       - name: Install cargo-machete
         run: cargo install cargo-machete
 
-      - name: Find Unused Dependencies
-        id: find_dependencies
-        run: |
-          echo "Running cargo machete..."
-          cargo machete --with-metadata
-        continue-on-error: true
-
-      - name: Check for unused dependencies
-        id: check_dependencies
-        run: |
-          if [[ ${{ steps.find_dependencies.outcome }} == "failure" ]]; then
-            echo "Unused dependencies were found."
-            echo "dependencies_found=true" >> $GITHUB_ENV
-          else
-            echo "No unused dependencies were found."
-            echo "dependencies_found=false" >> $GITHUB_ENV
-          fi
-
       - name: Create Branch and Fix Unused Dependencies
         id: cleanup_step
         if: env.dependencies_found == 'true'
@@ -55,7 +37,8 @@ jobs:
 
           if [ $EXIT_CODE -eq 0 ]; then
             echo "No unused dependencies found, skipping further steps."
-            exit 0
+            # Skip further steps without failing the workflow
+            echo "skip_steps=true" >> $GITHUB_ENV
           elif [ $EXIT_CODE -eq 1 ]; then
             echo "Unused dependencies found. Proceeding with commit and push."
           elif [ $EXIT_CODE -eq 2 ]; then
@@ -63,6 +46,14 @@ jobs:
             exit 1
           fi
 
+      - name: Skip Steps If No Changes
+        if: env.skip_steps == 'true'
+        run: |
+          echo "Skipping commit, push, and PR creation due to no unused dependencies."
+
+      - name: Check for Changes, Commit, Push, and Create PR
+        if: env.skip_steps != 'true' && env.dependencies_found == 'true'
+        run: |
           # Check if there are changes after fixing
           if [[ -n "$(git status --porcelain)" ]]; then
             git config --global user.name "dmlops"
