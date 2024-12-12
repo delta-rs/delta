@@ -26,6 +26,7 @@ jobs:
       - name: Find Unused Dependencies
         id: find_dependencies
         run: |
+          git pull
           echo "Running cargo machete..."
           cargo machete --with-metadata
         continue-on-error: true
@@ -40,14 +41,6 @@ jobs:
             echo "No unused dependencies were found."
             echo "dependencies_found=false" >> $GITHUB_ENV
           fi
-
-      - name: Create a new branch for the changes
-        id: create_branch
-        if: env.changes_made == 'true'
-        run: |
-          BRANCH_NAME="cleanup-$(date +%Y%m%d%H%M%S)"
-          git checkout -b "$BRANCH_NAME"
-          echo "branch_name=$BRANCH_NAME" >> $GITHUB_ENV
 
       - name: Fix Unused Dependencies
         if: env.dependencies_found == 'true'
@@ -68,6 +61,14 @@ jobs:
             echo "No changes were made."
             echo "changes_made=false" >> $GITHUB_ENV
           fi
+
+      - name: Create a new branch for the changes
+        id: create_branch
+        if: env.changes_made == 'true'
+        run: |
+          BRANCH_NAME="cleanup-$(date +%Y%m%d%H%M%S)"
+          git checkout -b "$BRANCH_NAME"
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_ENV
 
       # Only commit changes if changes were made
       - name: Force Commit Changes
