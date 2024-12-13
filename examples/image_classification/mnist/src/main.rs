@@ -7,7 +7,6 @@ use deltaml::neuralnet::Sequential;
 use deltaml::neuralnet::{Dense, Flatten};
 use deltaml::optimizers::Adam;
 
-#[cfg(feature = "metal")]
 use deltaml::devices::{Device, osx_metal};
 
 #[tokio::main]
@@ -37,7 +36,6 @@ async fn main() {
     #[allow(unused_mut)]
     let mut val_data = MnistDataset::load_val().await;
 
-    #[cfg(feature = "metal")]
     {
         println!("Transferring data to Metal device.");
         let (metal_device, metal_queue) = osx_metal::get_device_and_queue_metal();
