@@ -161,30 +161,43 @@ fn execute_tensor_operation_metal(
         .new_compute_pipeline_state(&pipeline_descriptor)
         .map_err(|e| format!("Failed to create compute pipeline: {:?}", e))?;
 
-    // Create buffers
-    let tensor1_buffer_size = (tensor1.data.len() * std::mem::size_of::<f32>()) as u64;
+    // Ensure the tensor data is contiguous and properly aligned
+    let tensor1_data = tensor1.data.as_slice().unwrap();
+    let tensor2_data = tensor2.data.as_slice().unwrap();
+
+    // Calculate buffer sizes
+    let tensor1_buffer_size = (tensor1_data.len() * std::mem::size_of::<f32>()) as u64;
+    let tensor2_buffer_size = (tensor2_data.len() * std::mem::size_of::<f32>()) as u64;
+
+    // Create aligned buffers for input tensors
     let input1_buffer = device.new_buffer_with_data(
-        tensor1.data.as_slice().unwrap().as_ptr() as *const _,
+        tensor1_data.as_ptr() as *const _,
         tensor1_buffer_size,
         metal::MTLResourceOptions::StorageModeShared,
     );
 
-    let tensor2_buffer_size = (tensor2.data.len() * std::mem::size_of::<f32>()) as u64;
     let input2_buffer = device.new_buffer_with_data(
-        tensor2.data.as_slice().unwrap().as_ptr() as *const _,
+        tensor2_data.as_ptr() as *const _,
         tensor2_buffer_size,
         metal::MTLResourceOptions::StorageModeShared,
     );
 
+    // Create an output buffer with the same size as the input tensors
     let output_buffer =
-        device.new_buffer(tensor2_buffer_size, metal::MTLResourceOptions::StorageModeShared);
+        device.new_buffer(tensor1_buffer_size, metal::MTLResourceOptions::StorageModeShared);
 
-    let tensor_length = tensor1.data.len() as u32; // Length of the tensor
+    // Create a buffer for tensor length
+    let tensor_length = tensor1_data.len() as u32;
     let length_buffer = device.new_buffer_with_data(
         &tensor_length as *const u32 as *const _,
         std::mem::size_of::<u32>() as u64,
         metal::MTLResourceOptions::StorageModeShared,
     );
+
+    // Check for buffer alignment and size correctness
+    assert_eq!(input1_buffer.length(), tensor1_buffer_size);
+    assert_eq!(input2_buffer.length(), tensor2_buffer_size);
+    assert_eq!(output_buffer.length(), tensor1_buffer_size);
 
     // Create command buffer and encoder
     let command_buffer = queue.new_command_buffer();
@@ -206,7 +219,7 @@ fn execute_tensor_operation_metal(
 
     // Compute the threadgroup count based on the actual data size
     let threadgroup_count = metal::MTLSize {
-        width: (tensor_length + threadgroup_size.width - 1) / threadgroup_size.width,
+        width: ((tensor_length + threadgroup_size.width - 1) / threadgroup_size.width) as u64,
         height: 1,
         depth: 1,
     };

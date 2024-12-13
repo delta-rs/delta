@@ -196,20 +196,13 @@ impl Tensor {
 
         Tensor { data: self_2d.dot(&other_2d).into_dyn(), device: self.device.clone() }
         // match &self.device {
-        //     Device::Cpu => Tensor {
-        //         data: self_2d.dot(&other_2d).into_dyn(),
-        //         device: self.device.clone(),
-        //     },
+        //     Device::Cpu => {
+        //         Tensor { data: self_2d.dot(&other_2d).into_dyn(), device: self.device.clone() }
+        //     }
         //     #[cfg(feature = "metal")]
         //     Device::Metal { device, queue } => tensor_multiply_metal(
-        //         &Tensor {
-        //             data: self_2d.to_owned().into_dyn(),
-        //             device: self.device.clone(),
-        //         },
-        //         &Tensor {
-        //             data: other_2d.to_owned().into_dyn(),
-        //             device: self.device.clone(),
-        //         },
+        //         &Tensor { data: self_2d.to_owned().into_dyn(), device: self.device.clone() },
+        //         &Tensor { data: other_2d.to_owned().into_dyn(), device: self.device.clone() },
         //         device,
         //         queue,
         //     )
@@ -333,17 +326,13 @@ impl Tensor {
     ///
     /// A new tensor containing the result of the division.
     pub fn div(&self, other: &Tensor) -> Tensor {
-        Tensor { data: &self.data / &other.data, device: self.device.clone() }
-        // match &self.device {
-        //     Device::Cpu => Tensor {
-        //         data: &self.data / &other.data,
-        //         device: self.device.clone(),
-        //     },
-        //     #[cfg(feature = "metal")]
-        //     Device::Metal { device, queue } => tensor_divide_metal(self, other, device, queue)
-        //         .expect("Failed to perform division on Metal device"),
-        //     _ => panic!("Unsupported device for tensor division."),
-        // }
+        match &self.device {
+            Device::Cpu => Tensor { data: &self.data / &other.data, device: self.device.clone() },
+            #[cfg(feature = "metal")]
+            Device::Metal { device, queue } => tensor_divide_metal(self, other, device, queue)
+                .expect("Failed to perform division on Metal device"),
+            _ => panic!("Unsupported device for tensor division."),
+        }
     }
 
     /// Flattens the tensor into a 1D array.
@@ -690,26 +679,24 @@ impl Tensor {
             .broadcast(self.data.raw_dim())
             .expect("Shapes are incompatible for broadcasting");
 
-        Tensor { data: &self.data - &broadcasted_other, device: self.device.clone() }
         // Perform the element-wise subtraction
-        // match &self.device {
-        //     Device::Cpu => Tensor {
-        //         data: &self.data - &broadcasted_other,
-        //         device: self.device.clone(),
-        //     },
-        //     #[cfg(feature = "metal")]
-        //     Device::Metal { device, queue } => tensor_subtract_metal(
-        //         self,
-        //         &Tensor {
-        //             data: broadcasted_other.to_owned().into_dyn(),
-        //             device: self.device.clone(),
-        //         },
-        //         device,
-        //         queue,
-        //     )
-        //     .expect("Failed to perform subtraction on Metal device"),
-        //     _ => panic!("Unsupported device for tensor subtraction."),
-        // }
+        match &self.device {
+            Device::Cpu => {
+                Tensor { data: &self.data - &broadcasted_other, device: self.device.clone() }
+            }
+            #[cfg(feature = "metal")]
+            Device::Metal { device, queue } => tensor_subtract_metal(
+                self,
+                &Tensor {
+                    data: broadcasted_other.to_owned().into_dyn(),
+                    device: self.device.clone(),
+                },
+                device,
+                queue,
+            )
+            .expect("Failed to perform subtraction on Metal device"),
+            _ => panic!("Unsupported device for tensor subtraction."),
+        }
     }
 
     /// Transfers the tensor to the specified device.
