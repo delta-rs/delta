@@ -1,14 +1,34 @@
-# Delta <!-- omit in toc --> ![build](https://img.shields.io/github/actions/workflow/status/delta-rs/delta/core.yml?branch=master) ![crates.io](https://img.shields.io/crates/v/deltaml.svg) [![documentation](https://img.shields.io/badge/docs-deltaml-blue?logo=rust)](https://docs.rs/deltaml/latest/) 
+<div align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/delta-rs/resources/refs/heads/main/logo/delta_logo_github_white.svg">
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/delta-rs/resources/refs/heads/main/logo/delta_logo_github_black.svg">
+    <img alt="The Rust Programming Language: A language empowering everyone to build reliable and efficient software"
+         src="https://raw.githubusercontent.com/delta-rs/resources/refs/heads/main/logo/delta_logo_github_white.svg"
+         width="50%">
+  </picture>
 
-An open-source machine learning framework in Rust Δ. It is designed to be fast, with APIs that are easy to use while allowing advanced usage to customize and extend functionality. It provides efficient and scalable tools for building and training neural networks. The framework aims to offer a comprehensive set of features, including various neural network layers, activation functions, loss functions, optimizers, and data handling utilities.
+[Website][Delta] | [Getting started] | [Learn] | [Documentation] | [Contributing]
+</div>
 
-## Table of Contents <!-- omit in toc -->
+[Delta]: https://deltaml.org
+[Getting Started]: https://github.com/delta-rs/delta/wiki/Getting-Started
+[Learn]: https://github.com/delta-rs/delta/wiki
+[Documentation]: https://docs.rs/deltaml/latest/deltaml/
+[Contributing]: CONTRIBUTING.md
 
-- [Getting Help](#getting-help)
-- [Reporting Issues](#reporting-issues)
-- [Contributing](#contributing)
-- [Contributors](#contributors)
-- [License](#license)
+An open-source machine learning framework in Rust Δ. 
+
+## Why Δ (Delta)?
+
+- **Speed:** Built with Rust, Δ is designed for high performance, making it ideal for compute-intensive machine learning tasks.
+
+- **Usability:** Intuitive APIs that balance simplicity for beginners and flexibility for advanced users to customize and extend functionality.
+
+- **Scalability:** Provides efficient tools to build and train neural networks, handling workloads of various sizes seamlessly.
+
+- **Comprehensive Features:** Includes a rich set of components such as neural network layers, activation functions, loss functions, optimizers, and robust data handling utilities.
+
+- **Open Source:** Actively maintained with a commitment to community-driven improvements and extensibility.
 
 ## Getting Help
 
