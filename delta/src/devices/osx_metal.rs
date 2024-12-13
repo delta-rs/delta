@@ -29,7 +29,7 @@
 
 use crate::common::Tensor;
 pub use metal;
-use ndarray::{IxDyn, Shape};
+use ndarray::{Array, IxDyn, Shape};
 
 /// Transfers the tensor to a Metal device.
 ///
@@ -140,16 +140,6 @@ fn execute_tensor_operation_metal(
     device: &metal::Device,
     queue: &metal::CommandQueue,
 ) -> Result<Tensor, String> {
-    // Ensure tensors have the same shape
-    // if tensor1.data.shape() != tensor2.data.shape() {
-    //     return Err(format!(
-    //         "Tensors must have the same shape for {}. Got {:?} and {:?}",
-    //         operation,
-    //         tensor1.data.shape(),
-    //         tensor2.data.shape()
-    //     ));
-    // }
-
     // Load shader and create compute pipeline
     let shader_source = include_str!("metal_shaders/tensor_ops.metal");
     let library = device
@@ -211,10 +201,10 @@ fn execute_tensor_operation_metal(
     }
     .to_vec();
 
-    // Create new tensor
-    let mut new_tensor = Tensor::new(output_data, tensor1.shape());
-    new_tensor.device = tensor1.device.clone();
-    Ok(new_tensor)
+    Ok(Tensor {
+        data: Array::from_shape_vec(tensor1.shape(), output_data).unwrap(),
+        device: tensor1.device.clone(),
+    })
 }
 
 #[cfg(feature = "metal")]

@@ -216,8 +216,19 @@ impl Tensor {
                 device: self.device.clone(),
             },
             #[cfg(feature = "metal")]
-            Device::Metal { device, queue } => tensor_multiply_metal(self, other, device, queue)
-                .expect("Failed to perform matrix multiplication on Metal device"),
+            Device::Metal { device, queue } => tensor_multiply_metal(
+                &Tensor {
+                    data: self_2d.to_owned().into_dyn(),
+                    device: self.device.clone(),
+                },
+                &Tensor {
+                    data: other_2d.to_owned().into_dyn(),
+                    device: self.device.clone(),
+                },
+                device,
+                queue,
+            )
+            .expect("Failed to perform matrix multiplication on Metal device"),
             _ => panic!("Unsupported device for matrix multiplication."),
         }
     }

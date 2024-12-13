@@ -261,13 +261,13 @@ impl Layer for Dense {
         self.device = device.clone();
 
         if let Some(ref mut weights) = self.weights {
-            self.weights = Some(weights.to_device(device.clone()).unwrap());
+            weights.device = device.clone();
         }
         if let Some(ref mut bias) = self.bias {
-            self.bias = Some(bias.to_device(device.clone()).unwrap());
+            bias.device = device.clone();
         }
         if let Some(ref mut input) = self.input {
-            self.input = Some(input.to_device(device.clone()).unwrap());
+            input.device = device.clone();
         }
     }
 }
