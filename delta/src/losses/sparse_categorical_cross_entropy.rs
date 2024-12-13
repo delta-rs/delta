@@ -150,8 +150,9 @@ impl Loss for SparseCategoricalCrossEntropyLoss {
             // Handle one-hot encoding
             if y_true.shape().raw_dim()[1] != y_pred.shape().raw_dim()[1] {
                 panic!(
-                    "If y_true is one-hot encoded, it must have the same number of classes as y_pred. Got: {:?}",
-                    y_true.shape()
+                    "If y_true is one-hot encoded, it must have the same number of classes as y_pred. \nGot y_true: {:?}\nGot y_pred: {:?}",
+                    y_true.shape(),
+                    y_pred.shape()
                 );
             }
             let y_true = self.preprocess_one_hot(&y_true);
