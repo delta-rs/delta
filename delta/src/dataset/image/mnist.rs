@@ -80,11 +80,7 @@ impl MnistDataset {
                 Self::TRAIN_EXAMPLES,
             )
         } else {
-            (
-                Self::MNIST_TEST_DATA_FILENAME,
-                Self::MNIST_TEST_LABELS_FILENAME,
-                Self::TEST_EXAMPLES,
-            )
+            (Self::MNIST_TEST_DATA_FILENAME, Self::MNIST_TEST_LABELS_FILENAME, Self::TEST_EXAMPLES)
         };
 
         let data_bytes = Self::get_bytes_data(data_filename).await?;
@@ -128,12 +124,7 @@ impl MnistDataset {
 
         Ok(Tensor::new(
             tensor_data,
-            Shape::from(IxDyn(&[
-                num_images,
-                Self::MNIST_IMAGE_SIZE,
-                Self::MNIST_IMAGE_SIZE,
-                1,
-            ])),
+            Shape::from(IxDyn(&[num_images, Self::MNIST_IMAGE_SIZE, Self::MNIST_IMAGE_SIZE, 1])),
         ))
     }
 
@@ -160,10 +151,7 @@ impl MnistDataset {
             tensor_data[i * Self::MNIST_NUM_CLASSES + label as usize] = 1.0;
         }
 
-        Ok(Tensor::new(
-            tensor_data,
-            Shape::from(IxDyn(&[num_labels, Self::MNIST_NUM_CLASSES])),
-        ))
+        Ok(Tensor::new(tensor_data, Shape::from(IxDyn(&[num_labels, Self::MNIST_NUM_CLASSES]))))
     }
 
     /// Download and decompress a file from the MNIST dataset
@@ -175,11 +163,7 @@ impl MnistDataset {
     /// A vector containing the decompressed dataset
     async fn get_bytes_data(filename: &str) -> Result<Vec<u8>, String> {
         let workspace_dir = get_workspace_dir();
-        let file_path = format!(
-            "{}/.cache/dataset/mnist/{}",
-            workspace_dir.display(),
-            filename
-        );
+        let file_path = format!("{}/.cache/dataset/mnist/{}", workspace_dir.display(), filename);
 
         if Path::new(&file_path).exists() {
             return Self::decompress_gz(&file_path).map_err(|e| e.to_string());
@@ -194,9 +178,7 @@ impl MnistDataset {
         async_fs::create_dir_all(format!("{}/.cache/dataset/mnist", workspace_dir.display()))
             .await
             .map_err(|e| e.to_string())?;
-        async_fs::write(&file_path, &compressed_data)
-            .await
-            .map_err(|e| e.to_string())?;
+        async_fs::write(&file_path, &compressed_data).await.map_err(|e| e.to_string())?;
 
         Self::decompress_gz(&file_path).map_err(|e| e.to_string())
     }
@@ -258,11 +240,7 @@ impl ImageDatasetOps for MnistDataset {
     fn load_train() -> Self::LoadFuture {
         Box::pin(async {
             match MnistDataset::load_data(true).await {
-                Ok(train_data) => MnistDataset {
-                    train: Some(train_data),
-                    test: None,
-                    val: None,
-                },
+                Ok(train_data) => MnistDataset { train: Some(train_data), test: None, val: None },
                 Err(err) => panic!("Failed to load train dataset: {}", err),
             }
         })
@@ -276,11 +254,7 @@ impl ImageDatasetOps for MnistDataset {
     fn load_test() -> Self::LoadFuture {
         Box::pin(async {
             match MnistDataset::load_data(false).await {
-                Ok(test_data) => MnistDataset {
-                    train: None,
-                    test: Some(test_data),
-                    val: None,
-                },
+                Ok(test_data) => MnistDataset { train: None, test: Some(test_data), val: None },
                 Err(err) => panic!("Failed to load test dataset: {}", err),
             }
         })
@@ -295,11 +269,8 @@ impl ImageDatasetOps for MnistDataset {
         Box::pin(async {
             match MnistDataset::load_data(true).await {
                 Ok(train_data) => {
-                    let mut dataset = MnistDataset {
-                        train: Some(train_data),
-                        test: None,
-                        val: None,
-                    };
+                    let mut dataset =
+                        MnistDataset { train: Some(train_data), test: None, val: None };
                     dataset.split_train_validation(0.2);
                     dataset
                 }
@@ -369,10 +340,7 @@ impl ImageDatasetOps for MnistDataset {
 
         // Ensure the start index is within range
         if start_idx >= total_samples {
-            panic!(
-                "Batch index {} out of range. Total samples: {}",
-                batch_idx, total_samples
-            );
+            panic!("Batch index {} out of range. Total samples: {}", batch_idx, total_samples);
         }
 
         // Adjust the end index if it exceeds the total samples
@@ -487,11 +455,7 @@ impl ImageDatasetOps for MnistDataset {
     ///
     /// A new `MnistDataset` instance that is a clone of the current instance.
     fn clone(&self) -> Self {
-        Self {
-            train: self.train.clone(),
-            test: self.test.clone(),
-            val: self.val.clone(),
-        }
+        Self { train: self.train.clone(), test: self.test.clone(), val: self.val.clone() }
     }
 
     /// Transfers the dataset to the specified device.
@@ -561,11 +525,7 @@ mod tests {
 
         let images =
             MnistDataset::parse_images(&data_bytes, 60000).expect("Failed to parse images");
-        assert_eq!(
-            images.data.len(),
-            60000 * 28 * 28,
-            "Images should have the correct length"
-        );
+        assert_eq!(images.data.len(), 60000 * 28 * 28, "Images should have the correct length");
     }
 
     #[tokio::test]
@@ -578,11 +538,7 @@ mod tests {
         let labels =
             MnistDataset::parse_labels(&labels_bytes, 60000).expect("Failed to parse labels");
 
-        assert_eq!(
-            labels.data.len(),
-            60000 * 10,
-            "Labels should have the correct length"
-        );
+        assert_eq!(labels.data.len(), 60000 * 10, "Labels should have the correct length");
     }
 
     #[tokio::test]

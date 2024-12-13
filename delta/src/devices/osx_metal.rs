@@ -48,10 +48,8 @@ pub fn to_device_metal(
 ) -> Result<metal::Buffer, String> {
     // Create a Metal buffer for the tensor's data
     let tensor_size = tensor.data.len() * std::mem::size_of::<f32>();
-    let buffer = metal_device.new_buffer(
-        tensor_size as u64,
-        metal::MTLResourceOptions::StorageModeShared,
-    );
+    let buffer =
+        metal_device.new_buffer(tensor_size as u64, metal::MTLResourceOptions::StorageModeShared);
 
     // Copy the tensor's data into the Metal buffer
     unsafe {
@@ -178,10 +176,8 @@ fn execute_tensor_operation_metal(
         metal::MTLResourceOptions::StorageModeShared,
     );
 
-    let output_buffer = device.new_buffer(
-        tensor2_buffer_size,
-        metal::MTLResourceOptions::StorageModeShared,
-    );
+    let output_buffer =
+        device.new_buffer(tensor2_buffer_size, metal::MTLResourceOptions::StorageModeShared);
 
     let tensor_length = tensor1.data.len() as u32; // Length of the tensor
     let length_buffer = device.new_buffer_with_data(
@@ -342,11 +338,7 @@ mod tests {
         assert_eq!(result.data.shape(), &[2, 2]);
         assert_eq!(
             result.data,
-            Tensor::new(
-                vec![0.2, 0.33333334, 0.42857146, 0.5],
-                Shape::from(IxDyn(&[2, 2]))
-            )
-            .data
+            Tensor::new(vec![0.2, 0.33333334, 0.42857146, 0.5], Shape::from(IxDyn(&[2, 2]))).data
         );
     }
 }

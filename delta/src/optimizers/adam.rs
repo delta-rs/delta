@@ -29,8 +29,8 @@
 
 use crate::common::Tensor;
 use crate::devices::Device;
-use crate::optimizers::error::OptimizerError;
 use crate::optimizers::Optimizer;
+use crate::optimizers::error::OptimizerError;
 use ndarray::Dimension;
 use std::fmt;
 use std::fmt::Debug;
@@ -109,44 +109,18 @@ impl Optimizer for Adam {
 
         // Initialize moving averages if not already done
         if self.m.is_none()
-            || self
-                .m
-                .as_ref()
-                .unwrap()
-                .shape()
-                .raw_dim()
-                .as_array_view()
-                .to_vec()
+            || self.m.as_ref().unwrap().shape().raw_dim().as_array_view().to_vec()
                 != weights.shape().raw_dim().as_array_view().to_vec()
         {
             self.m = Some(Tensor::zeros(weights.shape().clone()));
-            self.m = Some(
-                self.m
-                    .as_mut()
-                    .unwrap()
-                    .to_device(self.device.clone())
-                    .unwrap(),
-            );
+            self.m = Some(self.m.as_mut().unwrap().to_device(self.device.clone()).unwrap());
         }
         if self.v.is_none()
-            || self
-                .v
-                .as_ref()
-                .unwrap()
-                .shape()
-                .raw_dim()
-                .as_array_view()
-                .to_vec()
+            || self.v.as_ref().unwrap().shape().raw_dim().as_array_view().to_vec()
                 != weights.shape().raw_dim().as_array_view().to_vec()
         {
             self.v = Some(Tensor::zeros(weights.shape().clone()));
-            self.v = Some(
-                self.v
-                    .as_mut()
-                    .unwrap()
-                    .to_device(self.device.clone())
-                    .unwrap(),
-            );
+            self.v = Some(self.v.as_mut().unwrap().to_device(self.device.clone()).unwrap());
         }
 
         let m = self.m.as_mut().unwrap();
@@ -177,9 +151,7 @@ impl Optimizer for Adam {
 
         // Update moving averages
         *m = m.mul_scalar(0.9).add(&processed_gradients.mul_scalar(0.1));
-        *v = v
-            .mul_scalar(0.999)
-            .add(&processed_gradients.pow(2.0).mul_scalar(0.001));
+        *v = v.mul_scalar(0.999).add(&processed_gradients.pow(2.0).mul_scalar(0.001));
 
         // Bias correction
         let bias_correction_1 = 1.0 - 0.9f32.powi(self.timestep as i32);
@@ -196,24 +168,14 @@ impl Optimizer for Adam {
             .unwrap_or(self.learning_rate);
 
         // Compute scaling factor based on max gradient magnitude
-        let max_gradient = processed_gradients
-            .data
-            .iter()
-            .map(|g| g.abs())
-            .fold(0.0, f32::max);
+        let max_gradient = processed_gradients.data.iter().map(|g| g.abs()).fold(0.0, f32::max);
 
-        let scaling_factor = if max_gradient > 10.0 {
-            10.0 / max_gradient
-        } else {
-            1.0
-        };
+        let scaling_factor = if max_gradient > 10.0 { 10.0 / max_gradient } else { 1.0 };
 
         // Apply scaled learning rate
         let epsilon = 1e-8;
         let scaled_lr = lr * scaling_factor;
-        let update = m_hat
-            .div(&v_hat.sqrt().add_scalar(epsilon))
-            .mul_scalar(scaled_lr);
+        let update = m_hat.div(&v_hat.sqrt().add_scalar(epsilon)).mul_scalar(scaled_lr);
 
         *weights -= update;
 
@@ -236,16 +198,9 @@ mod tests {
     use ndarray::{ArrayD, IxDyn, Shape};
 
     fn assert_almost_equal(actual: &ArrayD<f32>, expected: &[f32], tolerance: f32) {
-        let actual_slice = actual
-            .as_slice()
-            .expect("Failed to convert ArrayD to slice");
+        let actual_slice = actual.as_slice().expect("Failed to convert ArrayD to slice");
         for (a, e) in actual_slice.iter().zip(expected.iter()) {
-            assert!(
-                (a - e).abs() < tolerance,
-                "Expected: {:?}, Actual: {:?}",
-                e,
-                a
-            );
+            assert!((a - e).abs() < tolerance, "Expected: {:?}, Actual: {:?}", e, a);
         }
     }
 
@@ -254,9 +209,7 @@ mod tests {
         let mut optimizer = Adam::new(0.001);
         let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[3, 1])));
         let gradients = Tensor::new(vec![0.1, 0.2, 0.3], Shape::from(IxDyn(&[3, 1])));
-        optimizer
-            .step(&mut weights, &gradients)
-            .expect("Failed to perform step");
+        optimizer.step(&mut weights, &gradients).expect("Failed to perform step");
         let expected = vec![0.999, 1.999, 2.999];
         assert_almost_equal(&weights.data, &expected, 1e-6);
     }
@@ -266,9 +219,7 @@ mod tests {
         let mut optimizer = Adam::new(0.001);
         let mut weights = Tensor::new(vec![0.0, 0.0, 0.0], Shape::from(IxDyn(&[3, 1])));
         let gradients = Tensor::new(vec![0.1, 0.2, 0.3], Shape::from(IxDyn(&[3, 1])));
-        optimizer
-            .step(&mut weights, &gradients)
-            .expect("Failed to perform step");
+        optimizer.step(&mut weights, &gradients).expect("Failed to perform step");
 
         let expected = vec![-0.0009999934, -0.0009999934, -0.0009999934];
         assert_almost_equal(&weights.data, &expected, 1e-6);
@@ -281,9 +232,7 @@ mod tests {
         let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[3, 1])));
         let gradients = Tensor::new(vec![0.1, 0.1, 0.1], Shape::from(IxDyn(&[3, 1])));
 
-        optimizer
-            .step(&mut weights, &gradients)
-            .expect("Failed to perform step");
+        optimizer.step(&mut weights, &gradients).expect("Failed to perform step");
 
         let expected = vec![0.95000035, 1.9500003, 2.9500003];
         assert_almost_equal(&weights.data, &expected, 1e-6);
@@ -294,9 +243,7 @@ mod tests {
         let mut optimizer = Adam::new(0.001);
         let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[3, 1])));
         let gradients = Tensor::new(vec![0.1], Shape::from(IxDyn(&[1, 1]))); // Broadcastable gradient
-        optimizer
-            .step(&mut weights, &gradients)
-            .expect("Failed to perform step");
+        optimizer.step(&mut weights, &gradients).expect("Failed to perform step");
         let expected = vec![0.9990000066, 1.9990000066, 2.9990000066];
         assert_almost_equal(&weights.data, &expected, 1e-6);
     }
@@ -308,10 +255,7 @@ mod tests {
         let gradients = Tensor::new(vec![0.1, 0.2], Shape::from(IxDyn(&[2, 1]))); // Mismatched shape
         let result = optimizer.step(&mut weights, &gradients);
 
-        assert!(
-            result.is_err(),
-            "Expected an error due to incompatible shapes"
-        );
+        assert!(result.is_err(), "Expected an error due to incompatible shapes");
 
         if let Err(OptimizerError::IncompatibleGradientWeightShape(g_shape, w_shape)) = result {
             assert_eq!(g_shape, vec![2, 1]);
@@ -326,15 +270,9 @@ mod tests {
         let mut optimizer = Adam::new(0.001);
         let mut weights = Tensor::new(vec![1.0, 1.0, 1.0], Shape::from(IxDyn(&[3, 1])));
         let gradients = Tensor::new(vec![0.1, 0.2, 0.3], Shape::from(IxDyn(&[3, 1])));
-        optimizer
-            .step(&mut weights, &gradients)
-            .expect("Failed to perform step");
-        optimizer
-            .step(&mut weights, &gradients)
-            .expect("Failed to perform step");
-        optimizer
-            .step(&mut weights, &gradients)
-            .expect("Failed to perform step");
+        optimizer.step(&mut weights, &gradients).expect("Failed to perform step");
+        optimizer.step(&mut weights, &gradients).expect("Failed to perform step");
+        optimizer.step(&mut weights, &gradients).expect("Failed to perform step");
 
         let expected = vec![0.99700004, 0.99700004, 0.99700004];
         assert_almost_equal(&weights.data, &expected, 1e-6);
@@ -347,17 +285,13 @@ mod tests {
         let gradients = Tensor::new(vec![0.1, 0.1, 0.1], Shape::from(IxDyn(&[3, 1])));
 
         // Step without bias correction
-        optimizer
-            .step(&mut weights, &gradients)
-            .expect("Failed to perform step");
+        optimizer.step(&mut weights, &gradients).expect("Failed to perform step");
 
         // Correct timestep
         assert_eq!(optimizer.timestep, 1);
 
         // Bias correction factors should influence the next step
-        optimizer
-            .step(&mut weights, &gradients)
-            .expect("Failed to perform step");
+        optimizer.step(&mut weights, &gradients).expect("Failed to perform step");
         assert_eq!(optimizer.timestep, 2);
     }
 
@@ -366,9 +300,7 @@ mod tests {
         let mut optimizer = Adam::new(0.001);
         let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[3, 1])));
         let gradients = Tensor::new(vec![0.0, 0.0, 0.0], Shape::from(IxDyn(&[3, 1])));
-        optimizer
-            .step(&mut weights, &gradients)
-            .expect("Failed to perform step");
+        optimizer.step(&mut weights, &gradients).expect("Failed to perform step");
 
         let expected = vec![1.0, 2.0, 3.0];
         assert_almost_equal(&weights.data, &expected, 1e-6);
@@ -380,9 +312,7 @@ mod tests {
         let mut weights = Tensor::new(vec![1.0, 1.0, 1.0], Shape::from(IxDyn(&[3, 1])));
         let gradients = Tensor::new(vec![20.0, 20.0, 20.0], Shape::from(IxDyn(&[3, 1]))); // High gradient values
 
-        optimizer
-            .step(&mut weights, &gradients)
-            .expect("Failed to perform step");
+        optimizer.step(&mut weights, &gradients).expect("Failed to perform step");
 
         // Compute expected weights
         let scaling_factor: f32 = 10.0 / 20.0; // Scale learning rate
@@ -403,14 +333,10 @@ mod tests {
     fn test_adam_optimizer_small_gradients() {
         let mut optimizer = Adam::new(0.001);
         let mut weights = Tensor::new(vec![1.0_f32, 2.0_f32, 3.0_f32], Shape::from(IxDyn(&[3, 1])));
-        let gradients = Tensor::new(
-            vec![1e-7_f32, 1e-7_f32, 1e-7_f32],
-            Shape::from(IxDyn(&[3, 1])),
-        );
+        let gradients =
+            Tensor::new(vec![1e-7_f32, 1e-7_f32, 1e-7_f32], Shape::from(IxDyn(&[3, 1])));
 
-        optimizer
-            .step(&mut weights, &gradients)
-            .expect("Failed to perform step");
+        optimizer.step(&mut weights, &gradients).expect("Failed to perform step");
 
         // Compute expected weights manually
         let learning_rate: f32 = 0.001;

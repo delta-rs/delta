@@ -2,8 +2,8 @@ use ndarray::Dimension;
 
 use crate::common::Tensor;
 use crate::devices::Device;
-use crate::optimizers::error::OptimizerError;
 use crate::optimizers::Optimizer;
+use crate::optimizers::error::OptimizerError;
 
 /// The SGD with Momentum optimizer struct.
 #[derive(Debug)]
@@ -28,12 +28,7 @@ impl SGDWithMomentum {
     ///
     /// A new instance of the SGDWithMomentum optimizer.
     pub fn new(learning_rate: f32, momentum: f32) -> Self {
-        Self {
-            learning_rate,
-            momentum,
-            velocity: None,
-            device: Device::default(),
-        }
+        Self { learning_rate, momentum, velocity: None, device: Device::default() }
     }
 }
 
@@ -56,13 +51,8 @@ impl Optimizer for SGDWithMomentum {
             || self.velocity.as_ref().unwrap().shape().raw_dim() != weights.shape().raw_dim()
         {
             self.velocity = Some(Tensor::zeros(weights.shape().clone()));
-            self.velocity = Some(
-                self.velocity
-                    .as_mut()
-                    .unwrap()
-                    .to_device(self.device.clone())
-                    .unwrap(),
-            );
+            self.velocity =
+                Some(self.velocity.as_mut().unwrap().to_device(self.device.clone()).unwrap());
         }
 
         let velocity = self.velocity.as_mut().unwrap();
@@ -115,16 +105,9 @@ mod tests {
     use ndarray::{ArrayD, IxDyn, Shape};
 
     fn assert_almost_equal(actual: &ArrayD<f32>, expected: &[f32], tolerance: f32) {
-        let actual_slice = actual
-            .as_slice()
-            .expect("Failed to convert ArrayD to slice");
+        let actual_slice = actual.as_slice().expect("Failed to convert ArrayD to slice");
         for (a, e) in actual_slice.iter().zip(expected.iter()) {
-            assert!(
-                (a - e).abs() < tolerance,
-                "Expected: {:?}, Actual: {:?}",
-                e,
-                a
-            );
+            assert!((a - e).abs() < tolerance, "Expected: {:?}, Actual: {:?}", e, a);
         }
     }
 
@@ -133,9 +116,7 @@ mod tests {
         let mut optimizer = SGDWithMomentum::new(0.01, 0.9);
         let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[3, 1])));
         let gradients = Tensor::new(vec![0.1, 0.2, 0.3], Shape::from(IxDyn(&[3, 1])));
-        optimizer
-            .step(&mut weights, &gradients)
-            .expect("Failed to perform step");
+        optimizer.step(&mut weights, &gradients).expect("Failed to perform step");
         let expected = vec![0.999, 1.998, 2.997];
         assert_almost_equal(&weights.data, &expected, 1e-6);
     }
@@ -146,12 +127,8 @@ mod tests {
         let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[3, 1])));
         let gradients = Tensor::new(vec![0.1, 0.1, 0.1], Shape::from(IxDyn(&[3, 1])));
 
-        optimizer
-            .step(&mut weights, &gradients)
-            .expect("Failed to perform step");
-        optimizer
-            .step(&mut weights, &gradients)
-            .expect("Failed to perform step");
+        optimizer.step(&mut weights, &gradients).expect("Failed to perform step");
+        optimizer.step(&mut weights, &gradients).expect("Failed to perform step");
 
         let expected = vec![0.9971, 1.9971, 2.9971];
         assert_almost_equal(&weights.data, &expected, 1e-6);
@@ -163,9 +140,7 @@ mod tests {
         let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[3, 1])));
         let gradients = Tensor::new(vec![0.0, 0.0, 0.0], Shape::from(IxDyn(&[3, 1])));
 
-        optimizer
-            .step(&mut weights, &gradients)
-            .expect("Failed to perform step");
+        optimizer.step(&mut weights, &gradients).expect("Failed to perform step");
 
         let expected = vec![1.0, 2.0, 3.0];
         assert_almost_equal(&weights.data, &expected, 1e-6);
@@ -178,10 +153,7 @@ mod tests {
         let gradients = Tensor::new(vec![0.1, 0.2], Shape::from(IxDyn(&[2, 1])));
         let result = optimizer.step(&mut weights, &gradients);
 
-        assert!(
-            result.is_err(),
-            "Expected an error due to incompatible shapes"
-        );
+        assert!(result.is_err(), "Expected an error due to incompatible shapes");
 
         if let Err(OptimizerError::IncompatibleGradientWeightShape(g_shape, w_shape)) = result {
             assert_eq!(g_shape, vec![2, 1]);

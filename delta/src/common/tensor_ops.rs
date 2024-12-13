@@ -4,7 +4,7 @@ use std::ops::{AddAssign, Mul, Range, SubAssign};
 use image::{GenericImageView, ImageReader};
 use ndarray::{Array, ArrayD, Axis, IxDyn, Shape};
 use ndarray::{Dimension, Ix2};
-use rand::{thread_rng, Rng};
+use rand::{Rng, thread_rng};
 use rand_distr::{Distribution, Normal};
 
 #[cfg(feature = "metal")]
@@ -50,10 +50,7 @@ impl Tensor {
     ///
     /// A tensor filled with zeros.
     pub fn zeros(shape: Shape<IxDyn>) -> Self {
-        Self {
-            data: Array::zeros(shape),
-            device: Device::default(),
-        }
+        Self { data: Array::zeros(shape), device: Device::default() }
     }
 
     /// Creates a tensor filled with random values.
@@ -86,10 +83,7 @@ impl Tensor {
     pub fn add(&self, other: &Tensor) -> Tensor {
         // Check device compatibility
         match &self.device {
-            Device::Cpu => Tensor {
-                data: &self.data + &other.data,
-                device: self.device.clone(),
-            },
+            Device::Cpu => Tensor { data: &self.data + &other.data, device: self.device.clone() },
             #[cfg(feature = "metal")]
             Device::Metal { device, queue } => {
                 // Perform Metal addition
@@ -106,11 +100,7 @@ impl Tensor {
     ///
     /// The maximum value in the tensor.
     pub fn max(&self) -> f32 {
-        *self
-            .data
-            .iter()
-            .max_by(|a, b| a.partial_cmp(b).unwrap())
-            .unwrap()
+        *self.data.iter().max_by(|a, b| a.partial_cmp(b).unwrap()).unwrap()
     }
 
     /// Calculates the mean of the tensor.
@@ -159,10 +149,7 @@ impl Tensor {
         // Create a new array by applying the function `f` to each element of `self.dataset`
         let new_data = self.data.mapv(|x| f(x));
 
-        Tensor {
-            data: new_data,
-            device: self.device.clone(),
-        }
+        Tensor { data: new_data, device: self.device.clone() }
     }
 
     /// Slices the tensor along the specified indices.
@@ -177,10 +164,7 @@ impl Tensor {
     pub fn slice(&self, indices: Vec<Range<usize>>) -> Tensor {
         let slices: Vec<_> = indices.iter().map(|r| r.clone().into()).collect();
         let view = self.data.slice(slices.as_slice());
-        Tensor {
-            data: view.to_owned(),
-            device: self.device.clone(),
-        }
+        Tensor { data: view.to_owned(), device: self.device.clone() }
     }
 
     /// Performs matrix multiplication between two tensors.
@@ -210,10 +194,7 @@ impl Tensor {
             .into_dimensionality::<Ix2>()
             .expect("Other tensor must be 2D for matmul");
 
-        Tensor {
-            data: self_2d.dot(&other_2d).into_dyn(),
-            device: self.device.clone(),
-        }
+        Tensor { data: self_2d.dot(&other_2d).into_dyn(), device: self.device.clone() }
         // match &self.device {
         //     Device::Cpu => Tensor {
         //         data: self_2d.dot(&other_2d).into_dyn(),
@@ -254,10 +235,7 @@ impl Tensor {
 
         // Create a transposed array by reversing the axes
         let axes: Vec<usize> = (0..ndim).rev().collect();
-        Tensor {
-            data: self.data.clone().permuted_axes(axes),
-            device: self.device.clone(),
-        }
+        Tensor { data: self.data.clone().permuted_axes(axes), device: self.device.clone() }
     }
 
     /// Gets the shape of the tensor.
@@ -279,10 +257,7 @@ impl Tensor {
     ///
     /// A new tensor with the permuted axes.
     pub fn permute(&self, axes: Vec<usize>) -> Tensor {
-        Tensor {
-            data: self.data.clone().permuted_axes(axes),
-            device: self.device.clone(),
-        }
+        Tensor { data: self.data.clone().permuted_axes(axes), device: self.device.clone() }
     }
 
     /// Sums the tensor along the specified axis.
@@ -296,10 +271,7 @@ impl Tensor {
     /// A new tensor containing the summed dataset.
     pub fn sum_along_axis(&self, axis: usize) -> Tensor {
         let sum = self.data.sum_axis(Axis(axis));
-        Tensor {
-            data: sum,
-            device: self.device.clone(),
-        }
+        Tensor { data: sum, device: self.device.clone() }
     }
 
     /// Multiplies the tensor by a scalar value.
@@ -361,10 +333,7 @@ impl Tensor {
     ///
     /// A new tensor containing the result of the division.
     pub fn div(&self, other: &Tensor) -> Tensor {
-        Tensor {
-            data: &self.data / &other.data,
-            device: self.device.clone(),
-        }
+        Tensor { data: &self.data / &other.data, device: self.device.clone() }
         // match &self.device {
         //     Device::Cpu => Tensor {
         //         data: &self.data / &other.data,
@@ -400,14 +369,8 @@ impl Tensor {
     ///
     /// A new tensor containing the mean dataset.
     pub fn mean_axis(&self, axis: usize) -> Tensor {
-        let mean = self
-            .data
-            .mean_axis(Axis(axis))
-            .expect("Failed to calculate mean");
-        Tensor {
-            data: mean,
-            device: self.device.clone(),
-        }
+        let mean = self.data.mean_axis(Axis(axis)).expect("Failed to calculate mean");
+        Tensor { data: mean, device: self.device.clone() }
     }
 
     /// Broadcasts the tensor to a target shape.
@@ -436,10 +399,7 @@ impl Tensor {
         // Validate compatibility for broadcasting
         for (self_dim, target_dim) in padded_shape.iter().zip(target_shape.raw_dim().slice()) {
             if *self_dim != *target_dim && *self_dim != 1 {
-                panic!(
-                    "Cannot broadcast shape {:?} to {:?}",
-                    self_shape, target_shape
-                );
+                panic!("Cannot broadcast shape {:?} to {:?}", self_shape, target_shape);
             }
         }
 
@@ -450,10 +410,7 @@ impl Tensor {
             .expect("Broadcast failed")
             .to_owned();
 
-        Tensor {
-            data: broadcasted_data,
-            device: self.device.clone(),
-        }
+        Tensor { data: broadcasted_data, device: self.device.clone() }
     }
 
     /// Normalizes the tensor to a specified range.
@@ -474,14 +431,10 @@ impl Tensor {
             return Tensor::zeros(self.shape());
         }
 
-        let normalized_data = self
-            .data
-            .mapv(|x| (x - current_min) / (current_max - current_min) * (max - min) + min);
+        let normalized_data =
+            self.data.mapv(|x| (x - current_min) / (current_max - current_min) * (max - min) + min);
 
-        Tensor {
-            data: normalized_data,
-            device: self.device.clone(),
-        }
+        Tensor { data: normalized_data, device: self.device.clone() }
     }
 
     /// Adds noise to the tensor.
@@ -508,10 +461,7 @@ impl Tensor {
     /// A new tensor containing the reduced dataset.
     pub fn reduce_sum(&self, axis: usize) -> Tensor {
         let sum = self.data.sum_axis(Axis(axis));
-        Tensor {
-            data: sum,
-            device: self.device.clone(),
-        }
+        Tensor { data: sum, device: self.device.clone() }
     }
 
     /// Gets the index of the maximum value along the specified axis.
@@ -530,11 +480,7 @@ impl Tensor {
     pub fn argmax(&self, axis: usize) -> Tensor {
         // Ensure the axis is valid
         if axis >= self.data.ndim() {
-            panic!(
-                "Axis {} is out of bounds for tensor with shape {:?}",
-                axis,
-                self.shape()
-            );
+            panic!("Axis {} is out of bounds for tensor with shape {:?}", axis, self.shape());
         }
 
         // Compute the indices of the maximum values along the specified axis
@@ -549,10 +495,7 @@ impl Tensor {
             })
             .into_dyn();
 
-        Tensor {
-            data: max_indices.mapv(|x| x as f32),
-            device: self.device.clone(),
-        }
+        Tensor { data: max_indices.mapv(|x| x as f32), device: self.device.clone() }
     }
 
     /// Takes elements from the tensor according to the given indices.
@@ -652,16 +595,11 @@ impl Tensor {
         }
 
         // Stack tensors along a new axis
-        let stacked_data = ndarray::stack(
-            Axis(0),
-            &tensors.iter().map(|t| t.data.view()).collect::<Vec<_>>(),
-        )
-        .map_err(|e| e.to_string())?;
+        let stacked_data =
+            ndarray::stack(Axis(0), &tensors.iter().map(|t| t.data.view()).collect::<Vec<_>>())
+                .map_err(|e| e.to_string())?;
 
-        Ok(Tensor {
-            data: stacked_data.into_dyn(),
-            device: tensors[0].device.clone(),
-        })
+        Ok(Tensor { data: stacked_data.into_dyn(), device: tensors[0].device.clone() })
     }
 
     /// Splits the tensor into two parts at the specified index.
@@ -684,10 +622,7 @@ impl Tensor {
         assert!(index <= shape[0], "Index out of bounds for tensor split");
 
         // Ensure the tensor has at least two dimensions for slicing
-        assert!(
-            shape.ndim() >= 2,
-            "Tensor must have at least two dimensions for slicing"
-        );
+        assert!(shape.ndim() >= 2, "Tensor must have at least two dimensions for slicing");
 
         println!("shape: {:?}", shape);
 
@@ -701,27 +636,13 @@ impl Tensor {
             slice2.push(ndarray::Slice::from(..));
         }
 
-        let data1 = self
-            .data
-            .slice_each_axis(|ax| slice1[ax.axis.0].clone())
-            .to_owned()
-            .into_dyn();
-        let data2 = self
-            .data
-            .slice_each_axis(|ax| slice2[ax.axis.0].clone())
-            .to_owned()
-            .into_dyn();
+        let data1 = self.data.slice_each_axis(|ax| slice1[ax.axis.0].clone()).to_owned().into_dyn();
+        let data2 = self.data.slice_each_axis(|ax| slice2[ax.axis.0].clone()).to_owned().into_dyn();
 
-        (
-            Tensor {
-                data: data1,
-                device: self.device.clone(),
-            },
-            Tensor {
-                data: data2,
-                device: self.device.clone(),
-            },
-        )
+        (Tensor { data: data1, device: self.device.clone() }, Tensor {
+            data: data2,
+            device: self.device.clone(),
+        })
     }
 
     /// Creates a tensor filled with random values sampled from a normal distribution.
@@ -740,9 +661,7 @@ impl Tensor {
         let mut rng = thread_rng();
 
         // Generate random values from the normal distribution
-        let data: Vec<f32> = (0..shape.size())
-            .map(|_| normal.sample(&mut rng) as f32)
-            .collect();
+        let data: Vec<f32> = (0..shape.size()).map(|_| normal.sample(&mut rng) as f32).collect();
 
         // Create a tensor from the generated data
         Tensor {
@@ -771,10 +690,7 @@ impl Tensor {
             .broadcast(self.data.raw_dim())
             .expect("Shapes are incompatible for broadcasting");
 
-        Tensor {
-            data: &self.data - &broadcasted_other,
-            device: self.device.clone(),
-        }
+        Tensor { data: &self.data - &broadcasted_other, device: self.device.clone() }
         // Perform the element-wise subtraction
         // match &self.device {
         //     Device::Cpu => Tensor {
@@ -980,10 +896,7 @@ mod tests {
     fn test_shape() {
         let data = vec![1.0, 2.0, 3.0, 4.0];
         let tensor = Tensor::new(data, Shape::from(IxDyn(&[2, 2])));
-        assert_eq!(
-            tensor.shape().raw_dim().as_array_view().to_vec(),
-            vec![2, 2]
-        );
+        assert_eq!(tensor.shape().raw_dim().as_array_view().to_vec(), vec![2, 2]);
     }
 
     #[test]
@@ -1106,10 +1019,7 @@ mod tests {
         let argmax = tensor.argmax(1);
 
         assert_eq!(argmax.data.shape(), &[2]);
-        assert_eq!(
-            argmax.data.iter().cloned().collect::<Vec<f32>>(),
-            vec![1.0, 1.0]
-        );
+        assert_eq!(argmax.data.iter().cloned().collect::<Vec<f32>>(), vec![1.0, 1.0]);
     }
 
     #[test]
@@ -1127,10 +1037,7 @@ mod tests {
         let tensor1 = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[3])));
         let tensor2 = Tensor::new(vec![4.0, 5.0, 6.0], Shape::from(IxDyn(&[3])));
         let stacked = Tensor::stack(&[tensor1, tensor2]).unwrap();
-        assert_eq!(
-            stacked.shape().raw_dim().as_array_view().to_vec(),
-            vec![2, 3]
-        );
+        assert_eq!(stacked.shape().raw_dim().as_array_view().to_vec(), vec![2, 3]);
     }
 
     #[test]

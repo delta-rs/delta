@@ -27,7 +27,7 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use ndarray::{s, IxDyn, Shape};
+use ndarray::{IxDyn, Shape, s};
 
 use crate::activations::Activation;
 use crate::common::Tensor;
@@ -109,10 +109,7 @@ impl Activation for SoftmaxActivation {
         }
 
         // Step 4: Return the Jacobian tensor
-        Tensor::new(
-            jacobian_data,
-            Shape::from(IxDyn(&[batch_size, num_classes, num_classes])),
-        )
+        Tensor::new(jacobian_data, Shape::from(IxDyn(&[batch_size, num_classes, num_classes])))
     }
 }
 
@@ -146,20 +143,17 @@ mod tests {
         assert_eq!(derivative.data.shape(), &[1, 3, 3]);
 
         // Verify values of the Jacobian matrix against a known correct output
-        let expected_data = Array::from_shape_vec(
-            IxDyn(&[1, 3, 3]),
-            vec![
-                0.08192507,
-                -0.02204622,
-                -0.05987885,
-                -0.02204622,
-                0.18483645,
-                -0.16279022,
-                -0.05987885,
-                -0.16279022,
-                0.22266908,
-            ],
-        )
+        let expected_data = Array::from_shape_vec(IxDyn(&[1, 3, 3]), vec![
+            0.08192507,
+            -0.02204622,
+            -0.05987885,
+            -0.02204622,
+            0.18483645,
+            -0.16279022,
+            -0.05987885,
+            -0.16279022,
+            0.22266908,
+        ])
         .unwrap();
 
         let tolerance = 1e-3;

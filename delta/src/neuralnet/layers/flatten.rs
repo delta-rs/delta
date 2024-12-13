@@ -28,8 +28,8 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use crate::common::Tensor;
-use crate::neuralnet::layers::error::LayerError;
 use crate::neuralnet::layers::Layer;
+use crate::neuralnet::layers::error::LayerError;
 use ndarray::{Dimension, IxDyn, Shape};
 
 /// A flatten layer that reshapes the input tensor to a 1D vector.
@@ -50,10 +50,7 @@ impl Flatten {
     ///
     /// A new instance of the flatten layer.
     pub fn new(input_shape: Shape<IxDyn>) -> Self {
-        Self {
-            name: "Flatten".to_string(),
-            input_shape,
-        }
+        Self { name: "Flatten".to_string(), input_shape }
     }
 }
 
@@ -110,12 +107,8 @@ impl Layer for Flatten {
     ///
     /// A `Shape` representing the output shape of the layer.
     fn output_shape(&self) -> Result<Shape<IxDyn>, LayerError> {
-        let shape = Shape::from(IxDyn(&[self
-            .input_shape
-            .raw_dim()
-            .as_array_view()
-            .iter()
-            .product()]));
+        let shape =
+            Shape::from(IxDyn(&[self.input_shape.raw_dim().as_array_view().iter().product()]));
         Ok(shape)
     }
 

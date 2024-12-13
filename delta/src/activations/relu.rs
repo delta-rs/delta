@@ -83,10 +83,7 @@ mod tests {
         let relu = ReluActivation::new();
         let output = relu.activate(&input);
 
-        assert_eq!(
-            output.data.iter().cloned().collect::<Vec<f32>>(),
-            vec![1.0, 0.0, 3.0, 0.0]
-        );
+        assert_eq!(output.data.iter().cloned().collect::<Vec<f32>>(), vec![1.0, 0.0, 3.0, 0.0]);
         assert_eq!(output.data.shape().to_vec(), vec![2, 2]);
     }
 
@@ -96,10 +93,7 @@ mod tests {
         let relu = ReluActivation::new();
         let derivative = relu.derivative(&input);
 
-        assert_eq!(
-            derivative.data.iter().cloned().collect::<Vec<f32>>(),
-            vec![1.0, 0.0, 1.0, 0.0]
-        );
+        assert_eq!(derivative.data.iter().cloned().collect::<Vec<f32>>(), vec![1.0, 0.0, 1.0, 0.0]);
         assert_eq!(derivative.data.shape().to_vec(), vec![2, 2]);
     }
 }

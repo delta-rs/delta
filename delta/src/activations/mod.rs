@@ -71,9 +71,6 @@ pub trait Activation: Debug {
     ///
     /// A string slice containing the name of the activation function.
     fn name(&self) -> &str {
-        std::any::type_name::<Self>()
-            .split("::")
-            .last()
-            .unwrap_or("Unknown")
+        std::any::type_name::<Self>().split("::").last().unwrap_or("Unknown")
     }
 }

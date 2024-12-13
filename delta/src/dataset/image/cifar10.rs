@@ -76,13 +76,9 @@ impl Cifar10Dataset {
 
         if !Path::new(&tarball_path).exists() {
             debug!("Downloading CIFAR-10 dataset from {}", Self::CIFAR10_URL);
-            let response = reqwest::get(Self::CIFAR10_URL)
-                .await
-                .expect("Failed to download CIFAR-10");
-            let data = response
-                .bytes()
-                .await
-                .expect("Failed to read CIFAR-10 dataset");
+            let response =
+                reqwest::get(Self::CIFAR10_URL).await.expect("Failed to download CIFAR-10");
+            let data = response.bytes().await.expect("Failed to read CIFAR-10 dataset");
             fs::create_dir_all(cache_path.clone()).unwrap();
             fs::write(&tarball_path, data).unwrap();
         }
@@ -128,8 +124,7 @@ impl Cifar10Dataset {
         let mut labels = vec![0.0; num_examples * Self::CIFAR10_NUM_CLASSES];
 
         for i in 0..num_examples {
-            file.read_exact(&mut buffer)
-                .expect("Failed to read CIFAR-10 example");
+            file.read_exact(&mut buffer).expect("Failed to read CIFAR-10 example");
             let label = buffer[0] as usize;
             labels[i * Self::CIFAR10_NUM_CLASSES + label] = 1.0; // One-hot encode
 
@@ -156,11 +151,7 @@ impl Cifar10Dataset {
 
         for &file in files {
             let (img, lbl) = Self::parse_file(
-                &format!(
-                    "{}/.cache/dataset/cifar10/{}",
-                    get_workspace_dir().display(),
-                    file
-                ),
+                &format!("{}/.cache/dataset/cifar10/{}", get_workspace_dir().display(), file),
                 total_examples / files.len(),
             );
             images.extend(img);
@@ -177,10 +168,7 @@ impl Cifar10Dataset {
                     3,
                 ])),
             ),
-            Tensor::new(
-                labels,
-                Shape::from(IxDyn(&[total_examples, Self::CIFAR10_NUM_CLASSES])),
-            ),
+            Tensor::new(labels, Shape::from(IxDyn(&[total_examples, Self::CIFAR10_NUM_CLASSES]))),
         )
     }
 
@@ -221,11 +209,7 @@ impl ImageDatasetOps for Cifar10Dataset {
         Box::pin(async {
             Self::download_and_extract().await;
             let train_data = Self::load_data(&Self::CIFAR10_TRAIN_FILES, Self::TRAIN_EXAMPLES);
-            Cifar10Dataset {
-                train: Some(train_data),
-                test: None,
-                val: None,
-            }
+            Cifar10Dataset { train: Some(train_data), test: None, val: None }
         })
     }
 
@@ -237,11 +221,7 @@ impl ImageDatasetOps for Cifar10Dataset {
         Box::pin(async {
             Self::download_and_extract().await;
             let test_data = Self::load_data(&[Self::CIFAR10_TEST_FILE], Self::TEST_EXAMPLES);
-            Cifar10Dataset {
-                train: None,
-                test: Some(test_data),
-                val: None,
-            }
+            Cifar10Dataset { train: None, test: Some(test_data), val: None }
         })
     }
 
@@ -249,11 +229,7 @@ impl ImageDatasetOps for Cifar10Dataset {
         Box::pin(async {
             Self::download_and_extract().await;
             let train_data = Self::load_data(&Self::CIFAR10_TRAIN_FILES, Self::TRAIN_EXAMPLES);
-            let mut dataset = Cifar10Dataset {
-                train: Some(train_data),
-                test: None,
-                val: None,
-            };
+            let mut dataset = Cifar10Dataset { train: Some(train_data), test: None, val: None };
             dataset.split_train_validation(0.2);
             dataset
         })
@@ -313,22 +289,15 @@ impl ImageDatasetOps for Cifar10Dataset {
         let end_idx = start_idx + batch_size;
 
         if start_idx >= total_samples {
-            panic!(
-                "Batch index {} out of range. Total samples: {}",
-                batch_idx, total_samples
-            );
+            panic!("Batch index {} out of range. Total samples: {}", batch_idx, total_samples);
         }
 
         let adjusted_end_idx = end_idx.min(total_samples);
 
         let inputs_batch =
-            dataset
-                .inputs
-                .slice(vec![start_idx..adjusted_end_idx, 0..32, 0..32, 0..3]);
+            dataset.inputs.slice(vec![start_idx..adjusted_end_idx, 0..32, 0..32, 0..3]);
 
-        let labels_batch = dataset
-            .labels
-            .slice(vec![start_idx..adjusted_end_idx, 0..10]);
+        let labels_batch = dataset.labels.slice(vec![start_idx..adjusted_end_idx, 0..10]);
 
         (inputs_batch, labels_batch)
     }
@@ -402,11 +371,7 @@ impl ImageDatasetOps for Cifar10Dataset {
     /// # Returns
     /// A new `Cifar10Dataset` instance with the same dataset.
     fn clone(&self) -> Self {
-        Self {
-            train: self.train.clone(),
-            test: self.test.clone(),
-            val: self.val.clone(),
-        }
+        Self { train: self.train.clone(), test: self.test.clone(), val: self.val.clone() }
     }
 
     /// Transfers the dataset to the specified device.
@@ -453,10 +418,8 @@ mod tests {
         setup();
         Cifar10Dataset::download_and_extract().await;
         let workspace_dir = get_workspace_dir();
-        let cache_path = format!(
-            "{}/.cache/dataset/cifar10/data_batch_1.bin",
-            workspace_dir.display()
-        );
+        let cache_path =
+            format!("{}/.cache/dataset/cifar10/data_batch_1.bin", workspace_dir.display());
         assert!(
             Path::new(&cache_path).exists(),
             "CIFAR-10 dataset should be downloaded and extracted"
@@ -469,22 +432,12 @@ mod tests {
         // Ensure the dataset is downloaded before parsing
         test_download_and_extract();
         let workspace_dir = get_workspace_dir();
-        let cache_path = format!(
-            "{}/.cache/dataset/cifar10/data_batch_1.bin",
-            workspace_dir.display()
-        );
+        let cache_path =
+            format!("{}/.cache/dataset/cifar10/data_batch_1.bin", workspace_dir.display());
 
         let (images, labels) = Cifar10Dataset::parse_file(&cache_path, 10000);
-        assert_eq!(
-            images.len(),
-            10000 * 32 * 32 * 3,
-            "Images should have the correct length"
-        );
-        assert_eq!(
-            labels.len(),
-            10000 * 10,
-            "Labels should have the correct length"
-        );
+        assert_eq!(images.len(), 10000 * 32 * 32 * 3, "Images should have the correct length");
+        assert_eq!(labels.len(), 10000 * 10, "Labels should have the correct length");
     }
 
     #[test]

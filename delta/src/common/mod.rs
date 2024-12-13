@@ -34,4 +34,4 @@ pub use error::*;
 pub use tensor_ops::Tensor;
 
 // Re-exports for convenience
-pub use ndarray::{Shape, IxDyn};
+pub use ndarray::{IxDyn, Shape};

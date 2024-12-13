@@ -29,8 +29,8 @@
 
 use crate::common::Tensor;
 use crate::devices::Device;
-use crate::optimizers::error::OptimizerError;
 use crate::optimizers::Optimizer;
+use crate::optimizers::error::OptimizerError;
 use ndarray::Dimension;
 
 /// The AdaGrad optimizer struct.
@@ -55,13 +55,7 @@ impl AdaGrad {
     ///
     /// A new instance of the AdaGrad optimizer.
     pub fn new(learning_rate: f32, epsilon: f32) -> Self {
-        Self {
-            learning_rate,
-            epsilon,
-            g_sum: None,
-            timestep: 0,
-            device: Device::default(),
-        }
+        Self { learning_rate, epsilon, g_sum: None, timestep: 0, device: Device::default() }
     }
 
     /// Resets the accumulated gradient sum (g_sum).
@@ -91,13 +85,7 @@ impl Optimizer for AdaGrad {
             || self.g_sum.as_ref().unwrap().shape().raw_dim() != weights.shape().raw_dim()
         {
             self.g_sum = Some(Tensor::zeros(weights.shape().clone()));
-            self.g_sum = Some(
-                self.g_sum
-                    .as_mut()
-                    .unwrap()
-                    .to_device(self.device.clone())
-                    .unwrap(),
-            );
+            self.g_sum = Some(self.g_sum.as_mut().unwrap().to_device(self.device.clone()).unwrap());
         }
 
         let g_sum = self.g_sum.as_mut().unwrap();
@@ -154,16 +142,9 @@ mod tests {
     use ndarray::{ArrayD, IxDyn};
 
     fn assert_almost_equal(actual: &ArrayD<f32>, expected: &[f32], tolerance: f32) {
-        let actual_slice = actual
-            .as_slice()
-            .expect("Failed to convert ArrayD to slice");
+        let actual_slice = actual.as_slice().expect("Failed to convert ArrayD to slice");
         for (a, e) in actual_slice.iter().zip(expected.iter()) {
-            assert!(
-                (a - e).abs() < tolerance,
-                "Expected: {:?}, Actual: {:?}",
-                e,
-                a
-            );
+            assert!((a - e).abs() < tolerance, "Expected: {:?}, Actual: {:?}", e, a);
         }
     }
 
@@ -173,9 +154,7 @@ mod tests {
         let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], IxDyn(&[3]).into());
         let gradients = Tensor::new(vec![0.1, 0.2, 0.3], IxDyn(&[3]).into());
 
-        optimizer
-            .step(&mut weights, &gradients)
-            .expect("Failed to perform step");
+        optimizer.step(&mut weights, &gradients).expect("Failed to perform step");
 
         let expected = vec![0.90000004, 1.90000002, 2.90000003];
         assert_almost_equal(&weights.data, &expected, 1e-6);
@@ -189,10 +168,7 @@ mod tests {
 
         let result = optimizer.step(&mut weights, &gradients);
 
-        assert!(
-            result.is_err(),
-            "Expected an error due to incompatible shapes"
-        );
+        assert!(result.is_err(), "Expected an error due to incompatible shapes");
 
         if let Err(OptimizerError::IncompatibleGradientWeightShape(g_shape, w_shape)) = result {
             assert_eq!(g_shape, vec![2, 1]);
@@ -208,9 +184,7 @@ mod tests {
         let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], IxDyn(&[3]).into());
         let gradients = Tensor::new(vec![0.1, 0.2, 0.3], IxDyn(&[3]).into());
 
-        optimizer
-            .step(&mut weights, &gradients)
-            .expect("Failed to perform step");
+        optimizer.step(&mut weights, &gradients).expect("Failed to perform step");
 
         optimizer.reset();
 
