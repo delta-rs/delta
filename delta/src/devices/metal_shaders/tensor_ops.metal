@@ -12,19 +12,14 @@ kernel void tensor_add(const device float* input1 [[ buffer(0) ]],
 
         if (isnan(b)) {
             // output[id] = NAN; // Example marker for NaN in input2
-            b = clamp(b, -FLT_MAX, FLT_MAX);
+            output[id] = NAN;
             return;
         }
 
         // Perform addition
         float result = a + b;
-
-        // Handle overflow or underflow
-        if (isinf(result)) {
-            output[id] = clamp(a + b, -FLT_MAX, FLT_MAX);
-        } else {
-            output[id] = result;
-        }
+        
+        output[id] = result;
     }
 }
 

@@ -164,19 +164,24 @@ fn execute_tensor_operation_metal(
         .map_err(|e| format!("Failed to create compute pipeline: {:?}", e))?;
 
     // Create buffers
-    let buffer_size = (tensor1.data.len() * std::mem::size_of::<f32>()) as u64;
+    let tensor1_buffer_size = (tensor1.data.len() * std::mem::size_of::<f32>()) as u64;
     let input1_buffer = device.new_buffer_with_data(
         tensor1.data.as_slice().unwrap().as_ptr() as *const _,
-        buffer_size,
+        tensor1_buffer_size,
         metal::MTLResourceOptions::StorageModeShared,
     );
+
+    let tensor2_buffer_size = (tensor2.data.len() * std::mem::size_of::<f32>()) as u64;
     let input2_buffer = device.new_buffer_with_data(
         tensor2.data.as_slice().unwrap().as_ptr() as *const _,
-        buffer_size,
+        tensor2_buffer_size,
         metal::MTLResourceOptions::StorageModeShared,
     );
-    let output_buffer =
-        device.new_buffer(buffer_size, metal::MTLResourceOptions::StorageModeShared);
+
+    let output_buffer = device.new_buffer(
+        tensor2_buffer_size,
+        metal::MTLResourceOptions::StorageModeShared,
+    );
 
     let tensor_length = tensor1.data.len() as u32; // Length of the tensor
     let length_buffer = device.new_buffer_with_data(
