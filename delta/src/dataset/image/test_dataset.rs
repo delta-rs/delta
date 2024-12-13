@@ -32,7 +32,7 @@ use std::{
     pin::Pin,
 };
 
-use ndarray::{s, IxDyn, Shape};
+use ndarray::{IxDyn, Shape, s};
 
 use crate::common::Tensor;
 use crate::dataset::base::{Dataset, ImageDatasetOps};
@@ -48,11 +48,7 @@ impl TestDataset {
     /// Creates a new `TestDataset` instance.
     #[inline]
     pub fn new() -> Self {
-        TestDataset {
-            train: None,
-            test: None,
-            val: None,
-        }
+        TestDataset { train: None, test: None, val: None }
     }
 
     /// Generates a dummy dataset with the given size and number of features.
@@ -71,10 +67,8 @@ impl TestDataset {
             (0..size * features).map(|x| x as f32).collect(),
             Shape::from(IxDyn(&[size, features])),
         );
-        let labels = Tensor::new(
-            (0..size).map(|x| (x % 2) as f32).collect(),
-            Shape::from(IxDyn(&[size])),
-        );
+        let labels =
+            Tensor::new((0..size).map(|x| (x % 2) as f32).collect(), Shape::from(IxDyn(&[size])));
         Dataset { inputs, labels }
     }
 
@@ -214,10 +208,7 @@ impl ImageDatasetOps for TestDataset {
                     inputs.iter().cloned().collect(),
                     Shape::from(IxDyn(&[end - start, dataset.inputs.shape().raw_dim()[1]])),
                 ),
-                Tensor::new(
-                    labels.iter().cloned().collect(),
-                    Shape::from(IxDyn(&[end - start])),
-                ),
+                Tensor::new(labels.iter().cloned().collect(), Shape::from(IxDyn(&[end - start]))),
             );
         }
 
@@ -235,12 +226,7 @@ impl ImageDatasetOps for TestDataset {
     ///
     /// The computed loss value.
     fn loss(&self, outputs: &Tensor, targets: &Tensor) -> f32 {
-        outputs
-            .data
-            .iter()
-            .zip(&targets.data)
-            .map(|(o, t)| (o - t).powi(2))
-            .sum()
+        outputs.data.iter().zip(&targets.data).map(|(o, t)| (o - t).powi(2)).sum()
     }
 
     /// Computes the gradient of the loss with respect to the outputs.
@@ -254,12 +240,7 @@ impl ImageDatasetOps for TestDataset {
     ///
     /// A `Tensor` containing the computed gradients.
     fn loss_grad(&self, outputs: &Tensor, targets: &Tensor) -> Tensor {
-        let grad = outputs
-            .data
-            .iter()
-            .zip(&targets.data)
-            .map(|(o, t)| 2.0 * (o - t))
-            .collect();
+        let grad = outputs.data.iter().zip(&targets.data).map(|(o, t)| 2.0 * (o - t)).collect();
         Tensor::new(grad, outputs.shape().clone())
     }
 
@@ -277,11 +258,7 @@ impl ImageDatasetOps for TestDataset {
     /// A new `TestDataset` instance that is a clone of the current instance.
     #[inline]
     fn clone(&self) -> Self {
-        Self {
-            train: self.train.clone(),
-            test: self.test.clone(),
-            val: self.val.clone(),
-        }
+        Self { train: self.train.clone(), test: self.test.clone(), val: self.val.clone() }
     }
 
     /// Transfers the dataset to the specified device.

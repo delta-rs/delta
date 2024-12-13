@@ -58,12 +58,7 @@ impl Sequential {
     ///
     /// A new instance of the sequential model.
     pub fn new() -> Self {
-        Self {
-            layers: Vec::new(),
-            layer_names: Vec::new(),
-            optimizer: None,
-            loss: None,
-        }
+        Self { layers: Vec::new(), layer_names: Vec::new(), optimizer: None, loss: None }
     }
 
     /// Add a layer to the model
@@ -236,9 +231,7 @@ impl Sequential {
         let mut grad = loss_fn.calculate_loss_grad(&outputs, targets);
         for layer in self.layers.iter_mut().rev() {
             grad = layer.backward(&grad).map_err(ModelError::LayerError)?;
-            layer
-                .update_weights(optimizer)
-                .map_err(ModelError::LayerError)?;
+            layer.update_weights(optimizer).map_err(ModelError::LayerError)?;
         }
 
         Ok(batch_loss)
@@ -365,9 +358,7 @@ impl Sequential {
         }
 
         if total_samples == 0 {
-            return Err(ModelError::DatasetError(
-                "No samples found in the dataset".to_string(),
-            ));
+            return Err(ModelError::DatasetError("No samples found in the dataset".to_string()));
         }
 
         Ok(correct_predictions as f32 / total_samples as f32)
@@ -415,12 +406,9 @@ impl Sequential {
     ///
     /// The output tensor after passing through all layers.
     pub fn forward(&mut self, input: &Tensor) -> Result<Tensor, ModelError> {
-        let tensor = self
-            .layers
-            .iter_mut()
-            .try_fold(input.clone(), |acc, layer| {
-                layer.forward(&acc).map_err(ModelError::LayerError)
-            })?;
+        let tensor = self.layers.iter_mut().try_fold(input.clone(), |acc, layer| {
+            layer.forward(&acc).map_err(ModelError::LayerError)
+        })?;
 
         Ok(tensor)
     }
@@ -428,10 +416,7 @@ impl Sequential {
     /// Prints a summary of the model.
     pub fn summary(&self) {
         println!("Model Summary:");
-        println!(
-            "{:<30} {:<25} {:<10}",
-            "Layer (type)", "Output Shape", "Param #"
-        );
+        println!("{:<30} {:<25} {:<10}", "Layer (type)", "Output Shape", "Param #");
         println!("{:-<65}", "");
 
         let mut total_params = 0;

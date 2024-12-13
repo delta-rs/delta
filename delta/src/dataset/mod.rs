@@ -36,5 +36,5 @@ pub use image::{
     // CustomImageDataset,
     ImageNetV2Dataset,
     MnistDataset,
-    TestDataset
+    TestDataset,
 };

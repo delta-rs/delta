@@ -82,12 +82,8 @@ impl Loss for CrossEntropyLoss {
         let clipped_pred = self.clip_tensor(y_pred, epsilon);
 
         // Compute element-wise multiplication
-        let cross_entropy = y_true
-            .data
-            .iter()
-            .zip(clipped_pred.data.iter())
-            .map(|(t, p)| t * p.ln())
-            .sum::<f32>();
+        let cross_entropy =
+            y_true.data.iter().zip(clipped_pred.data.iter()).map(|(t, p)| t * p.ln()).sum::<f32>();
 
         // Return cross-entropy loss
         -cross_entropy
@@ -171,10 +167,7 @@ mod tests {
 
         let expected_grad = vec![-0.1, 0.06666667, 0.03333334]; // Adjusted to correct gradient
         assert!(
-            grad.data
-                .iter()
-                .zip(expected_grad.iter())
-                .all(|(a, b)| (a - b).abs() < 1e-6),
+            grad.data.iter().zip(expected_grad.iter()).all(|(a, b)| (a - b).abs() < 1e-6),
             "Expected gradient: {:?}, got: {:?}",
             expected_grad,
             grad.data

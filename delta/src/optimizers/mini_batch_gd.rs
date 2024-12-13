@@ -31,8 +31,8 @@ use ndarray::Dimension;
 
 use crate::common::Tensor;
 use crate::devices::Device;
-use crate::optimizers::error::OptimizerError;
 use crate::optimizers::Optimizer;
+use crate::optimizers::error::OptimizerError;
 
 /// Mini-Batch Gradient Descent optimizer.
 #[derive(Debug)]
@@ -53,10 +53,7 @@ impl MiniBatchGD {
     ///
     /// A new instance of the MiniBatchGD optimizer.
     pub fn new(learning_rate: f32) -> Self {
-        Self {
-            learning_rate,
-            device: Device::default(),
-        }
+        Self { learning_rate, device: Device::default() }
     }
 }
 
@@ -119,16 +116,9 @@ mod tests {
     use ndarray::{ArrayD, IxDyn, Shape};
 
     fn assert_almost_equal(actual: &ArrayD<f32>, expected: &[f32], tolerance: f32) {
-        let actual_slice = actual
-            .as_slice()
-            .expect("Failed to convert ArrayD to slice");
+        let actual_slice = actual.as_slice().expect("Failed to convert ArrayD to slice");
         for (a, e) in actual_slice.iter().zip(expected.iter()) {
-            assert!(
-                (a - e).abs() < tolerance,
-                "Expected: {:?}, Actual: {:?}",
-                e,
-                a
-            );
+            assert!((a - e).abs() < tolerance, "Expected: {:?}, Actual: {:?}", e, a);
         }
     }
 
@@ -138,9 +128,7 @@ mod tests {
         let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[3, 1])));
         let gradients = Tensor::new(vec![0.1, 0.2, 0.3], Shape::from(IxDyn(&[3, 1])));
 
-        optimizer
-            .step(&mut weights, &gradients)
-            .expect("Failed to perform step");
+        optimizer.step(&mut weights, &gradients).expect("Failed to perform step");
 
         let expected = vec![0.999, 1.998, 2.997];
         assert_almost_equal(&weights.data, &expected, 1e-6);
@@ -154,10 +142,7 @@ mod tests {
 
         let result = optimizer.step(&mut weights, &gradients);
 
-        assert!(
-            result.is_err(),
-            "Expected an error due to incompatible shapes"
-        );
+        assert!(result.is_err(), "Expected an error due to incompatible shapes");
 
         if let Err(OptimizerError::IncompatibleGradientWeightShape(g_shape, w_shape)) = result {
             assert_eq!(g_shape, vec![2, 1]);
@@ -173,9 +158,7 @@ mod tests {
         let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[3, 1])));
         let gradients = Tensor::new(vec![0.0, 0.0, 0.0], Shape::from(IxDyn(&[3, 1])));
 
-        optimizer
-            .step(&mut weights, &gradients)
-            .expect("Failed to perform step");
+        optimizer.step(&mut weights, &gradients).expect("Failed to perform step");
 
         let expected = vec![1.0, 2.0, 3.0];
         assert_almost_equal(&weights.data, &expected, 1e-6);
@@ -187,9 +170,7 @@ mod tests {
         let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[3, 1])));
         let gradients = Tensor::new(vec![0.1, 0.1, 0.1], Shape::from(IxDyn(&[3, 1])));
 
-        optimizer
-            .step(&mut weights, &gradients)
-            .expect("Failed to perform step");
+        optimizer.step(&mut weights, &gradients).expect("Failed to perform step");
 
         let expected = vec![0.9, 1.9, 2.9];
         assert_almost_equal(&weights.data, &expected, 1e-6);

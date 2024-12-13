@@ -76,9 +76,7 @@ impl Loss for MeanSquaredLoss {
             panic!("Cannot calculate loss: no dataset in input tensors");
         }
 
-        let mean_squared_error = squared_diff
-            .mean()
-            .expect("Mean computation failed unexpectedly");
+        let mean_squared_error = squared_diff.mean().expect("Mean computation failed unexpectedly");
 
         mean_squared_error
     }
@@ -110,10 +108,7 @@ impl Loss for MeanSquaredLoss {
         let diff = &output.data - &target.data;
         let gradient = &diff * 2.0 / total_elements;
 
-        Tensor {
-            data: gradient,
-            device: Device::default(),
-        }
+        Tensor { data: gradient, device: Device::default() }
     }
 }
 
@@ -125,14 +120,8 @@ mod tests {
 
     #[test]
     fn test_mean_squared_loss() {
-        let y_true = Tensor::new(
-            vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
-            Shape::from(IxDyn(&[2, 3])),
-        );
-        let y_pred = Tensor::new(
-            vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
-            Shape::from(IxDyn(&[2, 3])),
-        );
+        let y_true = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], Shape::from(IxDyn(&[2, 3])));
+        let y_pred = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], Shape::from(IxDyn(&[2, 3])));
         let loss = MeanSquaredLoss::new();
         let result = loss.calculate_loss(&y_true, &y_pred);
         assert_eq!(result, 0.0);
@@ -141,20 +130,14 @@ mod tests {
     #[test]
     fn test_mean_squared_loss_with_mismatch() {
         let y_true = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], Shape::from(IxDyn(&[2, 2])));
-        let y_pred = Tensor::new(
-            vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
-            Shape::from(IxDyn(&[2, 3])),
-        );
+        let y_pred = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], Shape::from(IxDyn(&[2, 3])));
         let loss = MeanSquaredLoss::new();
 
         let result = std::panic::catch_unwind(|| {
             loss.calculate_loss(&y_true, &y_pred);
         });
 
-        assert!(
-            result.is_err(),
-            "Expected a panic due to shape mismatch, but no panic occurred."
-        );
+        assert!(result.is_err(), "Expected a panic due to shape mismatch, but no panic occurred.");
     }
 
     #[test]
@@ -167,10 +150,7 @@ mod tests {
             loss.calculate_loss(&y_true, &y_pred);
         });
 
-        assert!(
-            result.is_err(),
-            "Expected a panic due to NaN in inputs, but no panic occurred."
-        );
+        assert!(result.is_err(), "Expected a panic due to NaN in inputs, but no panic occurred.");
     }
 
     #[test]

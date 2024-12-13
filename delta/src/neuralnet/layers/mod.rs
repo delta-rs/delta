@@ -140,11 +140,7 @@ pub trait Layer: Debug {
     ///
     /// A `String` representing the type name of the layer.
     fn type_name(&self) -> String {
-        std::any::type_name::<Self>()
-            .split("::")
-            .last()
-            .unwrap_or("Unknown")
-            .to_string()
+        std::any::type_name::<Self>().split("::").last().unwrap_or("Unknown").to_string()
     }
 }
 

@@ -28,8 +28,8 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use crate::common::tensor_ops::Tensor;
-use crate::neuralnet::layers::error::LayerError;
 use crate::neuralnet::layers::Layer;
+use crate::neuralnet::layers::error::LayerError;
 use crate::optimizers::Optimizer;
 use ndarray::{IxDyn, Shape};
 
@@ -58,11 +58,7 @@ impl MaxPooling2D {
     ///
     /// A new `MaxPooling2D` instance.
     pub fn new(pool_size: usize, stride: usize) -> Self {
-        Self {
-            pool_size,
-            stride,
-            input_shape: None,
-        }
+        Self { pool_size, stride, input_shape: None }
     }
 }
 

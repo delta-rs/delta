@@ -8,7 +8,7 @@ use deltaml::neuralnet::{Dense, Flatten};
 use deltaml::optimizers::Adam;
 
 #[cfg(feature = "metal")]
-use deltaml::devices::{osx_metal, Device};
+use deltaml::devices::{Device, osx_metal};
 
 #[tokio::main]
 async fn main() {
@@ -41,20 +41,14 @@ async fn main() {
     {
         println!("Transferring data to Metal device.");
         let (metal_device, metal_queue) = osx_metal::get_device_and_queue_metal();
-        let _ = train_data.to_device(Device::Metal {
-            device: metal_device.clone(),
-            queue: metal_queue.clone(),
-        });
+        let _ = train_data
+            .to_device(Device::Metal { device: metal_device.clone(), queue: metal_queue.clone() });
 
-        let _ = test_data.to_device(Device::Metal {
-            device: metal_device.clone(),
-            queue: metal_queue.clone(),
-        });
+        let _ = test_data
+            .to_device(Device::Metal { device: metal_device.clone(), queue: metal_queue.clone() });
 
-        let _ = val_data.to_device(Device::Metal {
-            device: metal_device.clone(),
-            queue: metal_queue.clone(),
-        });
+        let _ = val_data
+            .to_device(Device::Metal { device: metal_device.clone(), queue: metal_queue.clone() });
     }
 
     println!("Training the model...");

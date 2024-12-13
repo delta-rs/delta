@@ -28,8 +28,8 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use crate::common::Tensor;
-use crate::neuralnet::layers::error::LayerError;
 use crate::neuralnet::layers::Layer;
+use crate::neuralnet::layers::error::LayerError;
 use crate::optimizers::Optimizer;
 use crate::{activations::Activation, devices::Device};
 use log::debug;
@@ -137,11 +137,8 @@ impl Layer for Dense {
         let z = input.matmul(weights).add(bias);
 
         // Apply activation if present
-        let z = if let Some(ref activation) = self.activation {
-            activation.activate(&z)
-        } else {
-            z
-        };
+        let z =
+            if let Some(ref activation) = self.activation { activation.activate(&z) } else { z };
 
         Ok(z)
     }
@@ -281,9 +278,7 @@ mod tests {
     fn test_dense_layer() {
         let input = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[1, 3])));
         let mut dense_layer = Dense::new(2, Some(ReluActivation::new()), true);
-        dense_layer
-            .build(Shape::from(IxDyn(&[1, 3])))
-            .expect("Failed to build layer");
+        dense_layer.build(Shape::from(IxDyn(&[1, 3]))).expect("Failed to build layer");
 
         let output = dense_layer.forward(&input).unwrap();
 
@@ -295,9 +290,7 @@ mod tests {
     fn test_dense_layer_forward_pass() {
         let input = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[1, 3])));
         let mut dense_layer = Dense::new(2, Some(ReluActivation::new()), true);
-        dense_layer
-            .build(Shape::from(IxDyn(&[1, 3])))
-            .expect("Failed to build layer");
+        dense_layer.build(Shape::from(IxDyn(&[1, 3]))).expect("Failed to build layer");
 
         let output = dense_layer.forward(&input).unwrap();
 
@@ -310,9 +303,7 @@ mod tests {
         let input = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[1, 3])));
         let mut dense_layer = Dense::new(2, Some(ReluActivation::new()), true);
         dense_layer.input = Some(input.clone());
-        dense_layer
-            .build(Shape::from(IxDyn(&[1, 3])))
-            .expect("Failed to build layer");
+        dense_layer.build(Shape::from(IxDyn(&[1, 3]))).expect("Failed to build layer");
 
         let grad = Tensor::new(vec![1.0, 2.0], Shape::from(IxDyn(&[1, 2])));
         let output = dense_layer.backward(&grad).unwrap();
@@ -333,9 +324,7 @@ mod tests {
     fn test_dense_layer_with_no_activation() {
         let input = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[1, 3])));
         let mut dense_layer = Dense::new(4, None::<ReluActivation>, true);
-        dense_layer
-            .build(Shape::from(IxDyn(&[1, 3])))
-            .expect("Failed to build layer");
+        dense_layer.build(Shape::from(IxDyn(&[1, 3]))).expect("Failed to build layer");
 
         let output = dense_layer.forward(&input).unwrap();
 
@@ -347,23 +336,15 @@ mod tests {
     #[test]
     fn test_dense_layer_output_shape() {
         let dense_layer = Dense::new(10, Some(ReluActivation::new()), true);
-        assert_eq!(
-            dense_layer
-                .output_shape()
-                .unwrap()
-                .raw_dim()
-                .as_array_view()
-                .to_vec(),
-            vec![10]
-        );
+        assert_eq!(dense_layer.output_shape().unwrap().raw_dim().as_array_view().to_vec(), vec![
+            10
+        ]);
     }
 
     #[test]
     fn test_dense_layer_param_count() {
         let mut dense_layer = Dense::new(6, None::<ReluActivation>, true);
-        dense_layer
-            .build(Shape::from(IxDyn(&[1, 4])))
-            .expect("Failed to build layer");
+        dense_layer.build(Shape::from(IxDyn(&[1, 4]))).expect("Failed to build layer");
 
         let (weights_count, bias_count) = dense_layer.param_count().unwrap();
         assert_eq!(weights_count, 4 * 6); // 4 input units, 6 output units
@@ -373,9 +354,7 @@ mod tests {
     #[test]
     fn test_dense_layer_backward_with_no_trainable() {
         let mut dense_layer = Dense::new(4, None::<ReluActivation>, false);
-        dense_layer
-            .build(Shape::from(IxDyn(&[1, 3])))
-            .expect("Failed to build layer");
+        dense_layer.build(Shape::from(IxDyn(&[1, 3]))).expect("Failed to build layer");
 
         let input = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[1, 3])));
         dense_layer.input = Some(input);
@@ -394,20 +373,10 @@ mod tests {
     #[test]
     fn test_dense_layer_with_zero_units() {
         let mut dense_layer = Dense::new(0, None::<ReluActivation>, true);
-        dense_layer
-            .build(Shape::from(IxDyn(&[1, 3])))
-            .expect("Failed to build layer");
+        dense_layer.build(Shape::from(IxDyn(&[1, 3]))).expect("Failed to build layer");
 
         // Ensure the layer initializes with zero units without crashing.
-        assert_eq!(
-            dense_layer
-                .output_shape()
-                .unwrap()
-                .raw_dim()
-                .as_array_view()
-                .to_vec(),
-            vec![0]
-        );
+        assert_eq!(dense_layer.output_shape().unwrap().raw_dim().as_array_view().to_vec(), vec![0]);
         assert!(dense_layer.weights.is_some());
         assert!(dense_layer.bias.is_some());
     }
@@ -416,9 +385,7 @@ mod tests {
     fn test_dense_layer_with_large_input() {
         let input = Tensor::random(Shape::from(IxDyn(&[1000, 512])));
         let mut dense_layer = Dense::new(256, Some(ReluActivation::new()), true);
-        dense_layer
-            .build(Shape::from(IxDyn(&[1000, 512])))
-            .expect("Failed to build layer");
+        dense_layer.build(Shape::from(IxDyn(&[1000, 512]))).expect("Failed to build layer");
 
         let output = dense_layer.forward(&input).unwrap();
 

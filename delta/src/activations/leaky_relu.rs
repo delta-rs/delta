@@ -91,10 +91,7 @@ mod tests {
         let leaky_relu = LeakyReluActivation::new(0.01);
         let output = leaky_relu.activate(&input);
 
-        assert_eq!(
-            output.data.iter().cloned().collect::<Vec<f32>>(),
-            vec![1.0, -0.02, 3.0, -0.04]
-        );
+        assert_eq!(output.data.iter().cloned().collect::<Vec<f32>>(), vec![1.0, -0.02, 3.0, -0.04]);
         assert_eq!(output.data.shape().to_vec(), vec![2, 2]);
     }
 
@@ -104,10 +101,9 @@ mod tests {
         let leaky_relu = LeakyReluActivation::new(0.01);
         let derivative = leaky_relu.derivative(&input);
 
-        assert_eq!(
-            derivative.data.iter().cloned().collect::<Vec<f32>>(),
-            vec![1.0, 0.01, 1.0, 0.01]
-        );
+        assert_eq!(derivative.data.iter().cloned().collect::<Vec<f32>>(), vec![
+            1.0, 0.01, 1.0, 0.01
+        ]);
         assert_eq!(derivative.data.shape().to_vec(), vec![2, 2]);
     }
 }

@@ -31,8 +31,8 @@ use ndarray::Dimension;
 
 use crate::common::Tensor;
 use crate::devices::Device;
-use crate::optimizers::error::OptimizerError;
 use crate::optimizers::Optimizer;
+use crate::optimizers::error::OptimizerError;
 
 /// The RMSProp optimizer struct.
 #[derive(Debug)]
@@ -95,13 +95,8 @@ impl Optimizer for RMSProp {
         // Initialize mean square tensor if not already done
         if self.mean_square.is_none() {
             self.mean_square = Some(Tensor::zeros(weights.shape().clone()));
-            self.mean_square = Some(
-                self.mean_square
-                    .as_mut()
-                    .unwrap()
-                    .to_device(self.device.clone())
-                    .unwrap(),
-            );
+            self.mean_square =
+                Some(self.mean_square.as_mut().unwrap().to_device(self.device.clone()).unwrap());
         }
 
         let mean_square = self.mean_square.as_mut().unwrap();
@@ -142,16 +137,9 @@ mod tests {
     const DEFAULT_EPSILON: f32 = 1e-8;
 
     fn assert_almost_equal(actual: &ArrayD<f32>, expected: &[f32], tolerance: f32) {
-        let actual_slice = actual
-            .as_slice()
-            .expect("Failed to convert ArrayD to slice");
+        let actual_slice = actual.as_slice().expect("Failed to convert ArrayD to slice");
         for (a, e) in actual_slice.iter().zip(expected.iter()) {
-            assert!(
-                (a - e).abs() < tolerance,
-                "Expected: {:?}, Actual: {:?}",
-                e,
-                a
-            );
+            assert!((a - e).abs() < tolerance, "Expected: {:?}, Actual: {:?}", e, a);
         }
     }
 
@@ -162,15 +150,9 @@ mod tests {
         let mut weights = Tensor::new(vec![1.0, 1.0, 1.0], Shape::from(IxDyn(&[3, 1])));
         let gradients = Tensor::new(vec![0.1, 0.2, 0.3], Shape::from(IxDyn(&[3, 1])));
 
-        optimizer
-            .step(&mut weights, &gradients)
-            .expect("Failed to perform step");
-        optimizer
-            .step(&mut weights, &gradients)
-            .expect("Failed to perform step");
-        optimizer
-            .step(&mut weights, &gradients)
-            .expect("Failed to perform step");
+        optimizer.step(&mut weights, &gradients).expect("Failed to perform step");
+        optimizer.step(&mut weights, &gradients).expect("Failed to perform step");
+        optimizer.step(&mut weights, &gradients).expect("Failed to perform step");
 
         // Update expected values based on manual calculation or reference implementation
         let expected = vec![/* Recalculated values */];
@@ -185,10 +167,7 @@ mod tests {
         let gradients = Tensor::new(vec![0.1, 0.2], Shape::from(IxDyn(&[2, 1])));
         let result = optimizer.step(&mut weights, &gradients);
 
-        assert!(
-            result.is_err(),
-            "Expected an error due to incompatible shapes"
-        );
+        assert!(result.is_err(), "Expected an error due to incompatible shapes");
     }
 
     #[test]
@@ -198,9 +177,7 @@ mod tests {
         let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[3, 1])));
         let gradients = Tensor::new(vec![0.0, 0.0, 0.0], Shape::from(IxDyn(&[3, 1])));
 
-        optimizer
-            .step(&mut weights, &gradients)
-            .expect("Failed to perform step");
+        optimizer.step(&mut weights, &gradients).expect("Failed to perform step");
 
         let expected = vec![1.0, 2.0, 3.0];
         assert_almost_equal(&weights.data, &expected, 1e-6);
@@ -215,9 +192,6 @@ mod tests {
     #[test]
     fn test_rmsprop_invalid_learning_rate() {
         let result = RMSProp::new(-0.01, DEFAULT_DECAY_RATE, DEFAULT_EPSILON);
-        assert!(
-            result.is_err(),
-            "Expected an error due to invalid learning rate"
-        );
+        assert!(result.is_err(), "Expected an error due to invalid learning rate");
     }
 }

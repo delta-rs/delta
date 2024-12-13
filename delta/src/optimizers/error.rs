@@ -53,11 +53,9 @@ impl fmt::Display for OptimizerError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             OptimizerError::InvalidLearningRate(s) => write!(f, "{}", s),
-            OptimizerError::IncompatibleGradientWeightShape(g, w) => write!(
-                f,
-                "Gradient shape {:?} is incompatible with weight shape {:?}",
-                g, w
-            ),
+            OptimizerError::IncompatibleGradientWeightShape(g, w) => {
+                write!(f, "Gradient shape {:?} is incompatible with weight shape {:?}", g, w)
+            }
             OptimizerError::InvalidEpsilon(s) => write!(f, "{}", s),
         }
     }

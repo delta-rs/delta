@@ -119,11 +119,8 @@ mod tests {
     fn test_gelu_activate() {
         let input = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[1, 3])));
         // Compute the expected GELU outputs for the input tensor.
-        let expected_values = vec![
-            GeluActivation::gelu(1.0),
-            GeluActivation::gelu(2.0),
-            GeluActivation::gelu(3.0),
-        ];
+        let expected_values =
+            vec![GeluActivation::gelu(1.0), GeluActivation::gelu(2.0), GeluActivation::gelu(3.0)];
         let output = Tensor::new(expected_values, Shape::from(IxDyn(&[1, 3])));
         assert_eq!(GeluActivation::new().activate(&input), output);
     }

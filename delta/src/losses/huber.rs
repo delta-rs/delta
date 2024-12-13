@@ -51,11 +51,7 @@ impl Loss for HuberLoss {
 
         // Step 4: Compute the Huber loss per element
         let huber_loss = diff.mapv(|x| {
-            if x <= self.delta {
-                0.5 * x.powi(2)
-            } else {
-                self.delta * (x - 0.5 * self.delta)
-            }
+            if x <= self.delta { 0.5 * x.powi(2) } else { self.delta * (x - 0.5 * self.delta) }
         });
 
         // Step 5: Calculate the mean of the Huber loss values
@@ -63,9 +59,7 @@ impl Loss for HuberLoss {
             panic!("Cannot calculate loss: no dataset in input tensors");
         }
 
-        let mean_loss = huber_loss
-            .mean()
-            .expect("Mean computation failed unexpectedly");
+        let mean_loss = huber_loss.mean().expect("Mean computation failed unexpectedly");
 
         mean_loss
     }
@@ -93,22 +87,14 @@ impl Loss for HuberLoss {
         let diff = &output.data - &target.data;
 
         // Compute the gradient
-        let gradient = diff.mapv(|x| {
-            if x.abs() <= self.delta {
-                x
-            } else {
-                self.delta * x.signum()
-            }
-        });
+        let gradient =
+            diff.mapv(|x| if x.abs() <= self.delta { x } else { self.delta * x.signum() });
 
         // Normalize the gradient by the number of elements
         let total_elements = output.data.len() as f32;
         let normalized_gradient = &gradient / total_elements;
 
-        Tensor {
-            data: normalized_gradient,
-            device: Device::default(),
-        }
+        Tensor { data: normalized_gradient, device: Device::default() }
     }
 }
 
@@ -120,14 +106,8 @@ mod tests {
 
     #[test]
     fn test_huber_loss() {
-        let y_true = Tensor::new(
-            vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
-            Shape::from(IxDyn(&[2, 3])),
-        );
-        let y_pred = Tensor::new(
-            vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
-            Shape::from(IxDyn(&[2, 3])),
-        );
+        let y_true = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], Shape::from(IxDyn(&[2, 3])));
+        let y_pred = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], Shape::from(IxDyn(&[2, 3])));
         let loss = HuberLoss::new(1.0);
         let result = loss.calculate_loss(&y_true, &y_pred);
         assert_eq!(result, 0.0);
@@ -145,10 +125,7 @@ mod tests {
         println!("Expected Loss: {}", expected_loss);
         println!("Calculated Loss: {}", result);
 
-        assert!(
-            (result - expected_loss).abs() < 1e-6,
-            "Calculated loss did not match expected"
-        );
+        assert!((result - expected_loss).abs() < 1e-6, "Calculated loss did not match expected");
     }
 
     #[test]
@@ -161,28 +138,19 @@ mod tests {
             loss.calculate_loss(&y_true, &y_pred);
         });
 
-        assert!(
-            result.is_err(),
-            "Expected a panic due to NaN in inputs, but no panic occurred."
-        );
+        assert!(result.is_err(), "Expected a panic due to NaN in inputs, but no panic occurred.");
     }
 
     #[test]
     fn test_huber_loss_with_mismatch() {
         let y_true = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], Shape::from(IxDyn(&[2, 2])));
-        let y_pred = Tensor::new(
-            vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
-            Shape::from(IxDyn(&[2, 3])),
-        );
+        let y_pred = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], Shape::from(IxDyn(&[2, 3])));
         let loss = HuberLoss::new(1.0);
 
         let result = std::panic::catch_unwind(|| {
             loss.calculate_loss(&y_true, &y_pred);
         });
 
-        assert!(
-            result.is_err(),
-            "Expected a panic due to shape mismatch, but no panic occurred."
-        );
+        assert!(result.is_err(), "Expected a panic due to shape mismatch, but no panic occurred.");
     }
 }

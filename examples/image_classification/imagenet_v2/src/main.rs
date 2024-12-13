@@ -1,8 +1,8 @@
 use deltaml::activations::relu::ReluActivation;
 use deltaml::activations::softmax::SoftmaxActivation;
 use deltaml::common::{IxDyn, Shape};
-use deltaml::dataset::base::ImageDatasetOps;
 use deltaml::dataset::ImageNetV2Dataset;
+use deltaml::dataset::base::ImageDatasetOps;
 use deltaml::losses::SparseCategoricalCrossEntropyLoss;
 use deltaml::neuralnet::Sequential;
 use deltaml::neuralnet::{Dense, Flatten};
@@ -50,9 +50,7 @@ async fn main() {
 
     // Evaluate the model
     println!("Evaluating the model...");
-    let accuracy = model
-        .evaluate(&test_data, batch_size)
-        .expect("Failed to evaluate model");
+    let accuracy = model.evaluate(&test_data, batch_size).expect("Failed to evaluate model");
     println!("Test Accuracy: {:.2} %", accuracy * 100.0);
 
     // Save the model

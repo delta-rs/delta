@@ -101,18 +101,12 @@ impl SparseCategoricalCrossEntropyLoss {
     fn preprocess_one_hot(&self, y_true: &Tensor) -> Tensor {
         let shape = y_true.shape();
         if shape.raw_dim().ndim() != 2 {
-            panic!(
-                "Expected a 2D tensor for one-hot encoding, but got shape: {:?}",
-                shape
-            );
+            panic!("Expected a 2D tensor for one-hot encoding, but got shape: {:?}", shape);
         }
 
         let rows = shape.raw_dim()[0];
         let cols = shape.raw_dim()[1];
-        let data = y_true
-            .data
-            .as_slice()
-            .expect("Tensor dataset must be accessible as a slice");
+        let data = y_true.data.as_slice().expect("Tensor dataset must be accessible as a slice");
 
         let mut processed_data = Vec::new();
         for i in 0..rows {
@@ -294,9 +288,6 @@ mod tests {
         let y_true = Tensor::new(vec![1.0, 0.0, 0.0], Shape::from(IxDyn(&[1, 3])));
         let loss = SparseCategoricalCrossEntropyLoss::new();
         let result = loss.preprocess_one_hot(&y_true);
-        assert_eq!(
-            result.data.iter().cloned().collect::<Vec<f32>>(),
-            vec![1.0, 0.0, 0.0]
-        );
+        assert_eq!(result.data.iter().cloned().collect::<Vec<f32>>(), vec![1.0, 0.0, 0.0]);
     }
 }

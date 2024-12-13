@@ -33,7 +33,7 @@ use crate::devices::Device;
 use crate::encoders::one_hot_encode;
 use flate2::read::GzDecoder;
 use log::debug;
-use ndarray::{s, ArrayBase, Axis, Dim, OwnedRepr};
+use ndarray::{ArrayBase, Axis, Dim, OwnedRepr, s};
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 use reqwest;
@@ -86,12 +86,8 @@ impl ImageNetV2Dataset {
         if !Path::new(&archive_path).exists() {
             let response = reqwest::get(url).await.map_err(|e| e.to_string())?;
             let data = response.bytes().await.map_err(|e| e.to_string())?;
-            async_fs::create_dir_all(&dataset_path)
-                .await
-                .map_err(|e| e.to_string())?;
-            async_fs::write(&archive_path, &data)
-                .await
-                .map_err(|e| e.to_string())?;
+            async_fs::create_dir_all(&dataset_path).await.map_err(|e| e.to_string())?;
+            async_fs::write(&archive_path, &data).await.map_err(|e| e.to_string())?;
             debug!("File successfully written to {}", &archive_path);
         }
 
@@ -126,10 +122,7 @@ impl ImageNetV2Dataset {
                 Ok(())
             }
             Err(e) => {
-                debug!(
-                    "Rust implementation failed: {}. Trying system tar command...",
-                    e
-                );
+                debug!("Rust implementation failed: {}. Trying system tar command...", e);
                 // Fallback to system tar command
                 // For some reason, the rust implementation fails with invalid gzip header dataset
                 let status = Command::new("tar")
@@ -140,10 +133,7 @@ impl ImageNetV2Dataset {
                     .status()?;
 
                 if status.success() {
-                    debug!(
-                        "Successfully decompressed using system tar to: {}",
-                        output_path
-                    );
+                    debug!("Successfully decompressed using system tar to: {}", output_path);
                     Ok(())
                 } else {
                     Err(io::Error::new(
@@ -197,13 +187,7 @@ impl ImageNetV2Dataset {
 
         let image_tensor = Tensor::stack(&images)?;
 
-        Ok(Dataset::new(
-            image_tensor,
-            Tensor {
-                data: label_data_dyn,
-                device: Device::default(),
-            },
-        ))
+        Ok(Dataset::new(image_tensor, Tensor { data: label_data_dyn, device: Device::default() }))
     }
 
     /// Splits the training data into training and validation datasets.
@@ -242,10 +226,7 @@ impl ImageDatasetOps for ImageNetV2Dataset {
     fn load_train() -> Self::LoadFuture {
         Box::pin(async {
             match ImageNetV2Dataset::load(0).await {
-                Ok(data) => ImageNetV2Dataset {
-                    train: Some(data),
-                    val: None,
-                },
+                Ok(data) => ImageNetV2Dataset { train: Some(data), val: None },
                 Err(err) => panic!("Failed to load dataset: {}", err),
             }
         })
@@ -258,10 +239,7 @@ impl ImageDatasetOps for ImageNetV2Dataset {
     fn load_test() -> Self::LoadFuture {
         Box::pin(async {
             match ImageNetV2Dataset::load(0).await {
-                Ok(data) => ImageNetV2Dataset {
-                    train: Some(data),
-                    val: None,
-                },
+                Ok(data) => ImageNetV2Dataset { train: Some(data), val: None },
                 Err(err) => panic!("Failed to load dataset: {}", err),
             }
         })
@@ -275,10 +253,7 @@ impl ImageDatasetOps for ImageNetV2Dataset {
         Box::pin(async {
             match ImageNetV2Dataset::load(0).await {
                 Ok(data) => {
-                    let mut dataset = ImageNetV2Dataset {
-                        train: None,
-                        val: Some(data),
-                    };
+                    let mut dataset = ImageNetV2Dataset { train: None, val: Some(data) };
                     dataset.split_train_validation(0.2); // Use 20% of the training data for validation
                     dataset
                 }
@@ -295,18 +270,8 @@ impl ImageDatasetOps for ImageNetV2Dataset {
     fn normalize(&mut self, min: f32, max: f32) {
         // Ensure the dataset is loaded
         if let Some(dataset) = &mut self.train {
-            let data_min = dataset
-                .inputs
-                .data
-                .iter()
-                .cloned()
-                .fold(f32::INFINITY, f32::min);
-            let data_max = dataset
-                .inputs
-                .data
-                .iter()
-                .cloned()
-                .fold(f32::NEG_INFINITY, f32::max);
+            let data_min = dataset.inputs.data.iter().cloned().fold(f32::INFINITY, f32::min);
+            let data_max = dataset.inputs.data.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
 
             // Scale each value to the new range
             dataset
@@ -334,10 +299,7 @@ impl ImageDatasetOps for ImageNetV2Dataset {
     ///
     /// The number of samples in the dataset.
     fn len(&self) -> usize {
-        self.train
-            .as_ref()
-            .map(|ds| ds.inputs.shape().raw_dim()[0])
-            .unwrap_or(0)
+        self.train.as_ref().map(|ds| ds.inputs.shape().raw_dim()[0]).unwrap_or(0)
     }
 
     /// Gets a batch of dataset from the dataset.
@@ -369,21 +331,14 @@ impl ImageDatasetOps for ImageNetV2Dataset {
 
         // Extract the batch from inputs and labels using slicing
         let batch_inputs = dataset.inputs.slice(vec![start_idx..end_idx]).to_owned();
-        let batch_labels = dataset
-            .labels
-            .data
-            .slice(s![start_idx..end_idx, ..])
-            .to_owned();
+        let batch_labels = dataset.labels.data.slice(s![start_idx..end_idx, ..]).to_owned();
 
         (
             Tensor {
                 data: batch_inputs.data.into_dyn(), // Convert to dynamic dimensionality
                 device: Device::default(),
             },
-            Tensor {
-                data: batch_labels.into_dyn(),
-                device: Device::default(),
-            },
+            Tensor { data: batch_labels.into_dyn(), device: Device::default() },
         )
     }
 
@@ -399,11 +354,7 @@ impl ImageDatasetOps for ImageNetV2Dataset {
     fn loss(&self, outputs: &Tensor, targets: &Tensor) -> f32 {
         // Apply softmax to outputs to get probabilities
         let softmax = outputs.data.mapv(|z| z.exp())
-            / outputs
-                .data
-                .mapv(|z| z.exp())
-                .sum_axis(Axis(1))
-                .insert_axis(Axis(1));
+            / outputs.data.mapv(|z| z.exp()).sum_axis(Axis(1)).insert_axis(Axis(1));
 
         // Compute the Cross-Entropy Loss
         let log_probs = softmax.mapv(f32::ln); // Logarithm of softmax probabilities
@@ -427,19 +378,12 @@ impl ImageDatasetOps for ImageNetV2Dataset {
     fn loss_grad(&self, outputs: &Tensor, targets: &Tensor) -> Tensor {
         // Apply softmax to outputs to get probabilities
         let softmax = outputs.data.mapv(|z| z.exp())
-            / outputs
-                .data
-                .mapv(|z| z.exp())
-                .sum_axis(Axis(1))
-                .insert_axis(Axis(1));
+            / outputs.data.mapv(|z| z.exp()).sum_axis(Axis(1)).insert_axis(Axis(1));
 
         // Calculate gradient: softmax(outputs) - targets
         let grad_data = softmax - &targets.data;
 
-        Tensor {
-            data: grad_data,
-            device: Device::default(),
-        }
+        Tensor { data: grad_data, device: Device::default() }
     }
 
     /// Shuffles the dataset.
@@ -472,10 +416,7 @@ impl ImageDatasetOps for ImageNetV2Dataset {
     ///
     /// A new instance of `ImageNetV2Dataset` with the same data as the original.
     fn clone(&self) -> Self {
-        Self {
-            train: self.train.clone(),
-            val: self.val.clone(),
-        }
+        Self { train: self.train.clone(), val: self.val.clone() }
     }
 
     /// Transfers the dataset to the specified device.
