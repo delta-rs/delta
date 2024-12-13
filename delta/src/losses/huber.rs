@@ -1,4 +1,5 @@
 use crate::common::tensor_ops::Tensor;
+use crate::devices::Device;
 use crate::losses::Loss;
 
 #[derive(Debug)]
@@ -106,6 +107,7 @@ impl Loss for HuberLoss {
 
         Tensor {
             data: normalized_gradient,
+            device: Device::default(),
         }
     }
 }

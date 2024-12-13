@@ -1,4 +1,5 @@
 use crate::common::tensor_ops::Tensor;
+use crate::devices::Device;
 use crate::losses::Loss;
 
 #[derive(Debug)]
@@ -75,7 +76,10 @@ impl Loss for MeanAbsoluteError {
         let diff = &output.data - &target.data;
         let gradient = diff.mapv(|x| if x > 0.0 { 1.0 } else { -1.0 });
 
-        Tensor { data: gradient }
+        Tensor {
+            data: gradient,
+            device: Device::default(),
+        }
     }
 }
 

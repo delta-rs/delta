@@ -493,6 +493,28 @@ impl ImageDatasetOps for MnistDataset {
             val: self.val.clone(),
         }
     }
+
+    /// Transfers the dataset to the specified device.
+    ///
+    /// # Arguments
+    ///
+    /// * `device` - The device to transfer the dataset to.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the dataset on the specified device.
+    fn to_device(&mut self, device: crate::devices::Device) -> Result<(), String> {
+        if let Some(train) = self.train.as_mut() {
+            train.to_device(&device);
+        }
+        if let Some(test) = self.test.as_mut() {
+            test.to_device(&device);
+        }
+        if let Some(val) = self.val.as_mut() {
+            val.to_device(&device);
+        }
+        Ok(())
+    }
 }
 
 #[cfg(test)]

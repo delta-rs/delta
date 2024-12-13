@@ -29,6 +29,7 @@
 
 use crate::common::Tensor;
 use crate::dataset::base::{Dataset, ImageDatasetOps};
+use crate::devices::Device;
 use crate::encoders::one_hot_encode;
 use flate2::read::GzDecoder;
 use log::debug;
@@ -200,6 +201,7 @@ impl ImageNetV2Dataset {
             image_tensor,
             Tensor {
                 data: label_data_dyn,
+                device: Device::default(),
             },
         ))
     }
@@ -376,9 +378,11 @@ impl ImageDatasetOps for ImageNetV2Dataset {
         (
             Tensor {
                 data: batch_inputs.data.into_dyn(), // Convert to dynamic dimensionality
+                device: Device::default(),
             },
             Tensor {
                 data: batch_labels.into_dyn(),
+                device: Device::default(),
             },
         )
     }
@@ -432,7 +436,10 @@ impl ImageDatasetOps for ImageNetV2Dataset {
         // Calculate gradient: softmax(outputs) - targets
         let grad_data = softmax - &targets.data;
 
-        Tensor { data: grad_data }
+        Tensor {
+            data: grad_data,
+            device: Device::default(),
+        }
     }
 
     /// Shuffles the dataset.
@@ -469,6 +476,23 @@ impl ImageDatasetOps for ImageNetV2Dataset {
             train: self.train.clone(),
             val: self.val.clone(),
         }
+    }
+
+    /// Transfers the dataset to the specified device.
+    ///
+    /// # Arguments
+    /// * `device` - The device to transfer the dataset to.
+    ///
+    /// # Returns
+    /// A `Result` containing the dataset on the specified device.
+    fn to_device(&mut self, device: Device) -> Result<(), String> {
+        if let Some(train) = self.train.as_mut() {
+            train.to_device(&device);
+        }
+        if let Some(val) = self.val.as_mut() {
+            val.to_device(&device);
+        }
+        Ok(())
     }
 }
 

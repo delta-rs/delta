@@ -27,10 +27,10 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use ndarray::{Dimension, IxDyn, Shape};
 use crate::common::Tensor;
 use crate::neuralnet::layers::error::LayerError;
 use crate::neuralnet::layers::Layer;
+use ndarray::{Dimension, IxDyn, Shape};
 
 /// A flatten layer that reshapes the input tensor to a 1D vector.
 #[derive(Debug)]
@@ -110,7 +110,12 @@ impl Layer for Flatten {
     ///
     /// A `Shape` representing the output shape of the layer.
     fn output_shape(&self) -> Result<Shape<IxDyn>, LayerError> {
-        let shape = Shape::from(IxDyn(&[self.input_shape.raw_dim().as_array_view().iter().product()]));
+        let shape = Shape::from(IxDyn(&[self
+            .input_shape
+            .raw_dim()
+            .as_array_view()
+            .iter()
+            .product()]));
         Ok(shape)
     }
 
@@ -144,6 +149,15 @@ impl Layer for Flatten {
         let _ = optimizer;
         // Do nothing
         Ok(())
+    }
+
+    /// Sets the device for the layer.
+    ///
+    /// # Arguments
+    ///
+    /// * `device` - The device to set for the layer.
+    fn set_device(&mut self, _device: &crate::devices::Device) {
+        // Do nothing
     }
 }
 

@@ -30,6 +30,7 @@
 use ndarray::Dimension;
 
 use crate::common::Tensor;
+use crate::devices::Device;
 use crate::optimizers::error::OptimizerError;
 use crate::optimizers::Optimizer;
 
@@ -40,6 +41,7 @@ pub struct AdaDelta {
     epsilon: f32,
     accumulated_gradients: Option<Tensor>,
     accumulated_updates: Option<Tensor>,
+    device: Device,
 }
 
 impl AdaDelta {
@@ -55,6 +57,7 @@ impl AdaDelta {
             epsilon,
             accumulated_gradients: None,
             accumulated_updates: None,
+            device: Device::default(),
         }
     }
 }
@@ -85,12 +88,26 @@ impl Optimizer for AdaDelta {
                 != weights.shape().raw_dim()
         {
             self.accumulated_gradients = Some(Tensor::zeros(weights.shape().clone()));
+            self.accumulated_gradients = Some(
+                self.accumulated_gradients
+                    .as_mut()
+                    .unwrap()
+                    .to_device(self.device.clone())
+                    .unwrap(),
+            );
         }
         if self.accumulated_updates.is_none()
             || self.accumulated_updates.as_ref().unwrap().shape().raw_dim()
                 != weights.shape().raw_dim()
         {
             self.accumulated_updates = Some(Tensor::zeros(weights.shape().clone()));
+            self.accumulated_updates = Some(
+                self.accumulated_updates
+                    .as_mut()
+                    .unwrap()
+                    .to_device(self.device.clone())
+                    .unwrap(),
+            );
         }
 
         let accumulated_gradients = self.accumulated_gradients.as_mut().unwrap();
@@ -106,6 +123,7 @@ impl Optimizer for AdaDelta {
         let rms_gradients = accumulated_gradients.sqrt().add_scalar(self.epsilon);
         let update = Tensor {
             data: gradients.div(&rms_gradients).data * rms_updates.data,
+            device: self.device.clone(),
         };
 
         // Update accumulated updates
@@ -117,6 +135,15 @@ impl Optimizer for AdaDelta {
         *weights -= update;
 
         Ok(())
+    }
+
+    /// Sets the device for the optimizer.
+    ///
+    /// # Arguments
+    ///
+    /// * `device` - The device to set for the optimizer.
+    fn set_device(&mut self, device: &Device) {
+        self.device = device.clone();
     }
 }
 

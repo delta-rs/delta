@@ -7,6 +7,9 @@ use deltaml::neuralnet::Sequential;
 use deltaml::neuralnet::{Dense, Flatten};
 use deltaml::optimizers::Adam;
 
+#[cfg(feature = "metal")]
+use deltaml::devices::{osx_metal, Device};
+
 #[tokio::main]
 async fn main() {
     // Create a neural network
@@ -29,8 +32,30 @@ async fn main() {
 
     // Loading the train and test dataset
     let mut train_data = MnistDataset::load_train().await;
-    let test_data = MnistDataset::load_test().await;
-    let val_data = MnistDataset::load_val().await;
+    #[allow(unused_mut)]
+    let mut test_data = MnistDataset::load_test().await;
+    #[allow(unused_mut)]
+    let mut val_data = MnistDataset::load_val().await;
+
+    #[cfg(feature = "metal")]
+    {
+        println!("Transferring data to Metal device.");
+        let (metal_device, metal_queue) = osx_metal::get_device_and_queue_metal();
+        let _ = train_data.to_device(Device::Metal {
+            device: metal_device.clone(),
+            queue: metal_queue.clone(),
+        });
+
+        let _ = test_data.to_device(Device::Metal {
+            device: metal_device.clone(),
+            queue: metal_queue.clone(),
+        });
+
+        let _ = val_data.to_device(Device::Metal {
+            device: metal_device.clone(),
+            queue: metal_queue.clone(),
+        });
+    }
 
     println!("Training the model...");
     println!("Train dataset size: {}", train_data.len());

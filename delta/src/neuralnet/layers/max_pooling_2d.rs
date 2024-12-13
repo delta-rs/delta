@@ -27,11 +27,11 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use ndarray::{IxDyn, Shape};
 use crate::common::tensor_ops::Tensor;
 use crate::neuralnet::layers::error::LayerError;
 use crate::neuralnet::layers::Layer;
 use crate::optimizers::Optimizer;
+use ndarray::{IxDyn, Shape};
 
 /// A struct representing a 2D max pooling layer.
 #[derive(Debug)]
@@ -144,6 +144,15 @@ impl Layer for MaxPooling2D {
     ///
     /// A `Result` indicating success or failure.
     fn update_weights(&mut self, _optimizer: &mut Box<dyn Optimizer>) -> Result<(), LayerError> {
+        unimplemented!()
+    }
+
+    /// Sets the device for the layer.
+    ///
+    /// # Arguments
+    ///
+    /// * `_device` - The device to set for the layer.
+    fn set_device(&mut self, _device: &crate::devices::Device) {
         unimplemented!()
     }
 }

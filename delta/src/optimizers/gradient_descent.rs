@@ -28,6 +28,7 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use crate::common::Tensor;
+use crate::devices::Device;
 use crate::optimizers::error::OptimizerError;
 use crate::optimizers::Optimizer;
 use ndarray::Dimension;
@@ -36,6 +37,7 @@ use ndarray::Dimension;
 #[derive(Debug)]
 pub struct GradientDescent {
     learning_rate: f32,
+    device: Device,
 }
 
 impl GradientDescent {
@@ -49,7 +51,10 @@ impl GradientDescent {
     ///
     /// A new instance of the Gradient Descent optimizer.
     pub fn new(learning_rate: f32) -> Self {
-        Self { learning_rate }
+        Self {
+            learning_rate,
+            device: Device::default(),
+        }
     }
 }
 
@@ -82,6 +87,15 @@ impl Optimizer for GradientDescent {
         *weights -= update;
 
         Ok(())
+    }
+
+    /// Sets the device for the optimizer.
+    ///
+    /// # Arguments
+    ///
+    /// * `device` - The device to set for the optimizer.
+    fn set_device(&mut self, device: &Device) {
+        self.device = device.clone();
     }
 }
 

@@ -30,6 +30,7 @@
 use ndarray::Dimension;
 
 use crate::common::Tensor;
+use crate::devices::Device;
 use crate::optimizers::error::OptimizerError;
 use crate::optimizers::Optimizer;
 
@@ -38,6 +39,7 @@ use crate::optimizers::Optimizer;
 pub struct MiniBatchGD {
     #[allow(dead_code)]
     learning_rate: f32,
+    device: Device,
 }
 
 impl MiniBatchGD {
@@ -51,7 +53,10 @@ impl MiniBatchGD {
     ///
     /// A new instance of the MiniBatchGD optimizer.
     pub fn new(learning_rate: f32) -> Self {
-        Self { learning_rate }
+        Self {
+            learning_rate,
+            device: Device::default(),
+        }
     }
 }
 
@@ -96,6 +101,15 @@ impl Optimizer for MiniBatchGD {
         *weights -= processed_gradients.mul_scalar(self.learning_rate);
 
         Ok(())
+    }
+
+    /// Sets the device for the optimizer.
+    ///
+    /// # Arguments
+    ///
+    /// * `device` - The device to set for the optimizer.
+    fn set_device(&mut self, device: &Device) {
+        self.device = device.clone();
     }
 }
 

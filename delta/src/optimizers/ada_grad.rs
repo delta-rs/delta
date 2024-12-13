@@ -28,6 +28,7 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use crate::common::Tensor;
+use crate::devices::Device;
 use crate::optimizers::error::OptimizerError;
 use crate::optimizers::Optimizer;
 use ndarray::Dimension;
@@ -39,6 +40,7 @@ pub struct AdaGrad {
     epsilon: f32,
     g_sum: Option<Tensor>,
     timestep: usize,
+    device: Device,
 }
 
 impl AdaGrad {
@@ -58,6 +60,7 @@ impl AdaGrad {
             epsilon,
             g_sum: None,
             timestep: 0,
+            device: Device::default(),
         }
     }
 
@@ -88,6 +91,13 @@ impl Optimizer for AdaGrad {
             || self.g_sum.as_ref().unwrap().shape().raw_dim() != weights.shape().raw_dim()
         {
             self.g_sum = Some(Tensor::zeros(weights.shape().clone()));
+            self.g_sum = Some(
+                self.g_sum
+                    .as_mut()
+                    .unwrap()
+                    .to_device(self.device.clone())
+                    .unwrap(),
+            );
         }
 
         let g_sum = self.g_sum.as_mut().unwrap();
@@ -126,6 +136,15 @@ impl Optimizer for AdaGrad {
         *weights -= update;
 
         Ok(())
+    }
+
+    /// Sets the device for the optimizer.
+    ///
+    /// # Arguments
+    ///
+    /// * `device` - The device to set for the optimizer.
+    fn set_device(&mut self, device: &Device) {
+        self.device = device.clone();
     }
 }
 

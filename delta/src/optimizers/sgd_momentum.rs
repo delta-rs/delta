@@ -1,6 +1,7 @@
 use ndarray::Dimension;
 
 use crate::common::Tensor;
+use crate::devices::Device;
 use crate::optimizers::error::OptimizerError;
 use crate::optimizers::Optimizer;
 
@@ -12,6 +13,7 @@ pub struct SGDWithMomentum {
     #[allow(dead_code)]
     momentum: f32,
     velocity: Option<Tensor>,
+    device: Device,
 }
 
 impl SGDWithMomentum {
@@ -30,6 +32,7 @@ impl SGDWithMomentum {
             learning_rate,
             momentum,
             velocity: None,
+            device: Device::default(),
         }
     }
 }
@@ -53,6 +56,13 @@ impl Optimizer for SGDWithMomentum {
             || self.velocity.as_ref().unwrap().shape().raw_dim() != weights.shape().raw_dim()
         {
             self.velocity = Some(Tensor::zeros(weights.shape().clone()));
+            self.velocity = Some(
+                self.velocity
+                    .as_mut()
+                    .unwrap()
+                    .to_device(self.device.clone())
+                    .unwrap(),
+            );
         }
 
         let velocity = self.velocity.as_mut().unwrap();
@@ -87,6 +97,15 @@ impl Optimizer for SGDWithMomentum {
         *weights += velocity.clone();
 
         Ok(())
+    }
+
+    /// Sets the device for the optimizer.
+    ///
+    /// # Arguments
+    ///
+    /// * `device` - The device to set for the optimizer.
+    fn set_device(&mut self, device: &Device) {
+        self.device = device.clone();
     }
 }
 

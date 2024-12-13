@@ -27,9 +27,9 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use ndarray::{Dimension, IxDyn, Shape};
-use crate::common::Tensor;
 use crate::losses::Loss;
+use crate::{common::Tensor, devices::Device};
+use ndarray::{Dimension, IxDyn, Shape};
 
 /// A struct representing the Sparse Categorical Cross-Entropy Loss function.
 #[derive(Debug)]
@@ -84,7 +84,9 @@ impl SparseCategoricalCrossEntropyLoss {
             })
             .collect();
 
-        Tensor::new(indices, Shape::from(IxDyn(&[rows])))
+        let mut indices = Tensor::new(indices, Shape::from(IxDyn(&[rows])));
+        indices.device = one_hot.device.clone();
+        indices
     }
 
     /// Preprocesses one-hot encoded `y_true` for use with sparse categorical cross-entropy loss.
@@ -126,7 +128,9 @@ impl SparseCategoricalCrossEntropyLoss {
             processed_data.extend((0..cols).map(|j| if j == max_idx { 1.0 } else { 0.0 }));
         }
 
-        Tensor::new(processed_data, Shape::from(IxDyn(&[rows, cols])))
+        let mut new_tensor = Tensor::new(processed_data, Shape::from(IxDyn(&[rows, cols])));
+        new_tensor.device = y_true.device.clone();
+        new_tensor
     }
 }
 
@@ -146,8 +150,9 @@ impl Loss for SparseCategoricalCrossEntropyLoss {
             // Handle one-hot encoding
             if y_true.shape().raw_dim()[1] != y_pred.shape().raw_dim()[1] {
                 panic!(
-                    "If y_true is one-hot encoded, it must have the same number of classes as y_pred. Got: {:?}",
-                    y_true.shape()
+                    "If y_true is one-hot encoded, it must have the same number of classes as y_pred. \nGot y_true: {:?}\nGot y_pred: {:?}",
+                    y_true.shape(),
+                    y_pred.shape()
                 );
             }
             let y_true = self.preprocess_one_hot(&y_true);
@@ -248,6 +253,7 @@ impl Loss for SparseCategoricalCrossEntropyLoss {
         Tensor {
             data: ndarray::Array::from_shape_vec(ndarray::IxDyn(&grad_shape), grad_data)
                 .expect("Failed to create gradient tensor"),
+            device: Device::default(),
         }
     }
 }

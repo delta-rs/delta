@@ -27,18 +27,19 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use crate::common::Tensor;
+use crate::dataset::ImageDatasetOps;
+use crate::devices::Device;
+use crate::losses::Loss;
+use crate::neuralnet::layers::Layer;
+use crate::neuralnet::models::error::ModelError;
+use crate::optimizers::Optimizer;
+use ndarray::Dimension;
 use serde_json;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 use std::time::Instant;
-use ndarray::Dimension;
-use crate::common::Tensor;
-use crate::dataset::ImageDatasetOps;
-use crate::losses::Loss;
-use crate::neuralnet::layers::Layer;
-use crate::neuralnet::models::error::ModelError;
-use crate::optimizers::Optimizer;
 
 /// A sequential model that contains a list of layers, an optimizer, and a loss function.
 #[derive(Debug)]
@@ -111,6 +112,12 @@ impl Sequential {
     pub fn compile<O: Optimizer + 'static, L: Loss + 'static>(&mut self, optimizer: O, loss: L) {
         self.optimizer = Some(Box::new(optimizer));
         self.loss = Some(Box::new(loss));
+    }
+
+    pub fn set_device(&mut self, device: Device) {
+        for layer in self.layers.iter_mut() {
+            layer.set_device(&device);
+        }
     }
 
     /// Trains the model with the given training dataset, number of epochs, and batch size.
