@@ -120,7 +120,13 @@ impl Optimizer for Adam {
                 != weights.shape().raw_dim().as_array_view().to_vec()
         {
             self.m = Some(Tensor::zeros(weights.shape().clone()));
-            let _ = self.m.as_mut().unwrap().to_device(self.device.clone());
+            self.m = Some(
+                self.m
+                    .as_mut()
+                    .unwrap()
+                    .to_device(self.device.clone())
+                    .unwrap(),
+            );
         }
         if self.v.is_none()
             || self
@@ -134,7 +140,13 @@ impl Optimizer for Adam {
                 != weights.shape().raw_dim().as_array_view().to_vec()
         {
             self.v = Some(Tensor::zeros(weights.shape().clone()));
-            let _ = self.v.as_mut().unwrap().to_device(self.device.clone());
+            self.v = Some(
+                self.v
+                    .as_mut()
+                    .unwrap()
+                    .to_device(self.device.clone())
+                    .unwrap(),
+            );
         }
 
         let m = self.m.as_mut().unwrap();

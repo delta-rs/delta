@@ -88,22 +88,26 @@ impl Optimizer for AdaDelta {
                 != weights.shape().raw_dim()
         {
             self.accumulated_gradients = Some(Tensor::zeros(weights.shape().clone()));
-            let _ = self
-                .accumulated_gradients
-                .as_mut()
-                .unwrap()
-                .to_device(self.device.clone());
+            self.accumulated_gradients = Some(
+                self.accumulated_gradients
+                    .as_mut()
+                    .unwrap()
+                    .to_device(self.device.clone())
+                    .unwrap(),
+            );
         }
         if self.accumulated_updates.is_none()
             || self.accumulated_updates.as_ref().unwrap().shape().raw_dim()
                 != weights.shape().raw_dim()
         {
             self.accumulated_updates = Some(Tensor::zeros(weights.shape().clone()));
-            let _ = self
-                .accumulated_updates
-                .as_mut()
-                .unwrap()
-                .to_device(self.device.clone());
+            self.accumulated_updates = Some(
+                self.accumulated_updates
+                    .as_mut()
+                    .unwrap()
+                    .to_device(self.device.clone())
+                    .unwrap(),
+            );
         }
 
         let accumulated_gradients = self.accumulated_gradients.as_mut().unwrap();

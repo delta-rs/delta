@@ -56,11 +56,13 @@ impl Optimizer for SGDWithMomentum {
             || self.velocity.as_ref().unwrap().shape().raw_dim() != weights.shape().raw_dim()
         {
             self.velocity = Some(Tensor::zeros(weights.shape().clone()));
-            let _ = self
-                .velocity
-                .as_mut()
-                .unwrap()
-                .to_device(self.device.clone());
+            self.velocity = Some(
+                self.velocity
+                    .as_mut()
+                    .unwrap()
+                    .to_device(self.device.clone())
+                    .unwrap(),
+            );
         }
 
         let velocity = self.velocity.as_mut().unwrap();

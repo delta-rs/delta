@@ -140,6 +140,15 @@ fn execute_tensor_operation_metal(
     device: &metal::Device,
     queue: &metal::CommandQueue,
 ) -> Result<Tensor, String> {
+    // Check if the tensors have the same shape
+    // if tensor1.data.shape() != tensor2.data.shape() {
+    //     return Err(format!(
+    //         "Tensors must have the same shape, got {:?} and {:?}",
+    //         tensor1.data.shape(),
+    //         tensor2.data.shape()
+    //     ));
+    // }
+
     // Load shader and create compute pipeline
     let shader_source = include_str!("metal_shaders/tensor_ops.metal");
     let library = device
@@ -169,6 +178,13 @@ fn execute_tensor_operation_metal(
     let output_buffer =
         device.new_buffer(buffer_size, metal::MTLResourceOptions::StorageModeShared);
 
+    let tensor_length = tensor1.data.len() as u32; // Length of the tensor
+    let length_buffer = device.new_buffer_with_data(
+        &tensor_length as *const u32 as *const _,
+        std::mem::size_of::<u32>() as u64,
+        metal::MTLResourceOptions::StorageModeShared,
+    );
+
     // Create command buffer and encoder
     let command_buffer = queue.new_command_buffer();
     let encoder = command_buffer.new_compute_command_encoder();
@@ -176,18 +192,29 @@ fn execute_tensor_operation_metal(
     encoder.set_buffer(0, Some(input1_buffer.as_ref()), 0);
     encoder.set_buffer(1, Some(input2_buffer.as_ref()), 0);
     encoder.set_buffer(2, Some(output_buffer.as_ref()), 0);
+    encoder.set_buffer(3, Some(length_buffer.as_ref()), 0);
 
     // Dispatch threads
+    let tensor_length = tensor1.data.len() as u64;
+
     let threadgroup_size = metal::MTLSize {
-        width: 256,
+        width: 256, // Typical value for threadgroup size
         height: 1,
         depth: 1,
     };
+
+    // Compute the threadgroup count based on the actual data size
     let threadgroup_count = metal::MTLSize {
-        width: (tensor1.data.len() as u64 + 255) / 256,
+        width: (tensor_length + threadgroup_size.width - 1) / threadgroup_size.width,
         height: 1,
         depth: 1,
     };
+    assert!(
+        threadgroup_count.width * threadgroup_size.width >= tensor_length,
+        "Thread group size mismatch!"
+    );
+
+    // Dispatch threads
     encoder.dispatch_thread_groups(threadgroup_count, threadgroup_size);
     encoder.end_encoding();
 
@@ -214,7 +241,7 @@ pub fn tensor_add_metal(
     device: &metal::Device,
     queue: &metal::CommandQueue,
 ) -> Result<Tensor, String> {
-    println!("tensor_add_metal");
+    // println!("tensor_add_metal");
     execute_tensor_operation_metal(tensor1, tensor2, "tensor_add", device, queue)
 }
 
@@ -225,7 +252,7 @@ pub fn tensor_subtract_metal(
     device: &metal::Device,
     queue: &metal::CommandQueue,
 ) -> Result<Tensor, String> {
-    println!("tensor_subtract_metal");
+    // println!("tensor_subtract_metal");
     execute_tensor_operation_metal(tensor1, tensor2, "tensor_subtract", device, queue)
 }
 
@@ -236,7 +263,7 @@ pub fn tensor_multiply_metal(
     device: &metal::Device,
     queue: &metal::CommandQueue,
 ) -> Result<Tensor, String> {
-    println!("tensor_multiply_metal");
+    // println!("tensor_multiply_metal");
     execute_tensor_operation_metal(tensor1, tensor2, "tensor_multiply", device, queue)
 }
 
@@ -247,6 +274,74 @@ pub fn tensor_divide_metal(
     device: &metal::Device,
     queue: &metal::CommandQueue,
 ) -> Result<Tensor, String> {
-    println!("tensor_divide_metal");
+    // println!("tensor_divide_metal");
     execute_tensor_operation_metal(tensor1, tensor2, "tensor_divide", device, queue)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::common::Tensor;
+    use ndarray::IxDyn;
+    use ndarray::Shape;
+
+    #[test]
+    fn test_tensor_add_metal() {
+        let tensor1 = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], Shape::from(IxDyn(&[2, 2])));
+        let tensor2 = Tensor::new(vec![5.0, 6.0, 7.0, 8.0], Shape::from(IxDyn(&[2, 2])));
+        let device = metal::Device::system_default().unwrap();
+        let queue = device.new_command_queue();
+        let result = tensor_add_metal(&tensor1, &tensor2, &device, &queue).unwrap();
+        assert_eq!(result.data.shape(), &[2, 2]);
+        assert_eq!(
+            result.data,
+            Tensor::new(vec![6.0, 8.0, 10.0, 12.0], Shape::from(IxDyn(&[2, 2]))).data
+        );
+    }
+
+    #[test]
+    fn test_tensor_subtract_metal() {
+        let tensor1 = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], Shape::from(IxDyn(&[2, 2])));
+        let tensor2 = Tensor::new(vec![5.0, 6.0, 7.0, 8.0], Shape::from(IxDyn(&[2, 2])));
+        let device = metal::Device::system_default().unwrap();
+        let queue = device.new_command_queue();
+        let result = tensor_subtract_metal(&tensor1, &tensor2, &device, &queue).unwrap();
+        assert_eq!(result.data.shape(), &[2, 2]);
+        assert_eq!(
+            result.data,
+            Tensor::new(vec![-4.0, -4.0, -4.0, -4.0], Shape::from(IxDyn(&[2, 2]))).data
+        );
+    }
+
+    #[test]
+    fn test_tensor_multiply_metal() {
+        let tensor1 = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], Shape::from(IxDyn(&[2, 2])));
+        let tensor2 = Tensor::new(vec![5.0, 6.0, 7.0, 8.0], Shape::from(IxDyn(&[2, 2])));
+        let device = metal::Device::system_default().unwrap();
+        let queue = device.new_command_queue();
+        let result = tensor_multiply_metal(&tensor1, &tensor2, &device, &queue).unwrap();
+        assert_eq!(result.data.shape(), &[2, 2]);
+        assert_eq!(
+            result.data,
+            Tensor::new(vec![5.0, 12.0, 21.0, 32.0], Shape::from(IxDyn(&[2, 2]))).data
+        );
+    }
+
+    #[test]
+    fn test_tensor_divide_metal() {
+        let tensor1 = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], Shape::from(IxDyn(&[2, 2])));
+        let tensor2 = Tensor::new(vec![5.0, 6.0, 7.0, 8.0], Shape::from(IxDyn(&[2, 2])));
+        let device = metal::Device::system_default().unwrap();
+        let queue = device.new_command_queue();
+        let result = tensor_divide_metal(&tensor1, &tensor2, &device, &queue).unwrap();
+        assert_eq!(result.data.shape(), &[2, 2]);
+        assert_eq!(
+            result.data,
+            Tensor::new(
+                vec![0.2, 0.33333334, 0.42857146, 0.5],
+                Shape::from(IxDyn(&[2, 2]))
+            )
+            .data
+        );
+    }
 }

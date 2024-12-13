@@ -91,7 +91,13 @@ impl Optimizer for AdaGrad {
             || self.g_sum.as_ref().unwrap().shape().raw_dim() != weights.shape().raw_dim()
         {
             self.g_sum = Some(Tensor::zeros(weights.shape().clone()));
-            let _ = self.g_sum.as_mut().unwrap().to_device(self.device.clone());
+            self.g_sum = Some(
+                self.g_sum
+                    .as_mut()
+                    .unwrap()
+                    .to_device(self.device.clone())
+                    .unwrap(),
+            );
         }
 
         let g_sum = self.g_sum.as_mut().unwrap();
