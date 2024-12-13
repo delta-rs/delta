@@ -27,11 +27,11 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::activations::Activation;
 use crate::common::Tensor;
 use crate::neuralnet::layers::error::LayerError;
 use crate::neuralnet::layers::Layer;
 use crate::optimizers::Optimizer;
+use crate::{activations::Activation, devices::Device};
 use log::debug;
 use ndarray::{Dimension, IxDyn, Shape};
 use serde_json;
@@ -48,6 +48,7 @@ pub struct Dense {
     weights_grad: Option<Tensor>,
     bias_grad: Option<Tensor>,
     input: Option<Tensor>,
+    device: Device,
 }
 
 impl Dense {
@@ -73,6 +74,7 @@ impl Dense {
             weights_grad: None,
             bias_grad: None,
             input: None,
+            device: Device::default(),
         }
     }
 }
@@ -248,6 +250,25 @@ impl Layer for Dense {
             "trainable": self.trainable,
             "activation": self.activation.as_ref().map(|a| a.name())
         })
+    }
+
+    /// Sets the device for the layer.
+    ///
+    /// # Arguments
+    ///
+    /// * `device` - The device to set for the layer.
+    fn set_device(&mut self, device: &Device) {
+        self.device = device.clone();
+
+        if let Some(ref mut weights) = self.weights {
+            self.weights = Some(weights.to_device(device.clone()).unwrap());
+        }
+        if let Some(ref mut bias) = self.bias {
+            self.bias = Some(bias.to_device(device.clone()).unwrap());
+        }
+        if let Some(ref mut input) = self.input {
+            self.input = Some(input.to_device(device.clone()).unwrap());
+        }
     }
 }
 

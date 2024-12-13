@@ -27,50 +27,39 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-pub mod ada_delta;
-pub mod ada_grad;
-pub mod adam;
-pub mod error;
-pub mod gradient_descent;
-pub mod mini_batch_gd;
-pub mod rms_prop;
-pub mod sgd;
-pub mod sgd_momentum;
+use std::fmt;
 
-use crate::common::Tensor;
-use crate::devices::Device;
-use crate::optimizers::error::OptimizerError;
-pub use ada_delta::AdaDelta;
-pub use ada_grad::AdaGrad;
-pub use adam::Adam;
-pub use gradient_descent::GradientDescent;
-pub use mini_batch_gd::MiniBatchGD;
-pub use rms_prop::RMSProp;
-pub use sgd::SGD;
-pub use sgd_momentum::SGDWithMomentum;
-use std::fmt::Debug;
+#[cfg(feature = "metal")]
+pub mod osx_metal;
 
-/// A trait representing an optimizer for training neural networks.
-pub trait Optimizer: Debug {
-    /// Performs an optimization step using the given weights and gradients.
-    ///
-    /// # Arguments
-    ///
-    /// * `weights` - A mutable reference to the weights tensor.
-    /// * `gradients` - A reference to the gradients tensor.
-    fn step(&mut self, weights: &mut Tensor, gradients: &Tensor) -> Result<(), OptimizerError>;
-
-    /// Sets the device for the optimizer.
-    ///
-    /// # Arguments
-    ///
-    /// * `device` - The device to set for the optimizer.
-    fn set_device(&mut self, device: &Device);
+#[derive(Debug, Clone)]
+pub enum Device {
+    Cpu,
+    #[cfg(feature = "metal")]
+    Metal {
+        device: metal::Device,
+        queue: metal::CommandQueue,
+    },
+    Cuda,
+    OpenCL,
+    OpenCLCuda,
 }
 
-/// A struct representing the configuration for an optimizer.
-#[derive(Debug)]
-pub struct OptimizerConfig {
-    /// The learning rate for the optimizer.
-    pub learning_rate: f32,
+impl Default for Device {
+    fn default() -> Self {
+        Self::Cpu
+    }
+}
+
+impl fmt::Display for Device {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Device::Cpu => write!(f, "CPU"),
+            #[cfg(feature = "metal")]
+            Device::Metal { .. } => write!(f, "Metal"),
+            Device::Cuda => write!(f, "CUDA"),
+            Device::OpenCL => write!(f, "OpenCL"),
+            Device::OpenCLCuda => write!(f, "OpenCL + CUDA"),
+        }
+    }
 }

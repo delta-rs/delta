@@ -34,7 +34,7 @@ use std::{
 
 use ndarray::{s, IxDyn, Shape};
 
-use crate::common::{Tensor};
+use crate::common::Tensor;
 use crate::dataset::base::{Dataset, ImageDatasetOps};
 
 /// A struct representing a test dataset.
@@ -71,7 +71,10 @@ impl TestDataset {
             (0..size * features).map(|x| x as f32).collect(),
             Shape::from(IxDyn(&[size, features])),
         );
-        let labels = Tensor::new((0..size).map(|x| (x % 2) as f32).collect(), Shape::from(IxDyn(&[size])));
+        let labels = Tensor::new(
+            (0..size).map(|x| (x % 2) as f32).collect(),
+            Shape::from(IxDyn(&[size])),
+        );
         Dataset { inputs, labels }
     }
 
@@ -113,7 +116,7 @@ impl ImageDatasetOps for TestDataset {
         Box::pin(future::ready(Self {
             train: Some(Self::generate_dummy_dataset(100, 10)),
             test: None,
-            val: None
+            val: None,
         }))
     }
 
@@ -126,7 +129,7 @@ impl ImageDatasetOps for TestDataset {
         Box::pin(future::ready(Self {
             train: None,
             test: Some(Self::generate_dummy_dataset(50, 10)),
-            val: None
+            val: None,
         }))
     }
 
@@ -211,7 +214,10 @@ impl ImageDatasetOps for TestDataset {
                     inputs.iter().cloned().collect(),
                     Shape::from(IxDyn(&[end - start, dataset.inputs.shape().raw_dim()[1]])),
                 ),
-                Tensor::new(labels.iter().cloned().collect(), Shape::from(IxDyn(&[end - start]))),
+                Tensor::new(
+                    labels.iter().cloned().collect(),
+                    Shape::from(IxDyn(&[end - start])),
+                ),
             );
         }
 
@@ -274,7 +280,29 @@ impl ImageDatasetOps for TestDataset {
         Self {
             train: self.train.clone(),
             test: self.test.clone(),
-            val: self.val.clone()
+            val: self.val.clone(),
         }
+    }
+
+    /// Transfers the dataset to the specified device.
+    ///
+    /// # Arguments
+    ///
+    /// * `device` - The device to transfer the dataset to.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the dataset on the specified device.
+    fn to_device(&mut self, device: crate::devices::Device) -> Result<(), String> {
+        if let Some(train) = self.train.as_mut() {
+            train.to_device(&device);
+        }
+        if let Some(test) = self.test.as_mut() {
+            test.to_device(&device);
+        }
+        if let Some(val) = self.val.as_mut() {
+            val.to_device(&device);
+        }
+        Ok(())
     }
 }

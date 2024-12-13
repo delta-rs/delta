@@ -27,9 +27,9 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use ndarray::{Dimension, IxDyn, Shape};
-use crate::common::Tensor;
 use crate::losses::Loss;
+use crate::{common::Tensor, devices::Device};
+use ndarray::{Dimension, IxDyn, Shape};
 
 /// A struct representing the Sparse Categorical Cross-Entropy Loss function.
 #[derive(Debug)]
@@ -84,7 +84,9 @@ impl SparseCategoricalCrossEntropyLoss {
             })
             .collect();
 
-        Tensor::new(indices, Shape::from(IxDyn(&[rows])))
+        let mut indices = Tensor::new(indices, Shape::from(IxDyn(&[rows])));
+        indices.device = one_hot.device.clone();
+        indices
     }
 
     /// Preprocesses one-hot encoded `y_true` for use with sparse categorical cross-entropy loss.
@@ -126,7 +128,9 @@ impl SparseCategoricalCrossEntropyLoss {
             processed_data.extend((0..cols).map(|j| if j == max_idx { 1.0 } else { 0.0 }));
         }
 
-        Tensor::new(processed_data, Shape::from(IxDyn(&[rows, cols])))
+        let mut new_tensor = Tensor::new(processed_data, Shape::from(IxDyn(&[rows, cols])));
+        new_tensor.device = y_true.device.clone();
+        new_tensor
     }
 }
 
@@ -248,6 +252,7 @@ impl Loss for SparseCategoricalCrossEntropyLoss {
         Tensor {
             data: ndarray::Array::from_shape_vec(ndarray::IxDyn(&grad_shape), grad_data)
                 .expect("Failed to create gradient tensor"),
+            device: Device::default(),
         }
     }
 }

@@ -28,18 +28,18 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 pub mod dense;
+pub mod error;
 pub mod flatten;
 pub mod max_pooling_2d;
-pub mod error;
 
-use std::fmt::Debug;
-use ndarray::{IxDyn, Shape};
+use crate::neuralnet::layers::error::LayerError;
+use crate::optimizers::Optimizer;
+use crate::{common::Tensor, devices::Device};
 pub use dense::Dense;
 pub use flatten::Flatten;
 pub use max_pooling_2d::MaxPooling2D;
-use crate::common::Tensor;
-use crate::neuralnet::layers::error::LayerError;
-use crate::optimizers::Optimizer;
+use ndarray::{IxDyn, Shape};
+use std::fmt::Debug;
 
 // A trait representing a neural network layer.
 pub trait Layer: Debug {
@@ -92,6 +92,13 @@ pub trait Layer: Debug {
     ///
     /// A `&str` representing the name of the layer.
     fn name(&self) -> &str;
+
+    /// Sets the device for the layer.
+    ///
+    /// # Arguments
+    ///
+    /// * `device` - The device to set for the layer.
+    fn set_device(&mut self, _device: &Device);
 
     /// Returns the number of units in the layer.
     ///

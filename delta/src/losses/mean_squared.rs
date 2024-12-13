@@ -28,6 +28,7 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use crate::common::tensor_ops::Tensor;
+use crate::devices::Device;
 use crate::losses::Loss;
 
 /// A struct representing the Mean Squared Loss function.
@@ -109,7 +110,10 @@ impl Loss for MeanSquaredLoss {
         let diff = &output.data - &target.data;
         let gradient = &diff * 2.0 / total_elements;
 
-        Tensor { data: gradient }
+        Tensor {
+            data: gradient,
+            device: Device::default(),
+        }
     }
 }
 
@@ -121,8 +125,14 @@ mod tests {
 
     #[test]
     fn test_mean_squared_loss() {
-        let y_true = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], Shape::from(IxDyn(&[2, 3])));
-        let y_pred = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], Shape::from(IxDyn(&[2, 3])));
+        let y_true = Tensor::new(
+            vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+            Shape::from(IxDyn(&[2, 3])),
+        );
+        let y_pred = Tensor::new(
+            vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+            Shape::from(IxDyn(&[2, 3])),
+        );
         let loss = MeanSquaredLoss::new();
         let result = loss.calculate_loss(&y_true, &y_pred);
         assert_eq!(result, 0.0);
@@ -131,7 +141,10 @@ mod tests {
     #[test]
     fn test_mean_squared_loss_with_mismatch() {
         let y_true = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], Shape::from(IxDyn(&[2, 2])));
-        let y_pred = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], Shape::from(IxDyn(&[2, 3])));
+        let y_pred = Tensor::new(
+            vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+            Shape::from(IxDyn(&[2, 3])),
+        );
         let loss = MeanSquaredLoss::new();
 
         let result = std::panic::catch_unwind(|| {

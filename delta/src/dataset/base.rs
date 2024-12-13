@@ -27,8 +27,8 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use crate::{common::Tensor, devices::Device};
 use std::future::Future;
-use crate::common::Tensor;
 
 /// A struct representing a dataset.
 #[derive(Debug, Clone)]
@@ -50,6 +50,16 @@ impl Dataset {
     /// A new `Dataset` instance.
     pub fn new(inputs: Tensor, labels: Tensor) -> Self {
         Dataset { inputs, labels }
+    }
+
+    /// Transfers the dataset to the specified device.
+    ///
+    /// # Arguments
+    ///
+    /// * `device` - The device to transfer the dataset to.
+    pub fn to_device(&mut self, device: &Device) {
+        self.inputs = self.inputs.to_device(device.clone()).unwrap();
+        self.labels = self.labels.to_device(device.clone()).unwrap();
     }
 }
 
@@ -146,6 +156,13 @@ pub trait ImageDatasetOps {
     ///
     /// A new instance of the dataset.
     fn clone(&self) -> Self;
+
+    /// Transfers the dataset to the specified device.
+    ///
+    /// # Arguments
+    ///
+    /// * `device` - The device to transfer the dataset to.
+    fn to_device(&mut self, device: Device) -> Result<(), String>;
 }
 
 /// A trait representing operations that can be performed on a text dataset.

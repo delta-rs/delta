@@ -30,6 +30,7 @@
 use ndarray::Dimension;
 
 use crate::common::Tensor;
+use crate::devices::Device;
 use crate::optimizers::error::OptimizerError;
 use crate::optimizers::Optimizer;
 
@@ -40,6 +41,7 @@ pub struct RMSProp {
     decay_rate: f32,
     epsilon: f32,
     mean_square: Option<Tensor>,
+    device: Device,
 }
 
 impl RMSProp {
@@ -70,6 +72,7 @@ impl RMSProp {
             decay_rate,
             epsilon,
             mean_square: None,
+            device: Device::default(),
         })
     }
 }
@@ -92,6 +95,11 @@ impl Optimizer for RMSProp {
         // Initialize mean square tensor if not already done
         if self.mean_square.is_none() {
             self.mean_square = Some(Tensor::zeros(weights.shape().clone()));
+            let _ = self
+                .mean_square
+                .as_mut()
+                .unwrap()
+                .to_device(self.device.clone());
         }
 
         let mean_square = self.mean_square.as_mut().unwrap();
@@ -110,6 +118,15 @@ impl Optimizer for RMSProp {
         *weights -= update;
 
         Ok(())
+    }
+
+    /// Sets the device for the optimizer.
+    ///
+    /// # Arguments
+    ///
+    /// * `device` - The device to set for the optimizer.
+    fn set_device(&mut self, device: &Device) {
+        self.device = device.clone();
     }
 }
 

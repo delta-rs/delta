@@ -34,6 +34,7 @@ use std::path::PathBuf;
 pub mod activations;
 pub mod common;
 pub mod dataset;
+pub mod devices;
 pub mod encoders;
 pub mod losses;
 pub mod neuralnet;

@@ -7,11 +7,19 @@ use ndarray::{Dimension, Ix2};
 use rand::{thread_rng, Rng};
 use rand_distr::{Distribution, Normal};
 
+#[cfg(feature = "metal")]
+use crate::devices::osx_metal::{
+    tensor_add_metal, tensor_divide_metal, tensor_multiply_metal, tensor_subtract_metal,
+};
+
+use crate::devices::Device;
+
 /// A struct representing a tensor.
 #[derive(Debug, Clone)]
 pub struct Tensor {
     /// The dataset of the tensor stored as an n-dimensional array.
     pub data: ArrayD<f32>,
+    pub device: Device,
 }
 
 impl Tensor {
@@ -28,6 +36,7 @@ impl Tensor {
     pub fn new(data: Vec<f32>, shape: Shape<IxDyn>) -> Self {
         Self {
             data: Array::from_shape_vec(shape, data).expect("Invalid shape for dataset"),
+            device: Device::default(),
         }
     }
 
@@ -43,6 +52,7 @@ impl Tensor {
     pub fn zeros(shape: Shape<IxDyn>) -> Self {
         Self {
             data: Array::zeros(shape),
+            device: Device::default(),
         }
     }
 
@@ -60,6 +70,7 @@ impl Tensor {
         let data: Vec<f32> = (0..shape.size()).map(|_| rng.gen::<f32>()).collect(); // Use size() method
         Self {
             data: Array::from_shape_vec(shape, data).expect("Invalid shape for random dataset"),
+            device: Device::default(),
         }
     }
 
@@ -73,8 +84,19 @@ impl Tensor {
     ///
     /// A new tensor containing the result of the addition.
     pub fn add(&self, other: &Tensor) -> Tensor {
-        Tensor {
-            data: &self.data + &other.data,
+        // Check device compatibility
+        match &self.device {
+            Device::Cpu => Tensor {
+                data: &self.data + &other.data,
+                device: self.device.clone(),
+            },
+            #[cfg(feature = "metal")]
+            Device::Metal { device, queue } => {
+                // Perform Metal addition
+                tensor_add_metal(self, other, device, queue)
+                    .expect("Failed to perform addition on Metal device")
+            }
+            _ => panic!("Unsupported device for tensor addition."),
         }
     }
 
@@ -117,6 +139,7 @@ impl Tensor {
                 .into_shape_with_order(shape)
                 .expect("Invalid shape for reshape")
                 .to_owned(), // Only create a new allocation if necessary
+            device: self.device.clone(),
         }
     }
 
@@ -136,7 +159,10 @@ impl Tensor {
         // Create a new array by applying the function `f` to each element of `self.dataset`
         let new_data = self.data.mapv(|x| f(x));
 
-        Tensor { data: new_data }
+        Tensor {
+            data: new_data,
+            device: self.device.clone(),
+        }
     }
 
     /// Slices the tensor along the specified indices.
@@ -153,6 +179,7 @@ impl Tensor {
         let view = self.data.slice(slices.as_slice());
         Tensor {
             data: view.to_owned(),
+            device: self.device.clone(),
         }
     }
 
@@ -183,12 +210,15 @@ impl Tensor {
             .into_dimensionality::<Ix2>()
             .expect("Other tensor must be 2D for matmul");
 
-        // Perform the matrix multiplication
-        let result = self_2d.dot(&other_2d);
-
-        // Wrap the result back into a Tensor with dynamic dimensions
-        Tensor {
-            data: result.into_dyn(),
+        match &self.device {
+            Device::Cpu => Tensor {
+                data: self_2d.dot(&other_2d).into_dyn(),
+                device: self.device.clone(),
+            },
+            #[cfg(feature = "metal")]
+            Device::Metal { device, queue } => tensor_multiply_metal(self, other, device, queue)
+                .expect("Failed to perform matrix multiplication on Metal device"),
+            _ => panic!("Unsupported device for matrix multiplication."),
         }
     }
 
@@ -211,6 +241,7 @@ impl Tensor {
         let axes: Vec<usize> = (0..ndim).rev().collect();
         Tensor {
             data: self.data.clone().permuted_axes(axes),
+            device: self.device.clone(),
         }
     }
 
@@ -235,6 +266,7 @@ impl Tensor {
     pub fn permute(&self, axes: Vec<usize>) -> Tensor {
         Tensor {
             data: self.data.clone().permuted_axes(axes),
+            device: self.device.clone(),
         }
     }
 
@@ -249,7 +281,10 @@ impl Tensor {
     /// A new tensor containing the summed dataset.
     pub fn sum_along_axis(&self, axis: usize) -> Tensor {
         let sum = self.data.sum_axis(Axis(axis));
-        Tensor { data: sum }
+        Tensor {
+            data: sum,
+            device: self.device.clone(),
+        }
     }
 
     /// Multiplies the tensor by a scalar value.
@@ -311,8 +346,15 @@ impl Tensor {
     ///
     /// A new tensor containing the result of the division.
     pub fn div(&self, other: &Tensor) -> Tensor {
-        Tensor {
-            data: &self.data / &other.data,
+        match &self.device {
+            Device::Cpu => Tensor {
+                data: &self.data / &other.data,
+                device: self.device.clone(),
+            },
+            #[cfg(feature = "metal")]
+            Device::Metal { device, queue } => tensor_divide_metal(self, other, device, queue)
+                .expect("Failed to perform division on Metal device"),
+            _ => panic!("Unsupported device for tensor division."),
         }
     }
 
@@ -325,6 +367,7 @@ impl Tensor {
         let shape = IxDyn(&[self.data.len()]);
         Tensor {
             data: self.data.clone().into_shape_with_order(shape).unwrap(),
+            device: self.device.clone(),
         }
     }
 
@@ -342,7 +385,10 @@ impl Tensor {
             .data
             .mean_axis(Axis(axis))
             .expect("Failed to calculate mean");
-        Tensor { data: mean }
+        Tensor {
+            data: mean,
+            device: self.device.clone(),
+        }
     }
 
     /// Broadcasts the tensor to a target shape.
@@ -387,6 +433,7 @@ impl Tensor {
 
         Tensor {
             data: broadcasted_data,
+            device: self.device.clone(),
         }
     }
 
@@ -414,6 +461,7 @@ impl Tensor {
 
         Tensor {
             data: normalized_data,
+            device: self.device.clone(),
         }
     }
 
@@ -441,7 +489,10 @@ impl Tensor {
     /// A new tensor containing the reduced dataset.
     pub fn reduce_sum(&self, axis: usize) -> Tensor {
         let sum = self.data.sum_axis(Axis(axis));
-        Tensor { data: sum }
+        Tensor {
+            data: sum,
+            device: self.device.clone(),
+        }
     }
 
     /// Gets the index of the maximum value along the specified axis.
@@ -481,6 +532,7 @@ impl Tensor {
 
         Tensor {
             data: max_indices.mapv(|x| x as f32),
+            device: self.device.clone(),
         }
     }
 
@@ -589,6 +641,7 @@ impl Tensor {
 
         Ok(Tensor {
             data: stacked_data.into_dyn(),
+            device: tensors[0].device.clone(),
         })
     }
 
@@ -640,7 +693,16 @@ impl Tensor {
             .to_owned()
             .into_dyn();
 
-        (Tensor { data: data1 }, Tensor { data: data2 })
+        (
+            Tensor {
+                data: data1,
+                device: self.device.clone(),
+            },
+            Tensor {
+                data: data2,
+                device: self.device.clone(),
+            },
+        )
     }
 
     /// Creates a tensor filled with random values sampled from a normal distribution.
@@ -666,6 +728,7 @@ impl Tensor {
         // Create a tensor from the generated data
         Tensor {
             data: Array::from_shape_vec(shape, data).expect("Invalid shape for random dataset"),
+            device: Device::default(),
         }
     }
 
@@ -690,9 +753,39 @@ impl Tensor {
             .expect("Shapes are incompatible for broadcasting");
 
         // Perform the element-wise subtraction
-        Tensor {
-            data: &self.data - &broadcasted_other,
+        match &self.device {
+            Device::Cpu => Tensor {
+                data: &self.data - &broadcasted_other,
+                device: self.device.clone(),
+            },
+            #[cfg(feature = "metal")]
+            Device::Metal { device, queue } => tensor_subtract_metal(self, other, device, queue)
+                .expect("Failed to perform subtraction on Metal device"),
+            _ => panic!("Unsupported device for tensor subtraction."),
         }
+    }
+
+    /// Transfers the tensor to the specified device.
+    ///
+    /// # Arguments
+    ///
+    /// * `device` - The device to transfer the tensor to.
+    ///
+    /// # Returns
+    ///
+    /// A new tensor on the specified device.
+    pub fn to_device(&mut self, device: Device) -> Result<Self, String> {
+        self.device = device.clone();
+        Ok(self.clone())
+        // match device {
+        //     Device::Cpu => Ok(self.clone()), // Already on CPU
+        //     #[cfg(feature = "metal")]
+        //     Device::Metal { device, queue } => {
+        //         let buffer = to_device_metal(self, &device, &queue)?;
+        //         Ok(from_device_metal(&buffer, self.shape()))
+        //     }
+        //     _ => Err("Device not supported yet.".to_string()),
+        // }
     }
 }
 

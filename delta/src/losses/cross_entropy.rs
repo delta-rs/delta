@@ -27,9 +27,10 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use ndarray::Dimension;
 use crate::common::Tensor;
+use crate::devices::Device;
 use crate::losses::Loss;
+use ndarray::Dimension;
 
 /// A struct representing the Cross-Entropy Loss function.
 #[derive(Debug)]
@@ -129,6 +130,7 @@ impl Loss for CrossEntropyLoss {
         Tensor {
             data: ndarray::Array::from_shape_vec(ndarray::IxDyn(&grad_shape), grad_data)
                 .expect("Failed to create gradient tensor"),
+            device: Device::default(),
         }
     }
 }

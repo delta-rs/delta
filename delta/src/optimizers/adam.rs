@@ -28,6 +28,7 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use crate::common::Tensor;
+use crate::devices::Device;
 use crate::optimizers::error::OptimizerError;
 use crate::optimizers::Optimizer;
 use ndarray::Dimension;
@@ -53,6 +54,7 @@ pub struct Adam {
     m: Option<Tensor>,
     v: Option<Tensor>,
     timestep: usize,
+    device: Device,
 }
 
 impl Adam {
@@ -72,6 +74,7 @@ impl Adam {
             m: None,
             v: None,
             timestep: 0,
+            device: Device::default(),
         }
     }
 
@@ -117,6 +120,7 @@ impl Optimizer for Adam {
                 != weights.shape().raw_dim().as_array_view().to_vec()
         {
             self.m = Some(Tensor::zeros(weights.shape().clone()));
+            let _ = self.m.as_mut().unwrap().to_device(self.device.clone());
         }
         if self.v.is_none()
             || self
@@ -130,6 +134,7 @@ impl Optimizer for Adam {
                 != weights.shape().raw_dim().as_array_view().to_vec()
         {
             self.v = Some(Tensor::zeros(weights.shape().clone()));
+            let _ = self.v.as_mut().unwrap().to_device(self.device.clone());
         }
 
         let m = self.m.as_mut().unwrap();
@@ -201,6 +206,15 @@ impl Optimizer for Adam {
         *weights -= update;
 
         Ok(())
+    }
+
+    /// Sets the device for the optimizer.
+    ///
+    /// # Arguments
+    ///
+    /// * `device` - The device to set for the optimizer.
+    fn set_device(&mut self, device: &Device) {
+        self.device = device.clone();
     }
 }
 
