@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "delta",
+    "delta_bench",
     "examples/image_classification/cifar10",
     "examples/image_classification/mnist",
     "examples/image_classification/imagenet_v2",
@@ -9,3 +10,6 @@ resolver = "2"
 
 [workspace.dependencies]
 tokio = { version = "1.32.0", features = ["full"] }
+
+[workspace.dev-dependencies]
+flamegraph = "0.6.6"
