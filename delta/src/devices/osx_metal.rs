@@ -29,67 +29,7 @@
 
 use crate::common::Tensor;
 pub use metal;
-use ndarray::{Array, IxDyn, Shape};
-
-/// Transfers the tensor to a Metal device.
-///
-/// # Arguments
-///
-/// * `metal_device` - The Metal device to transfer the tensor to.
-///
-/// # Returns
-///
-/// A new tensor with data stored on the Metal device.
-#[cfg(feature = "metal")]
-pub fn to_device_metal(
-    tensor: &Tensor,
-    metal_device: &metal::Device,
-    _queue: &metal::CommandQueue,
-) -> Result<metal::Buffer, String> {
-    // Create a Metal buffer for the tensor's data
-    let tensor_size = tensor.data.len() * std::mem::size_of::<f32>();
-    let buffer =
-        metal_device.new_buffer(tensor_size as u64, metal::MTLResourceOptions::StorageModeShared);
-
-    // Copy the tensor's data into the Metal buffer
-    unsafe {
-        std::ptr::copy_nonoverlapping(
-            tensor.data.as_slice().unwrap().as_ptr(),
-            buffer.contents() as *mut f32,
-            tensor.data.len(),
-        );
-    }
-
-    Ok(buffer)
-}
-
-/// Transfers the tensor's data back from a Metal buffer to the CPU.
-///
-/// # Arguments
-///
-/// * `buffer` - The Metal buffer containing the tensor's data.
-///
-/// # Returns
-///
-/// A new `Tensor` instance with the data transferred from the Metal device.
-#[cfg(feature = "metal")]
-pub fn from_device_metal(buffer: &metal::Buffer, shape: Shape<IxDyn>) -> Tensor {
-    // Create a vector to hold the data
-    let tensor_size = buffer.length() as usize / std::mem::size_of::<f32>();
-    let mut data = vec![0.0; tensor_size];
-
-    // Copy the data from the Metal buffer
-    unsafe {
-        std::ptr::copy_nonoverlapping(
-            buffer.contents() as *const f32,
-            data.as_mut_ptr(),
-            tensor_size,
-        );
-    }
-
-    // Create a new tensor from the data
-    Tensor::new(data, shape)
-}
+use ndarray::Array;
 
 /// Creates a Metal device and command queue.
 ///

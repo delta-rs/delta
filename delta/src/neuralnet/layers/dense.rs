@@ -113,7 +113,7 @@ impl Layer for Dense {
         ));
 
         // Initialize bias to zeros
-        self.bias = Some(Tensor::zeros(Shape::from(IxDyn(&[self.units]))));
+        self.bias = Some(Tensor::zeros(Shape::from(IxDyn(&[self.units])), self.device.clone()));
 
         Ok(())
     }

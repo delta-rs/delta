@@ -35,6 +35,8 @@ use ndarray::Dimension;
 use std::fmt;
 use std::fmt::Debug;
 
+const EPSILON: f32 = 1e-8;
+
 /// A wrapper struct for a debuggable scheduler function.
 #[allow(dead_code)]
 struct DebuggableScheduler(Box<dyn Fn(usize) -> f32>);
@@ -48,7 +50,6 @@ impl Debug for DebuggableScheduler {
 /// The Adam optimizer struct.
 #[derive(Debug)]
 pub struct Adam {
-    #[allow(dead_code)]
     learning_rate: f32,
     scheduler: Option<DebuggableScheduler>,
     m: Option<Tensor>,
@@ -107,45 +108,44 @@ impl Optimizer for Adam {
 
         self.timestep += 1;
 
+        let weights_shape = weights.shape().clone();
+        let weights_shape_vec = weights_shape.raw_dim().as_array_view().to_vec();
+
+        let gradients_shape = gradients.shape().clone();
+        let gradients_shape_vec = gradients_shape.raw_dim().as_array_view().to_vec();
+
         // Initialize moving averages if not already done
         if self.m.is_none()
             || self.m.as_ref().unwrap().shape().raw_dim().as_array_view().to_vec()
-                != weights.shape().raw_dim().as_array_view().to_vec()
+                != weights_shape_vec
         {
-            self.m = Some(Tensor::zeros(weights.shape().clone()));
-            self.m = Some(self.m.as_mut().unwrap().to_device(self.device.clone()).unwrap());
+            self.m = Some(Tensor::zeros(weights_shape.clone(), self.device.clone()));
         }
         if self.v.is_none()
             || self.v.as_ref().unwrap().shape().raw_dim().as_array_view().to_vec()
-                != weights.shape().raw_dim().as_array_view().to_vec()
+                != weights_shape_vec
         {
-            self.v = Some(Tensor::zeros(weights.shape().clone()));
-            self.v = Some(self.v.as_mut().unwrap().to_device(self.device.clone()).unwrap());
+            self.v = Some(Tensor::zeros(weights_shape.clone(), self.device.clone()));
         }
 
         let m = self.m.as_mut().unwrap();
         let v = self.v.as_mut().unwrap();
 
         // Ensure gradients match the weights' shape
-        let processed_gradients = if gradients.shape().raw_dim().as_array_view().to_vec()
-            == weights.shape().raw_dim().as_array_view().to_vec()
-        {
+        let processed_gradients = if gradients_shape_vec == weights_shape_vec {
             gradients.clone()
-        } else if gradients.shape().raw_dim().ndim() <= weights.shape().raw_dim().ndim()
-            && gradients
-                .shape()
-                .raw_dim()
-                .as_array_view()
+        } else if gradients_shape_vec.len() <= weights_shape_vec.len()
+            && gradients_shape_vec
                 .iter()
                 .rev()
-                .zip(weights.shape().raw_dim().as_array_view().iter().rev())
+                .zip(weights_shape_vec.iter().rev())
                 .all(|(g, w)| *g == *w || *g == 1)
         {
-            gradients.broadcast(weights.shape())
+            gradients.broadcast(weights_shape)
         } else {
             return Err(OptimizerError::IncompatibleGradientWeightShape(
-                gradients.shape().raw_dim().as_array_view().to_vec(),
-                weights.shape().raw_dim().as_array_view().to_vec(),
+                gradients_shape_vec,
+                weights_shape_vec,
             ));
         };
 
@@ -154,11 +154,14 @@ impl Optimizer for Adam {
         *v = v.mul_scalar(0.999).add(&processed_gradients.pow(2.0).mul_scalar(0.001));
 
         // Bias correction
-        let bias_correction_1 = 1.0 - 0.9f32.powi(self.timestep as i32);
-        let bias_correction_2 = 1.0 - 0.999f32.powi(self.timestep as i32);
+        let beta1_t = 0.9f32.powi(self.timestep as i32);
+        let beta2_t = 0.999f32.powi(self.timestep as i32);
 
-        let m_hat = m.div_scalar(bias_correction_1);
-        let v_hat = v.div_scalar(bias_correction_2);
+        let bias_correction_1 = 1.0 - beta1_t;
+        let bias_correction_2 = 1.0 - beta2_t;
+
+        let m_hat = m.map(|m_val| m_val / bias_correction_1);
+        let v_hat = v.map(|v_val| v_val / bias_correction_2);
 
         // Get learning rate
         let lr = self
@@ -173,7 +176,7 @@ impl Optimizer for Adam {
         let scaling_factor = if max_gradient > 10.0 { 10.0 / max_gradient } else { 1.0 };
 
         // Apply scaled learning rate
-        let epsilon = 1e-8;
+        let epsilon = EPSILON;
         let scaled_lr = lr * scaling_factor;
         let update = m_hat.div(&v_hat.sqrt().add_scalar(epsilon)).mul_scalar(scaled_lr);
 

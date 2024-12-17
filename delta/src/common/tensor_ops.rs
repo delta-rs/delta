@@ -45,12 +45,13 @@ impl Tensor {
     /// # Arguments
     ///
     /// * `shape` - A vector representing the shape of the tensor.
+    /// * `device` - The device to create the tensor on.
     ///
     /// # Returns
     ///
     /// A tensor filled with zeros.
-    pub fn zeros(shape: Shape<IxDyn>) -> Self {
-        Self { data: Array::zeros(shape), device: Device::default() }
+    pub fn zeros(shape: Shape<IxDyn>, device: Device) -> Self {
+        Self { data: Array::zeros(shape), device }
     }
 
     /// Creates a tensor filled with random values.
@@ -417,7 +418,7 @@ impl Tensor {
         let current_max = self.data.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
 
         if current_min == current_max {
-            return Tensor::zeros(self.shape());
+            return Tensor::zeros(self.shape(), self.device.clone());
         }
 
         let normalized_data =
@@ -752,7 +753,7 @@ impl Default for Tensor {
     ///
     /// A new tensor with default values.
     fn default() -> Self {
-        Self::zeros(Shape::from(IxDyn(&[1, 1])))
+        Self::zeros(Shape::from(IxDyn(&[1, 1])), Device::Cpu)
     }
 }
 
@@ -804,7 +805,7 @@ mod tests {
     #[test]
     fn test_zeros() {
         let shape = Shape::from(IxDyn(&[2, 3]));
-        let tensor = Tensor::zeros(shape);
+        let tensor = Tensor::zeros(shape, Device::default());
         assert_eq!(tensor.data.shape(), &[2, 3]);
     }
 
