@@ -712,15 +712,19 @@ impl Tensor {
     pub fn to_device(&mut self, device: Device) -> Result<Self, String> {
         self.device = device.clone();
         Ok(self.clone())
-        // match device {
-        //     Device::Cpu => Ok(self.clone()), // Already on CPU
-        //     #[cfg(feature = "metal")]
-        //     Device::Metal { device, queue } => {
-        //         let buffer = to_device_metal(self, &device, &queue)?;
-        //         Ok(from_device_metal(&buffer, self.shape()))
-        //     }
-        //     _ => Err("Device not supported yet.".to_string()),
-        // }
+    }
+
+    /// Scales the tensor by a scalar value.
+    ///
+    /// # Arguments
+    ///
+    /// * `scalar` - The scalar value to scale the tensor by.
+    ///
+    /// # Returns
+    ///
+    /// A new tensor containing the scaled values.
+    pub fn scale(&self, scalar: f32) -> Tensor {
+        self.map(|x| x * scalar)
     }
 }
 
@@ -1049,5 +1053,15 @@ mod tests {
         let tensor2 = Tensor::new(vec![4.0, 5.0, 6.0], Shape::from(IxDyn(&[3])));
         let result = tensor1.sub(&tensor2);
         assert_eq!(result.data.shape(), &[3]);
+    }
+
+    #[test]
+    fn test_scale() {
+        let data = vec![1.0, 2.0, 3.0, 4.0];
+        let tensor = Tensor::new(data, Shape::from(IxDyn(&[2, 2])));
+        let scaled = tensor.scale(2.0);
+
+        assert_eq!(scaled.data.shape(), &[2, 2]);
+        assert_eq!(scaled.to_vec(), vec![2.0, 4.0, 6.0, 8.0]);
     }
 }

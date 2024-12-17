@@ -34,6 +34,7 @@ use crate::optimizers::error::OptimizerError;
 use ndarray::Dimension;
 use std::fmt;
 use std::fmt::Debug;
+use std::ops::AddAssign;
 
 const EPSILON: f32 = 1e-8;
 
@@ -150,36 +151,20 @@ impl Optimizer for Adam {
         };
 
         // Update moving averages
-        *m = m.mul_scalar(0.9).add(&processed_gradients.mul_scalar(0.1));
-        *v = v.mul_scalar(0.999).add(&processed_gradients.pow(2.0).mul_scalar(0.001));
+        m.scale(0.9);
+        m.add_assign(processed_gradients.scale(0.1));
 
-        // Bias correction
-        let beta1_t = 0.9f32.powi(self.timestep as i32);
-        let beta2_t = 0.999f32.powi(self.timestep as i32);
-
-        let bias_correction_1 = 1.0 - beta1_t;
-        let bias_correction_2 = 1.0 - beta2_t;
-
-        let m_hat = m.map(|m_val| m_val / bias_correction_1);
-        let v_hat = v.map(|v_val| v_val / bias_correction_2);
+        v.scale(0.999);
+        v.add_assign(processed_gradients.pow(2.0).scale(0.001));
 
         // Get learning rate
-        let lr = self
-            .scheduler
-            .as_ref()
-            .map(|scheduler| scheduler.0(self.timestep))
-            .unwrap_or(self.learning_rate);
-
-        // Compute scaling factor based on max gradient magnitude
-        let max_gradient = processed_gradients.data.iter().map(|g| g.abs()).fold(0.0, f32::max);
-
-        let scaling_factor = if max_gradient > 10.0 { 10.0 / max_gradient } else { 1.0 };
+        let lr_t =
+            self.scheduler.as_ref().map_or(self.learning_rate, |sched| sched.0(self.timestep));
+        let lr_scaled = lr_t / (1.0 - 0.9f32.powi(self.timestep as i32));
 
         // Apply scaled learning rate
         let epsilon = EPSILON;
-        let scaled_lr = lr * scaling_factor;
-        let update = m_hat.div(&v_hat.sqrt().add_scalar(epsilon)).mul_scalar(scaled_lr);
-
+        let update = m.div(&v.sqrt().add_scalar(epsilon)).mul_scalar(lr_scaled);
         *weights -= update;
 
         Ok(())
