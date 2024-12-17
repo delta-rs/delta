@@ -5,7 +5,7 @@ If it's only bug fixes or documentation, feel free to send PR, those are more li
 
 ## Copypasta for license when adding new files
 
-For all new files we create please add the license to the top of the files, see `delta_nn/src/layers.rs` for an example.
+For all new files we create please add the license to the top of the files, see `delta/src/neuralnet/layers/dense.rs` for an example.
 
 ```rust
 //! BSD 3-Clause License
