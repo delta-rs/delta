@@ -6,7 +6,6 @@ publish = false
 
 [dependencies]
 criterion = "0.5.1"
-deltaml = { path = "../delta" }
 
 [[bench]]
 name = "benchmark"
