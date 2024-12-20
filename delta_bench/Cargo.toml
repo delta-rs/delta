@@ -5,9 +5,10 @@ edition = "2021"
 publish = false
 
 [dependencies]
+deltaml = { path = "../delta" }
 criterion = "0.5.1"
 
 [[bench]]
-name = "benchmark"
+name = "adam_benchmark"
 harness = false
-path = "src/benchmark.rs"
+path = "src/adam_benchmark.rs"
