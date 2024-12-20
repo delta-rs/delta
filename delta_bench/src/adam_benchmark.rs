@@ -3,6 +3,7 @@ use deltaml::common::{Dimension, IxDyn, Shape, Tensor};
 use deltaml::optimizers::{Adam, Optimizer};
 use rand::Rng;
 
+#[allow(dead_code)]
 fn benchmark_adam_optimizer_simple(c: &mut Criterion) {
     let mut rng = rand::thread_rng();
 
@@ -26,6 +27,7 @@ fn benchmark_adam_optimizer_simple(c: &mut Criterion) {
 
 // TODO: We have an issue here that it's unable to complete all the 100 samples.
 // Need to increase the target time to more than 12s or reduce sample count to 40
+#[allow(dead_code)]
 fn benchmark_adam_optimizer_large(c: &mut Criterion) {
     let mut rng = rand::thread_rng();
 
