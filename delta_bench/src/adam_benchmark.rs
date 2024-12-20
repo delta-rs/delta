@@ -1,5 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use delta::{Adam, Tensor, Shape, IxDyn}; // Adjust the imports based on your actual module structure
+use deltaml::common::{IxDyn, Shape, Tensor};
+use deltaml::optimizers::{Adam, Optimizer};
 
 fn benchmark_adam_optimizer(c: &mut Criterion) {
     c.bench_function("adam_optimizer", |b| {
