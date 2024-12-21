@@ -9,7 +9,9 @@ deltaml = { path = "../delta" }
 criterion = "0.5.1"
 rand = "0.8.5"
 
+# We need to specify this for every single benchmark we want to run
+# This is a bit annoying, but it's the only way to get the benchmarks to run
 [[bench]]
 name = "adam_benchmark"
 harness = false
-path = "src/adam_benchmark.rs"
+path = "src/optimizers/adam_benchmark.rs"
