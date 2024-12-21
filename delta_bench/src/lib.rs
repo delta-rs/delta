@@ -1,1 +1,3 @@
-mod adam_benchmark;
+mod optimizers {
+    mod adam_benchmark;
+}
