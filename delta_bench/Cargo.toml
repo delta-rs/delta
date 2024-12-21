@@ -15,3 +15,8 @@ rand = "0.8.5"
 name = "adam_benchmark"
 harness = false
 path = "src/optimizers/adam_benchmark.rs"
+
+[[bench]]
+name = "ada_delta_benchmark"
+harness = false
+path = "src/optimizers/ada_delta_benchmark.rs"
