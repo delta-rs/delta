@@ -84,7 +84,7 @@ impl Tensor {
         // Check device compatibility
         match &self.device {
             Device::Cpu => Tensor { data: &self.data + &other.data, device: self.device.clone() },
-            #[cfg(feature = "metal")]
+            #[cfg(all(target_os = "macos", feature = "metal"))]
             Device::Metal { device, queue } => {
                 // Perform Metal addition
                 tensor_add_metal(self, other, device, queue)
