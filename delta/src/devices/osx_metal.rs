@@ -47,7 +47,7 @@ pub fn to_device_metal(
     _queue: &metal::CommandQueue,
 ) -> Result<metal::Buffer, String> {
     // Create a Metal buffer for the tensor's data
-    let tensor_size = tensor.data.len() * std::mem::size_of::<f32>();
+    let tensor_size = tensor.data.len() * size_of::<f32>();
     let buffer =
         metal_device.new_buffer(tensor_size as u64, metal::MTLResourceOptions::StorageModeShared);
 
@@ -75,7 +75,7 @@ pub fn to_device_metal(
 #[cfg(feature = "metal")]
 pub fn from_device_metal(buffer: &metal::Buffer, shape: Shape<IxDyn>) -> Tensor {
     // Create a vector to hold the data
-    let tensor_size = buffer.length() as usize / std::mem::size_of::<f32>();
+    let tensor_size = buffer.length() as usize / size_of::<f32>();
     let mut data = vec![0.0; tensor_size];
 
     // Copy the data from the Metal buffer
@@ -190,7 +190,7 @@ fn execute_tensor_operation_metal(
     let tensor_length = tensor1_data.len() as u32;
     let length_buffer = device.new_buffer_with_data(
         &tensor_length as *const u32 as *const _,
-        std::mem::size_of::<u32>() as u64,
+        size_of::<u32>() as u64,
         metal::MTLResourceOptions::StorageModeShared,
     );
 
