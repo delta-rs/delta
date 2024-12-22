@@ -40,14 +40,13 @@ use ndarray::{Array, IxDyn, Shape};
 /// # Returns
 ///
 /// A new tensor with data stored on the Metal device.
-#[cfg(feature = "metal")]
 pub fn to_device_metal(
     tensor: &Tensor,
     metal_device: &metal::Device,
     _queue: &metal::CommandQueue,
 ) -> Result<metal::Buffer, String> {
     // Create a Metal buffer for the tensor's data
-    let tensor_size = tensor.data.len() * std::mem::size_of::<f32>();
+    let tensor_size = tensor.data.len() * size_of::<f32>();
     let buffer =
         metal_device.new_buffer(tensor_size as u64, metal::MTLResourceOptions::StorageModeShared);
 
@@ -72,10 +71,9 @@ pub fn to_device_metal(
 /// # Returns
 ///
 /// A new `Tensor` instance with the data transferred from the Metal device.
-#[cfg(feature = "metal")]
 pub fn from_device_metal(buffer: &metal::Buffer, shape: Shape<IxDyn>) -> Tensor {
     // Create a vector to hold the data
-    let tensor_size = buffer.length() as usize / std::mem::size_of::<f32>();
+    let tensor_size = buffer.length() as usize / size_of::<f32>();
     let mut data = vec![0.0; tensor_size];
 
     // Copy the data from the Metal buffer
@@ -96,7 +94,6 @@ pub fn from_device_metal(buffer: &metal::Buffer, shape: Shape<IxDyn>) -> Tensor 
 /// # Returns
 ///
 /// A tuple containing the Metal device and command queue.
-#[cfg(feature = "metal")]
 pub fn get_device_and_queue_metal() -> (metal::Device, metal::CommandQueue) {
     let device = metal::Device::system_default().expect("no device found");
     let queue = device.new_command_queue();
@@ -113,7 +110,6 @@ pub fn get_device_and_queue_metal() -> (metal::Device, metal::CommandQueue) {
 /// # Returns
 ///
 /// A new `metal::ComputePipelineState` instance.
-#[cfg(feature = "metal")]
 pub fn create_compute_pipeline(
     device: &metal::Device,
     shader_name: &str,
@@ -130,7 +126,6 @@ pub fn create_compute_pipeline(
         .map_err(|e| format!("Failed to create compute pipeline: {:?}", e))
 }
 
-#[cfg(feature = "metal")]
 fn execute_tensor_operation_metal(
     tensor1: &Tensor,
     tensor2: &Tensor,
@@ -190,7 +185,7 @@ fn execute_tensor_operation_metal(
     let tensor_length = tensor1_data.len() as u32;
     let length_buffer = device.new_buffer_with_data(
         &tensor_length as *const u32 as *const _,
-        std::mem::size_of::<u32>() as u64,
+        size_of::<u32>() as u64,
         metal::MTLResourceOptions::StorageModeShared,
     );
 
@@ -248,7 +243,6 @@ fn execute_tensor_operation_metal(
     })
 }
 
-#[cfg(feature = "metal")]
 pub fn tensor_add_metal(
     tensor1: &Tensor,
     tensor2: &Tensor,
@@ -259,7 +253,6 @@ pub fn tensor_add_metal(
     execute_tensor_operation_metal(tensor1, tensor2, "tensor_add", device, queue)
 }
 
-#[cfg(feature = "metal")]
 pub fn tensor_subtract_metal(
     tensor1: &Tensor,
     tensor2: &Tensor,
@@ -270,7 +263,6 @@ pub fn tensor_subtract_metal(
     execute_tensor_operation_metal(tensor1, tensor2, "tensor_subtract", device, queue)
 }
 
-#[cfg(feature = "metal")]
 pub fn tensor_multiply_metal(
     tensor1: &Tensor,
     tensor2: &Tensor,
@@ -281,7 +273,6 @@ pub fn tensor_multiply_metal(
     execute_tensor_operation_metal(tensor1, tensor2, "tensor_multiply", device, queue)
 }
 
-#[cfg(feature = "metal")]
 pub fn tensor_divide_metal(
     tensor1: &Tensor,
     tensor2: &Tensor,

@@ -1,6 +1,6 @@
 use deltaml::activations::relu::ReluActivation;
 use deltaml::activations::softmax::SoftmaxActivation;
-use deltaml::common::{IxDyn, Shape};
+use deltaml::common::ndarray::{IxDyn, Shape};
 use deltaml::dataset::ImageNetV2Dataset;
 use deltaml::dataset::base::ImageDatasetOps;
 use deltaml::losses::SparseCategoricalCrossEntropyLoss;

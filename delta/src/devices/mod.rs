@@ -29,13 +29,13 @@
 
 use std::fmt;
 
-#[cfg(feature = "metal")]
+#[cfg(all(target_os = "macos", feature = "metal"))]
 pub mod osx_metal;
 
 #[derive(Debug, Clone)]
 pub enum Device {
     Cpu,
-    #[cfg(feature = "metal")]
+    #[cfg(all(target_os = "macos", feature = "metal"))]
     Metal {
         device: metal::Device,
         queue: metal::CommandQueue,
@@ -55,7 +55,7 @@ impl fmt::Display for Device {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Device::Cpu => write!(f, "CPU"),
-            #[cfg(feature = "metal")]
+            #[cfg(all(target_os = "macos", feature = "metal"))]
             Device::Metal { .. } => write!(f, "Metal"),
             Device::Cuda => write!(f, "CUDA"),
             Device::OpenCL => write!(f, "OpenCL"),

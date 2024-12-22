@@ -1,7 +1,8 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use deltaml::common::{Dimension, IxDyn, Shape, Tensor};
+use deltaml::common::ndarray::{Dimension, IxDyn, Shape};
 use deltaml::optimizers::{AdaDelta, Optimizer};
 use rand::Rng;
+use deltaml::common::Tensor;
 
 #[allow(dead_code)]
 fn benchmark_ada_delta_optimizer_small(c: &mut Criterion) {

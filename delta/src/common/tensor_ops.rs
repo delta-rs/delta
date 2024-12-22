@@ -7,7 +7,7 @@ use ndarray::{Dimension, Ix2};
 use rand::{Rng, thread_rng};
 use rand_distr::{Distribution, Normal};
 
-#[cfg(feature = "metal")]
+#[cfg(all(target_os = "macos", feature = "metal"))]
 use crate::devices::osx_metal::{
     tensor_add_metal, tensor_divide_metal, tensor_multiply_metal, tensor_subtract_metal,
 };
@@ -63,7 +63,7 @@ impl Tensor {
     ///
     /// A tensor filled with random values.
     pub fn random(shape: Shape<IxDyn>) -> Self {
-        let mut rng = rand::thread_rng();
+        let mut rng = thread_rng();
         let data: Vec<f32> = (0..shape.size()).map(|_| rng.gen::<f32>()).collect(); // Use size() method
         Self {
             data: Array::from_shape_vec(shape, data).expect("Invalid shape for random dataset"),
@@ -84,7 +84,7 @@ impl Tensor {
         // Check device compatibility
         match &self.device {
             Device::Cpu => Tensor { data: &self.data + &other.data, device: self.device.clone() },
-            #[cfg(feature = "metal")]
+            #[cfg(all(target_os = "macos", feature = "metal"))]
             Device::Metal { device, queue } => {
                 // Perform Metal addition
                 tensor_add_metal(self, other, device, queue)
@@ -328,7 +328,7 @@ impl Tensor {
     pub fn div(&self, other: &Tensor) -> Tensor {
         match &self.device {
             Device::Cpu => Tensor { data: &self.data / &other.data, device: self.device.clone() },
-            #[cfg(feature = "metal")]
+            #[cfg(all(target_os = "macos", feature = "metal"))]
             Device::Metal { device, queue } => tensor_divide_metal(self, other, device, queue)
                 .expect("Failed to perform division on Metal device"),
             _ => panic!("Unsupported device for tensor division."),
@@ -684,7 +684,7 @@ impl Tensor {
             Device::Cpu => {
                 Tensor { data: &self.data - &broadcasted_other, device: self.device.clone() }
             }
-            #[cfg(feature = "metal")]
+            #[cfg(all(target_os = "macos", feature = "metal"))]
             Device::Metal { device, queue } => tensor_subtract_metal(
                 self,
                 &Tensor {
