@@ -76,9 +76,7 @@ impl Loss for MeanSquaredLoss {
             panic!("Cannot calculate loss: no dataset in input tensors");
         }
 
-        let mean_squared_error = squared_diff.mean().expect("Mean computation failed unexpectedly");
-
-        mean_squared_error
+        squared_diff.mean().expect("Mean computation failed unexpectedly")
     }
 
     /// Calculates the gradient of the loss with respect to the output tensor.
