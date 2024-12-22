@@ -5,7 +5,7 @@ edition = "2021"
 publish = false
 
 [dependencies]
-deltaml = { path = "../delta" }
+deltaml = { path = "../delta", features = [ "metal" ] }
 criterion = "0.5.1"
 rand = "0.8.5"
 
