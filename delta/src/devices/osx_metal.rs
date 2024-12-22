@@ -162,8 +162,8 @@ fn execute_tensor_operation_metal(
     let tensor2_data = tensor2.data.as_slice().unwrap();
 
     // Calculate buffer sizes
-    let tensor1_buffer_size = (tensor1_data.len() * std::mem::size_of::<f32>()) as u64;
-    let tensor2_buffer_size = (tensor2_data.len() * std::mem::size_of::<f32>()) as u64;
+    let tensor1_buffer_size = size_of_val(tensor1_data) as u64;
+    let tensor2_buffer_size = size_of_val(tensor2_data) as u64;
 
     // Create aligned buffers for input tensors
     let input1_buffer = device.new_buffer_with_data(
@@ -215,7 +215,7 @@ fn execute_tensor_operation_metal(
 
     // Compute the threadgroup count based on the actual data size
     let threadgroup_count = metal::MTLSize {
-        width: ((tensor_length + threadgroup_size.width - 1) / threadgroup_size.width) as u64,
+        width: tensor_length.div_ceil(threadgroup_size.width),
         height: 1,
         depth: 1,
     };
