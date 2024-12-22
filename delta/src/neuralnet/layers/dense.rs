@@ -218,7 +218,7 @@ impl Layer for Dense {
         if let Some(ref weights_grad) = self.weights_grad {
             optimizer
                 .step(self.weights.as_mut().unwrap(), weights_grad)
-                .map_err(|e| LayerError::OptimizerError(e))?;
+                .map_err(LayerError::OptimizerError)?;
         }
 
         if let Some(ref bias_grad) = self.bias_grad {
