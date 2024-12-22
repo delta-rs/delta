@@ -82,8 +82,9 @@ impl Activation for LeakyReluActivation {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use ndarray::{IxDyn, Shape};
+
+    use super::*;
 
     #[test]
     fn test_leaky_relu_activation() {

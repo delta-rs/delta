@@ -27,10 +27,11 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use ndarray::{Dimension, IxDyn, Shape};
+
 use crate::common::Tensor;
 use crate::neuralnet::layers::Layer;
 use crate::neuralnet::layers::error::LayerError;
-use ndarray::{Dimension, IxDyn, Shape};
 
 /// A flatten layer that reshapes the input tensor to a 1D vector.
 #[derive(Debug)]
@@ -156,8 +157,9 @@ impl Layer for Flatten {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use ndarray::{IxDyn, Shape};
+
+    use super::*;
 
     #[test]
     fn test_flatten_new() {

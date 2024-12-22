@@ -27,13 +27,21 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::losses::Loss;
-use crate::{common::Tensor, devices::Device};
 use ndarray::{Dimension, IxDyn, Shape};
+
+use crate::common::Tensor;
+use crate::devices::Device;
+use crate::losses::Loss;
 
 /// A struct representing the Sparse Categorical Cross-Entropy Loss function.
 #[derive(Debug)]
 pub struct SparseCategoricalCrossEntropyLoss;
+
+impl Default for SparseCategoricalCrossEntropyLoss {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl SparseCategoricalCrossEntropyLoss {
     /// Creates a new SparseCategoricalCrossEntropyLoss instance.
@@ -254,10 +262,10 @@ impl Loss for SparseCategoricalCrossEntropyLoss {
 
 #[cfg(test)]
 mod tests {
+    use ndarray::{IxDyn, Shape};
+
     use super::*;
     use crate::common::Tensor;
-    use ndarray::IxDyn;
-    use ndarray::Shape;
 
     #[test]
     fn test_sparse_categorical_cross_entropy_loss() {

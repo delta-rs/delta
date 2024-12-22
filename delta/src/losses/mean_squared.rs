@@ -35,6 +35,12 @@ use crate::losses::Loss;
 #[derive(Debug)]
 pub struct MeanSquaredLoss;
 
+impl Default for MeanSquaredLoss {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MeanSquaredLoss {
     /// Creates a new instance of `MeanSquaredLoss`.
     pub fn new() -> Self {
@@ -112,9 +118,10 @@ impl Loss for MeanSquaredLoss {
 
 #[cfg(test)]
 mod tests {
+    use ndarray::{IxDyn, Shape};
+
     use super::*;
     use crate::common::Tensor;
-    use ndarray::{IxDyn, Shape};
 
     #[test]
     fn test_mean_squared_loss() {

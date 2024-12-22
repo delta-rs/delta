@@ -1,14 +1,11 @@
-use deltaml::activations::ReluActivation;
-use deltaml::activations::SoftmaxActivation;
+use deltaml::activations::{ReluActivation, SoftmaxActivation};
 use deltaml::common::ndarray::{IxDyn, Shape};
 use deltaml::dataset::{ImageDatasetOps, MnistDataset};
-use deltaml::losses::SparseCategoricalCrossEntropyLoss;
-use deltaml::neuralnet::Sequential;
-use deltaml::neuralnet::{Dense, Flatten};
-use deltaml::optimizers::Adam;
-
 #[cfg(feature = "metal")]
 use deltaml::devices::{Device, osx_metal};
+use deltaml::losses::SparseCategoricalCrossEntropyLoss;
+use deltaml::neuralnet::{Dense, Flatten, Sequential};
+use deltaml::optimizers::Adam;
 
 #[tokio::main]
 async fn main() {

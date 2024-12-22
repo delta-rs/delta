@@ -27,11 +27,12 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use ndarray::Dimension;
+
 use crate::common::Tensor;
 use crate::devices::Device;
 use crate::optimizers::Optimizer;
 use crate::optimizers::error::OptimizerError;
-use ndarray::Dimension;
 
 /// The AdaGrad optimizer struct.
 #[derive(Debug)]
@@ -138,8 +139,9 @@ impl Optimizer for AdaGrad {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use ndarray::{ArrayD, IxDyn};
+
+    use super::*;
 
     fn assert_almost_equal(actual: &ArrayD<f32>, expected: &[f32], tolerance: f32) {
         let actual_slice = actual.as_slice().expect("Failed to convert ArrayD to slice");
@@ -156,7 +158,7 @@ mod tests {
 
         optimizer.step(&mut weights, &gradients).expect("Failed to perform step");
 
-        let expected = vec![0.90000004, 1.90000002, 2.90000003];
+        let expected = vec![0.90000004, 1.9, 2.9];
         assert_almost_equal(&weights.data, &expected, 1e-6);
     }
 

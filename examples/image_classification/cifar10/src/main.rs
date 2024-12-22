@@ -1,19 +1,17 @@
-use deltaml::activations::ReluActivation;
-use deltaml::activations::SoftmaxActivation;
+use deltaml::activations::{ReluActivation, SoftmaxActivation};
 use deltaml::common::ndarray::{IxDyn, Shape};
 use deltaml::dataset::Cifar10Dataset;
 use deltaml::dataset::base::ImageDatasetOps;
 use deltaml::losses::MeanSquaredLoss;
-use deltaml::neuralnet::Sequential;
-use deltaml::neuralnet::{Dense, Flatten};
+use deltaml::neuralnet::{Dense, Flatten, Sequential};
 use deltaml::optimizers::Adam;
 
 #[tokio::main]
 async fn main() {
     // Create a neural network
     let mut model = Sequential::new()
-        .add(Flatten::new(Shape::from(IxDyn(&[28, 28])))) // Input: 28x28, Output: 784
-        .add(Dense::new(128, Some(ReluActivation::new()), true)) // Input: 784, Output: 128
+        .add(Flatten::new(Shape::from(IxDyn(&[32, 32, 3])))) // CIFAR-10: 32x32x3 -> 3072
+        .add(Dense::new(128, Some(ReluActivation::new()), true)) // Input: 3072, Output: 128
         .add(Dense::new(10, Some(SoftmaxActivation::new()), false)); // Output: 10 classes
 
     // Display the model summary

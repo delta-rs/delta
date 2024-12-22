@@ -80,8 +80,9 @@ impl Activation for PreluActivation {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use ndarray::{IxDyn, Shape};
+
+    use super::*;
 
     #[test]
     fn test_prelu_activation() {

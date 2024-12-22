@@ -37,9 +37,8 @@ pub mod rms_prop;
 pub mod sgd;
 pub mod sgd_momentum;
 
-use crate::common::Tensor;
-use crate::devices::Device;
-use crate::optimizers::error::OptimizerError;
+use std::fmt::Debug;
+
 pub use ada_delta::AdaDelta;
 pub use ada_grad::AdaGrad;
 pub use adam::Adam;
@@ -48,7 +47,10 @@ pub use mini_batch_gd::MiniBatchGD;
 pub use rms_prop::RMSProp;
 pub use sgd::SGD;
 pub use sgd_momentum::SGDWithMomentum;
-use std::fmt::Debug;
+
+use crate::common::Tensor;
+use crate::devices::Device;
+use crate::optimizers::error::OptimizerError;
 
 /// A trait representing an optimizer for training neural networks.
 pub trait Optimizer: Debug {

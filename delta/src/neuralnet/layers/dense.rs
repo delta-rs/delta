@@ -27,14 +27,16 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::Tensor;
-use crate::neuralnet::layers::Layer;
-use crate::neuralnet::layers::error::LayerError;
-use crate::optimizers::Optimizer;
-use crate::{activations::Activation, devices::Device};
 use log::debug;
 use ndarray::{Dimension, IxDyn, Shape};
 use serde_json;
+
+use crate::activations::Activation;
+use crate::common::Tensor;
+use crate::devices::Device;
+use crate::neuralnet::layers::Layer;
+use crate::neuralnet::layers::error::LayerError;
+use crate::optimizers::Optimizer;
 
 /// A dense (fully connected) layer.
 #[derive(Debug)]

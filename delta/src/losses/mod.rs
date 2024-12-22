@@ -33,13 +33,15 @@ pub mod mean_absolute_error;
 pub mod mean_squared;
 pub mod sparse_categorical_cross_entropy;
 
-use crate::common::Tensor;
+use std::fmt::Debug;
+
 pub use cross_entropy::CrossEntropyLoss;
 pub use huber::HuberLoss;
 pub use mean_absolute_error::MeanAbsoluteError;
 pub use mean_squared::MeanSquaredLoss;
 pub use sparse_categorical_cross_entropy::SparseCategoricalCrossEntropyLoss;
-use std::fmt::Debug;
+
+use crate::common::Tensor;
 
 /// A trait representing a loss function.
 pub trait Loss: Debug {

@@ -27,10 +27,8 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use std::{
-    future::{self, Future},
-    pin::Pin,
-};
+use std::future::{self, Future};
+use std::pin::Pin;
 
 use ndarray::{IxDyn, Shape, s};
 
@@ -42,6 +40,12 @@ pub struct TestDataset {
     train: Option<Dataset>,
     test: Option<Dataset>,
     val: Option<Dataset>,
+}
+
+impl Default for TestDataset {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl TestDataset {

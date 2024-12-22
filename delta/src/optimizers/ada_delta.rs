@@ -140,8 +140,9 @@ impl Optimizer for AdaDelta {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use ndarray::{ArrayD, IxDyn, Shape};
+
+    use super::*;
 
     fn assert_almost_equal(actual: &ArrayD<f32>, expected: &[f32], tolerance: f32) {
         let actual_slice = actual.as_slice().expect("Failed to convert ArrayD to slice");
@@ -158,7 +159,7 @@ mod tests {
 
         optimizer.step(&mut weights, &gradients).expect("Failed to perform step");
 
-        let expected = vec![0.99999684, 1.99999684, 2.99999684];
+        let expected = vec![0.99999684, 1.999_996_8, 2.999_997];
         assert_almost_equal(&weights.data, &expected, 1e-4);
     }
 
@@ -172,7 +173,7 @@ mod tests {
             optimizer.step(&mut weights, &gradients).expect("Failed to perform step");
         }
 
-        let expected = vec![0.99997528, 1.99997528, 2.99997528];
+        let expected = vec![0.99997528, 1.999_975_3, 2.999_975_2];
         assert_almost_equal(&weights.data, &expected, 1e-4);
     }
 

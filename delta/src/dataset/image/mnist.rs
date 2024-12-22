@@ -27,20 +27,22 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::Tensor;
-use crate::dataset::base::{Dataset, ImageDatasetOps};
-use crate::get_workspace_dir;
-use flate2::read::GzDecoder;
-use log::debug;
-use ndarray::{IxDyn, Shape};
-use rand::seq::SliceRandom;
-use reqwest;
 use std::fs::File;
 use std::future::Future;
 use std::io::{self, Read};
 use std::path::Path;
 use std::pin::Pin;
+
+use flate2::read::GzDecoder;
+use log::debug;
+use ndarray::{IxDyn, Shape};
+use rand::seq::SliceRandom;
+use reqwest;
 use tokio::fs as async_fs;
+
+use crate::common::Tensor;
+use crate::dataset::base::{Dataset, ImageDatasetOps};
+use crate::get_workspace_dir;
 
 /// A struct representing the MNIST dataset.
 pub struct MnistDataset {
@@ -483,10 +485,12 @@ impl ImageDatasetOps for MnistDataset {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use serial_test::serial;
     use std::fs;
+
+    use serial_test::serial;
     use tokio::runtime::Runtime;
+
+    use super::*;
 
     fn setup() {
         let workspace_dir = get_workspace_dir();

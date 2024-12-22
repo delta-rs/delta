@@ -27,26 +27,26 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::Tensor;
-use crate::dataset::base::{Dataset, ImageDatasetOps};
-use crate::devices::Device;
-use crate::encoders::one_hot_encode;
+use std::fs::File;
+use std::future::Future;
+use std::io::{self};
+use std::path::Path;
+use std::pin::Pin;
+use std::process::Command;
+
 use flate2::read::GzDecoder;
 use log::debug;
 use ndarray::{ArrayBase, Axis, Dim, OwnedRepr, s};
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 use reqwest;
-use std::fs::File;
-use std::future::Future;
-use std::{
-    io::{self},
-    path::Path,
-    pin::Pin,
-    process::Command,
-};
 use tokio::fs as async_fs;
 use walkdir::WalkDir;
+
+use crate::common::Tensor;
+use crate::dataset::base::{Dataset, ImageDatasetOps};
+use crate::devices::Device;
+use crate::encoders::one_hot_encode;
 
 /// A struct representing the ImageNetV2 dataset.
 pub struct ImageNetV2Dataset {
@@ -330,12 +330,12 @@ impl ImageDatasetOps for ImageNetV2Dataset {
         }
 
         // Extract the batch from inputs and labels using slicing
-        let batch_inputs = dataset.inputs.slice(vec![start_idx..end_idx]).to_owned();
+        let batch_inputs = dataset.inputs.data.slice(s![start_idx..end_idx, ..]).to_owned();
         let batch_labels = dataset.labels.data.slice(s![start_idx..end_idx, ..]).to_owned();
 
         (
             Tensor {
-                data: batch_inputs.data.into_dyn(), // Convert to dynamic dimensionality
+                data: batch_inputs.into_dyn(), // Convert to dynamic dimensionality
                 device: Device::default(),
             },
             Tensor { data: batch_labels.into_dyn(), device: Device::default() },

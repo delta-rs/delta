@@ -36,13 +36,12 @@ pub use models::Sequential;
 /// Putting tests here since it's using a collection of everything
 #[cfg(test)]
 mod tests {
-    use crate::{
-        activations::{ReluActivation, SoftmaxActivation},
-        losses::MeanSquaredLoss,
-        neuralnet::{Dense, Flatten, Sequential},
-        optimizers::Adam,
-    };
     use ndarray::{IxDyn, Shape};
+
+    use crate::activations::{ReluActivation, SoftmaxActivation};
+    use crate::losses::MeanSquaredLoss;
+    use crate::neuralnet::{Dense, Flatten, Sequential};
+    use crate::optimizers::Adam;
 
     #[test]
     fn test_sequential_new() {
