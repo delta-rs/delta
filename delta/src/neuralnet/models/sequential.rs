@@ -38,6 +38,7 @@ use ndarray::Dimension;
 use serde_json;
 use std::fs::File;
 use std::io::Write;
+use std::ops::Div;
 use std::path::Path;
 use std::time::Instant;
 
@@ -298,7 +299,7 @@ impl Sequential {
         self.ensure_optimizer_and_loss()?;
 
         let loss_fn = self.loss.as_ref().ok_or(ModelError::MissingLossFunction)?;
-        let num_batches = (validation_data.len() + batch_size - 1) / batch_size;
+        let num_batches = validation_data.len().div_ceil(batch_size);
         let mut total_loss = 0.0;
 
         for batch_idx in 0..num_batches {
@@ -334,7 +335,7 @@ impl Sequential {
         let mut correct_predictions = 0;
         let mut total_samples = 0;
 
-        let num_batches = (test_data.len() + batch_size - 1) / batch_size;
+        let num_batches = test_data.len().div_ceil(batch_size);
 
         for batch_idx in 0..num_batches {
             let (inputs, targets) = test_data.get_batch(batch_idx, batch_size);

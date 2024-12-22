@@ -149,9 +149,9 @@ impl Loss for SparseCategoricalCrossEntropyLoss {
                     y_pred.shape()
                 );
             }
-            let y_true = self.preprocess_one_hot(&y_true);
-            let indices = self.one_hot_to_indices(&y_true);
-            indices
+            let y_true = self.preprocess_one_hot(y_true);
+
+            self.one_hot_to_indices(&y_true)
         } else {
             // Validate 1D tensor
             if y_true.shape().raw_dim().ndim() != 1 {
@@ -205,9 +205,9 @@ impl Loss for SparseCategoricalCrossEntropyLoss {
                     target.shape()
                 );
             }
-            let target = self.preprocess_one_hot(&target);
-            let indices = self.one_hot_to_indices(&target);
-            indices
+            let target = self.preprocess_one_hot(target);
+
+            self.one_hot_to_indices(&target)
         } else {
             // Validate 1D tensor
             if target.shape().raw_dim().ndim() != 1 {

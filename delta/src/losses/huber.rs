@@ -59,9 +59,7 @@ impl Loss for HuberLoss {
             panic!("Cannot calculate loss: no dataset in input tensors");
         }
 
-        let mean_loss = huber_loss.mean().expect("Mean computation failed unexpectedly");
-
-        mean_loss
+        huber_loss.mean().expect("Mean computation failed unexpectedly")
     }
 
     /// Calculates the gradient of the Huber loss with respect to the output tensor.

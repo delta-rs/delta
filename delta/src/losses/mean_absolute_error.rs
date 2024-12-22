@@ -45,9 +45,7 @@ impl Loss for MeanAbsoluteError {
             panic!("Cannot calculate loss: no dataset in input tensors");
         }
 
-        let mean_absolute_error = abs_diff.mean().expect("Mean computation failed unexpectedly");
-
-        mean_absolute_error
+        abs_diff.mean().expect("Mean computation failed unexpectedly")
     }
 
     /// Calculates the gradient of the loss with respect to the output tensor.
