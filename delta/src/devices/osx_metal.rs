@@ -40,7 +40,6 @@ use ndarray::{Array, IxDyn, Shape};
 /// # Returns
 ///
 /// A new tensor with data stored on the Metal device.
-#[cfg(feature = "metal")]
 pub fn to_device_metal(
     tensor: &Tensor,
     metal_device: &metal::Device,
@@ -72,7 +71,6 @@ pub fn to_device_metal(
 /// # Returns
 ///
 /// A new `Tensor` instance with the data transferred from the Metal device.
-#[cfg(feature = "metal")]
 pub fn from_device_metal(buffer: &metal::Buffer, shape: Shape<IxDyn>) -> Tensor {
     // Create a vector to hold the data
     let tensor_size = buffer.length() as usize / size_of::<f32>();
@@ -96,7 +94,6 @@ pub fn from_device_metal(buffer: &metal::Buffer, shape: Shape<IxDyn>) -> Tensor 
 /// # Returns
 ///
 /// A tuple containing the Metal device and command queue.
-#[cfg(feature = "metal")]
 pub fn get_device_and_queue_metal() -> (metal::Device, metal::CommandQueue) {
     let device = metal::Device::system_default().expect("no device found");
     let queue = device.new_command_queue();
@@ -113,7 +110,6 @@ pub fn get_device_and_queue_metal() -> (metal::Device, metal::CommandQueue) {
 /// # Returns
 ///
 /// A new `metal::ComputePipelineState` instance.
-#[cfg(feature = "metal")]
 pub fn create_compute_pipeline(
     device: &metal::Device,
     shader_name: &str,
@@ -130,7 +126,6 @@ pub fn create_compute_pipeline(
         .map_err(|e| format!("Failed to create compute pipeline: {:?}", e))
 }
 
-#[cfg(feature = "metal")]
 fn execute_tensor_operation_metal(
     tensor1: &Tensor,
     tensor2: &Tensor,
@@ -248,7 +243,6 @@ fn execute_tensor_operation_metal(
     })
 }
 
-#[cfg(feature = "metal")]
 pub fn tensor_add_metal(
     tensor1: &Tensor,
     tensor2: &Tensor,
@@ -259,7 +253,6 @@ pub fn tensor_add_metal(
     execute_tensor_operation_metal(tensor1, tensor2, "tensor_add", device, queue)
 }
 
-#[cfg(feature = "metal")]
 pub fn tensor_subtract_metal(
     tensor1: &Tensor,
     tensor2: &Tensor,
@@ -270,7 +263,6 @@ pub fn tensor_subtract_metal(
     execute_tensor_operation_metal(tensor1, tensor2, "tensor_subtract", device, queue)
 }
 
-#[cfg(feature = "metal")]
 pub fn tensor_multiply_metal(
     tensor1: &Tensor,
     tensor2: &Tensor,
@@ -281,7 +273,6 @@ pub fn tensor_multiply_metal(
     execute_tensor_operation_metal(tensor1, tensor2, "tensor_multiply", device, queue)
 }
 
-#[cfg(feature = "metal")]
 pub fn tensor_divide_metal(
     tensor1: &Tensor,
     tensor2: &Tensor,
