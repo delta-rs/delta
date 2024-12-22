@@ -205,7 +205,7 @@ impl Loss for SparseCategoricalCrossEntropyLoss {
                     target.shape()
                 );
             }
-            let target = self.preprocess_one_hot(&target);
+            let target = self.preprocess_one_hot(target);
             let indices = self.one_hot_to_indices(&target);
             indices
         } else {
