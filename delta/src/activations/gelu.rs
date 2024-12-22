@@ -29,9 +29,7 @@
 
 use std::f64::consts::PI;
 
-use libm::erff;
-use libm::expf;
-use libm::sqrt;
+use libm::{erff, expf, sqrt};
 
 use crate::activations::Activation;
 use crate::common::Tensor;
@@ -39,6 +37,12 @@ use crate::common::Tensor;
 /// A struct representing the Gaussian Error Linear Unit (GeLU) activation function.
 #[derive(Debug)]
 pub struct GeluActivation;
+
+impl Default for GeluActivation {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl GeluActivation {
     /// Creates a new instance of `GeluActivation`.

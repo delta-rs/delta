@@ -27,8 +27,9 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::optimizers::error::OptimizerError;
 use std::fmt;
+
+use crate::optimizers::error::OptimizerError;
 
 /// Errors that can occur in the Dense layer.
 #[derive(Debug)]

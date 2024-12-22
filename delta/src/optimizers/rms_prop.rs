@@ -129,8 +129,9 @@ impl Optimizer for RMSProp {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use ndarray::{ArrayD, IxDyn, Shape};
+
+    use super::*;
 
     /// Default constants for RMSProp optimizer
     const DEFAULT_DECAY_RATE: f32 = 0.9;

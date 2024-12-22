@@ -27,13 +27,6 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::Tensor;
-use crate::dataset::base::{Dataset, ImageDatasetOps};
-use crate::devices::Device;
-use crate::get_workspace_dir;
-use flate2::read::GzDecoder;
-use log::debug;
-use ndarray::{IxDyn, Shape};
 use std::collections::HashSet;
 use std::fs;
 use std::fs::File;
@@ -41,7 +34,16 @@ use std::future::Future;
 use std::io::Read;
 use std::path::Path;
 use std::pin::Pin;
+
+use flate2::read::GzDecoder;
+use log::debug;
+use ndarray::{IxDyn, Shape};
 use tar::Archive;
+
+use crate::common::Tensor;
+use crate::dataset::base::{Dataset, ImageDatasetOps};
+use crate::devices::Device;
+use crate::get_workspace_dir;
 
 /// A struct representing the CIFAR10 dataset.
 pub struct Cifar10Dataset {
@@ -90,7 +92,7 @@ impl Cifar10Dataset {
 
         for entry in archive.entries().unwrap() {
             let mut entry = entry.unwrap();
-            let path = entry.path().unwrap().to_owned();
+            let path = entry.path().unwrap().into_owned();
             let file_name = path.file_name().unwrap().to_string_lossy().to_string();
 
             if path.is_dir() || !path.extension().map_or(false, |ext| ext == "bin") {
@@ -400,9 +402,10 @@ impl ImageDatasetOps for Cifar10Dataset {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use ndarray::Dimension;
     use serial_test::serial;
+
+    use super::*;
 
     fn setup() {
         let workspace_dir = get_workspace_dir();

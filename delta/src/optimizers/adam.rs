@@ -27,13 +27,15 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use std::fmt;
+use std::fmt::Debug;
+
+use ndarray::Dimension;
+
 use crate::common::Tensor;
 use crate::devices::Device;
 use crate::optimizers::Optimizer;
 use crate::optimizers::error::OptimizerError;
-use ndarray::Dimension;
-use std::fmt;
-use std::fmt::Debug;
 
 /// A wrapper struct for a debuggable scheduler function.
 #[allow(dead_code)]
@@ -194,8 +196,9 @@ impl Optimizer for Adam {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use ndarray::{ArrayD, IxDyn, Shape};
+
+    use super::*;
 
     fn assert_almost_equal(actual: &ArrayD<f32>, expected: &[f32], tolerance: f32) {
         let actual_slice = actual.as_slice().expect("Failed to convert ArrayD to slice");
@@ -244,7 +247,7 @@ mod tests {
         let mut weights = Tensor::new(vec![1.0, 2.0, 3.0], Shape::from(IxDyn(&[3, 1])));
         let gradients = Tensor::new(vec![0.1], Shape::from(IxDyn(&[1, 1]))); // Broadcastable gradient
         optimizer.step(&mut weights, &gradients).expect("Failed to perform step");
-        let expected = vec![0.9990000066, 1.9990000066, 2.9990000066];
+        let expected = vec![0.999, 1.999, 2.999];
         assert_almost_equal(&weights.data, &expected, 1e-6);
     }
 

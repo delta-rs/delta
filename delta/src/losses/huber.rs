@@ -98,9 +98,10 @@ impl Loss for HuberLoss {
 
 #[cfg(test)]
 mod tests {
+    use ndarray::{IxDyn, Shape};
+
     use super::*;
     use crate::common::Tensor;
-    use ndarray::{IxDyn, Shape};
 
     #[test]
     fn test_huber_loss() {

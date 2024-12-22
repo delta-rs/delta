@@ -5,6 +5,12 @@ use crate::losses::Loss;
 #[derive(Debug)]
 pub struct MeanAbsoluteError;
 
+impl Default for MeanAbsoluteError {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MeanAbsoluteError {
     pub fn new() -> Self {
         Self
@@ -78,9 +84,10 @@ impl Loss for MeanAbsoluteError {
 
 #[cfg(test)]
 mod tests {
+    use ndarray::{IxDyn, Shape};
+
     use super::*;
     use crate::common::Tensor;
-    use ndarray::{IxDyn, Shape};
 
     #[test]
     fn test_mean_absolute_error() {

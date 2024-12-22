@@ -27,8 +27,10 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::{common::Tensor, devices::Device};
 use std::future::Future;
+
+use crate::common::Tensor;
+use crate::devices::Device;
 
 /// A struct representing a dataset.
 #[derive(Debug, Clone)]
@@ -103,6 +105,15 @@ pub trait ImageDatasetOps {
     ///
     /// * `noise_level` - The level of noise to add.
     fn add_noise(&mut self, noise_level: f32);
+
+    /// Returns true if the dataset is empty.
+    ///
+    /// # Returns
+    ///
+    /// True if the dataset contains no elements.
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
 
     /// Returns the number of samples in the dataset.
     ///
@@ -187,6 +198,15 @@ pub trait TextDatasetOps {
     /// Preprocesses the text dataset.
     fn preprocess_data(&self);
 
+    /// Returns true if the dataset is empty.
+    ///
+    /// # Returns
+    ///
+    /// True if the dataset contains no elements.
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     /// Returns the number of samples in the dataset.
     ///
     /// # Returns
@@ -262,6 +282,15 @@ pub trait AudioDatasetOps {
 
     /// Preprocesses the audio dataset.
     fn preprocess_data(&self);
+
+    /// Returns true if the dataset is empty.
+    ///
+    /// # Returns
+    ///
+    /// True if the dataset contains no elements.
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
 
     /// Returns the number of samples in the dataset.
     ///

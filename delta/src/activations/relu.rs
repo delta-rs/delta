@@ -34,6 +34,12 @@ use crate::common::Tensor;
 #[derive(Debug)]
 pub struct ReluActivation;
 
+impl Default for ReluActivation {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ReluActivation {
     /// Creates a new instance of `ReluActivation`.
     #[inline(always)]
@@ -74,8 +80,9 @@ impl Activation for ReluActivation {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use ndarray::{IxDyn, Shape};
+
+    use super::*;
 
     #[test]
     fn test_relu_activation() {
