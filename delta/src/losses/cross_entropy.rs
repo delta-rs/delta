@@ -27,14 +27,21 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use ndarray::Dimension;
+
 use crate::common::Tensor;
 use crate::devices::Device;
 use crate::losses::Loss;
-use ndarray::Dimension;
 
 /// A struct representing the Cross-Entropy Loss function.
 #[derive(Debug)]
 pub struct CrossEntropyLoss;
+
+impl Default for CrossEntropyLoss {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl CrossEntropyLoss {
     /// Creates a new CrossEntropyLoss instance.
@@ -135,9 +142,10 @@ impl Loss for CrossEntropyLoss {
 mod tests {
     use std::vec;
 
+    use ndarray::{IxDyn, Shape};
+
     use super::*;
     use crate::common::Tensor;
-    use ndarray::{IxDyn, Shape};
 
     #[test]
     fn test_cross_entropy_loss() {

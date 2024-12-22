@@ -27,11 +27,12 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use ndarray::{IxDyn, Shape};
+
 use crate::common::tensor_ops::Tensor;
 use crate::neuralnet::layers::Layer;
 use crate::neuralnet::layers::error::LayerError;
 use crate::optimizers::Optimizer;
-use ndarray::{IxDyn, Shape};
 
 /// A struct representing a 2D max pooling layer.
 #[derive(Debug)]

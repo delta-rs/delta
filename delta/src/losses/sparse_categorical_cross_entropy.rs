@@ -27,13 +27,21 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::losses::Loss;
-use crate::{common::Tensor, devices::Device};
 use ndarray::{Dimension, IxDyn, Shape};
+
+use crate::common::Tensor;
+use crate::devices::Device;
+use crate::losses::Loss;
 
 /// A struct representing the Sparse Categorical Cross-Entropy Loss function.
 #[derive(Debug)]
 pub struct SparseCategoricalCrossEntropyLoss;
+
+impl Default for SparseCategoricalCrossEntropyLoss {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl SparseCategoricalCrossEntropyLoss {
     /// Creates a new SparseCategoricalCrossEntropyLoss instance.
@@ -149,9 +157,9 @@ impl Loss for SparseCategoricalCrossEntropyLoss {
                     y_pred.shape()
                 );
             }
-            let y_true = self.preprocess_one_hot(&y_true);
-            let indices = self.one_hot_to_indices(&y_true);
-            indices
+            let y_true = self.preprocess_one_hot(y_true);
+
+            self.one_hot_to_indices(&y_true)
         } else {
             // Validate 1D tensor
             if y_true.shape().raw_dim().ndim() != 1 {
@@ -205,9 +213,9 @@ impl Loss for SparseCategoricalCrossEntropyLoss {
                     target.shape()
                 );
             }
-            let target = self.preprocess_one_hot(&target);
-            let indices = self.one_hot_to_indices(&target);
-            indices
+            let target = self.preprocess_one_hot(target);
+
+            self.one_hot_to_indices(&target)
         } else {
             // Validate 1D tensor
             if target.shape().raw_dim().ndim() != 1 {
@@ -254,10 +262,10 @@ impl Loss for SparseCategoricalCrossEntropyLoss {
 
 #[cfg(test)]
 mod tests {
+    use ndarray::{IxDyn, Shape};
+
     use super::*;
     use crate::common::Tensor;
-    use ndarray::IxDyn;
-    use ndarray::Shape;
 
     #[test]
     fn test_sparse_categorical_cross_entropy_loss() {

@@ -59,9 +59,7 @@ impl Loss for HuberLoss {
             panic!("Cannot calculate loss: no dataset in input tensors");
         }
 
-        let mean_loss = huber_loss.mean().expect("Mean computation failed unexpectedly");
-
-        mean_loss
+        huber_loss.mean().expect("Mean computation failed unexpectedly")
     }
 
     /// Calculates the gradient of the Huber loss with respect to the output tensor.
@@ -100,9 +98,10 @@ impl Loss for HuberLoss {
 
 #[cfg(test)]
 mod tests {
+    use ndarray::{IxDyn, Shape};
+
     use super::*;
     use crate::common::Tensor;
-    use ndarray::{IxDyn, Shape};
 
     #[test]
     fn test_huber_loss() {

@@ -4,8 +4,7 @@ use deltaml::common::ndarray::{IxDyn, Shape};
 use deltaml::dataset::ImageNetV2Dataset;
 use deltaml::dataset::base::ImageDatasetOps;
 use deltaml::losses::SparseCategoricalCrossEntropyLoss;
-use deltaml::neuralnet::Sequential;
-use deltaml::neuralnet::{Dense, Flatten};
+use deltaml::neuralnet::{Dense, Flatten, Sequential};
 use deltaml::optimizers::Adam;
 
 #[tokio::main]

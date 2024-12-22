@@ -27,6 +27,14 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use std::fs::File;
+use std::io::Write;
+use std::path::Path;
+use std::time::Instant;
+
+use ndarray::Dimension;
+use serde_json;
+
 use crate::common::Tensor;
 use crate::dataset::ImageDatasetOps;
 use crate::devices::Device;
@@ -34,12 +42,6 @@ use crate::losses::Loss;
 use crate::neuralnet::layers::Layer;
 use crate::neuralnet::models::error::ModelError;
 use crate::optimizers::Optimizer;
-use ndarray::Dimension;
-use serde_json;
-use std::fs::File;
-use std::io::Write;
-use std::path::Path;
-use std::time::Instant;
 
 /// A sequential model that contains a list of layers, an optimizer, and a loss function.
 #[derive(Debug)]
@@ -49,6 +51,12 @@ pub struct Sequential {
     pub loss: Option<Box<dyn Loss>>,
 
     layer_names: Vec<String>,
+}
+
+impl Default for Sequential {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Sequential {
@@ -70,6 +78,7 @@ impl Sequential {
     /// # Returns
     ///
     /// A reference to the model
+    #[allow(clippy::should_implement_trait)]
     pub fn add<L: Layer + 'static>(mut self, mut layer: L) -> Self {
         let layer_type = std::any::type_name::<L>().split("::").last().unwrap();
         let layer_name = match layer_type {
@@ -298,7 +307,7 @@ impl Sequential {
         self.ensure_optimizer_and_loss()?;
 
         let loss_fn = self.loss.as_ref().ok_or(ModelError::MissingLossFunction)?;
-        let num_batches = (validation_data.len() + batch_size - 1) / batch_size;
+        let num_batches = validation_data.len().div_ceil(batch_size);
         let mut total_loss = 0.0;
 
         for batch_idx in 0..num_batches {
@@ -334,7 +343,7 @@ impl Sequential {
         let mut correct_predictions = 0;
         let mut total_samples = 0;
 
-        let num_batches = (test_data.len() + batch_size - 1) / batch_size;
+        let num_batches = test_data.len().div_ceil(batch_size);
 
         for batch_idx in 0..num_batches {
             let (inputs, targets) = test_data.get_batch(batch_idx, batch_size);

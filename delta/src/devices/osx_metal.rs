@@ -27,9 +27,10 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use crate::common::Tensor;
 pub use metal;
 use ndarray::{Array, IxDyn, Shape};
+
+use crate::common::Tensor;
 
 /// Transfers the tensor to a Metal device.
 ///
@@ -285,10 +286,10 @@ pub fn tensor_divide_metal(
 
 #[cfg(test)]
 mod tests {
+    use ndarray::{IxDyn, Shape};
+
     use super::*;
     use crate::common::Tensor;
-    use ndarray::IxDyn;
-    use ndarray::Shape;
 
     #[test]
     fn test_tensor_add_metal() {

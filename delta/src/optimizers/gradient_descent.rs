@@ -27,11 +27,12 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use ndarray::Dimension;
+
 use crate::common::Tensor;
 use crate::devices::Device;
 use crate::optimizers::Optimizer;
 use crate::optimizers::error::OptimizerError;
-use ndarray::Dimension;
 
 /// The Gradient Descent optimizer struct.
 #[derive(Debug)]
@@ -98,8 +99,9 @@ impl Optimizer for GradientDescent {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use ndarray::{ArrayD, IxDyn, Shape};
+
+    use super::*;
 
     fn assert_almost_equal(actual: &ArrayD<f32>, expected: &[f32], tolerance: f32) {
         let actual_slice = actual.as_slice().expect("Failed to convert ArrayD to slice");

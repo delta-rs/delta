@@ -1,8 +1,8 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
+use deltaml::common::Tensor;
 use deltaml::common::ndarray::{Dimension, IxDyn, Shape};
 use deltaml::optimizers::{Adam, Optimizer};
 use rand::Rng;
-use deltaml::common::Tensor;
 
 #[allow(dead_code)]
 fn benchmark_adam_optimizer_small(c: &mut Criterion) {
@@ -49,7 +49,9 @@ fn benchmark_adam_optimizer_large(c: &mut Criterion) {
             let gradients_clone = gradients.clone();
 
             for _ in 0..10 {
-                optimizer.step(&mut weights_clone, &gradients_clone).expect("Failed to perform step");
+                optimizer
+                    .step(&mut weights_clone, &gradients_clone)
+                    .expect("Failed to perform step");
             }
         })
     });

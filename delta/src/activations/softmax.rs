@@ -36,6 +36,12 @@ use crate::common::Tensor;
 #[derive(Debug)]
 pub struct SoftmaxActivation;
 
+impl Default for SoftmaxActivation {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SoftmaxActivation {
     /// Creates a new instance of `SoftmaxActivation`.
     pub fn new() -> Self {
@@ -126,7 +132,7 @@ mod tests {
         let output = softmax.activate(&input);
 
         let expected = Tensor::new(
-            vec![0.09003057317038025, 0.24472847105479776, 0.6652409557758217],
+            vec![0.090_030_57, 0.244_728_48, 0.665_240_94],
             Shape::from(IxDyn(&[1, 3])),
         );
 

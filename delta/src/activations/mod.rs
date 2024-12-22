@@ -33,13 +33,15 @@ pub mod prelu;
 pub mod relu;
 pub mod softmax;
 
-use crate::common::Tensor;
+use std::fmt::Debug;
+
 pub use gelu::GeluActivation;
 pub use leaky_relu::LeakyReluActivation;
 pub use prelu::PreluActivation;
 pub use relu::ReluActivation;
 pub use softmax::SoftmaxActivation;
-use std::fmt::Debug;
+
+use crate::common::Tensor;
 
 /// A trait representing an activation function.
 pub trait Activation: Debug {

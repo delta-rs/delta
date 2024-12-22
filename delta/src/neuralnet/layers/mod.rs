@@ -32,14 +32,17 @@ pub mod error;
 pub mod flatten;
 pub mod max_pooling_2d;
 
-use crate::neuralnet::layers::error::LayerError;
-use crate::optimizers::Optimizer;
-use crate::{common::Tensor, devices::Device};
+use std::fmt::Debug;
+
 pub use dense::Dense;
 pub use flatten::Flatten;
 pub use max_pooling_2d::MaxPooling2D;
 use ndarray::{IxDyn, Shape};
-use std::fmt::Debug;
+
+use crate::common::Tensor;
+use crate::devices::Device;
+use crate::neuralnet::layers::error::LayerError;
+use crate::optimizers::Optimizer;
 
 // A trait representing a neural network layer.
 pub trait Layer: Debug {

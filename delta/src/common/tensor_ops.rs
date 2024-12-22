@@ -2,17 +2,15 @@ use std::io::Cursor;
 use std::ops::{AddAssign, Mul, Range, SubAssign};
 
 use image::{GenericImageView, ImageReader};
-use ndarray::{Array, ArrayD, Axis, IxDyn, Shape};
-use ndarray::{Dimension, Ix2};
+use ndarray::{Array, ArrayD, Axis, Dimension, Ix2, IxDyn, Shape};
 use rand::{Rng, thread_rng};
 use rand_distr::{Distribution, Normal};
 
+use crate::devices::Device;
 #[cfg(all(target_os = "macos", feature = "metal"))]
 use crate::devices::osx_metal::{
     tensor_add_metal, tensor_divide_metal, tensor_multiply_metal, tensor_subtract_metal,
 };
-
-use crate::devices::Device;
 
 /// A struct representing a tensor.
 #[derive(Debug, Clone)]
@@ -147,7 +145,7 @@ impl Tensor {
         F: Fn(f32) -> f32,
     {
         // Create a new array by applying the function `f` to each element of `self.dataset`
-        let new_data = self.data.mapv(|x| f(x));
+        let new_data = self.data.mapv(f);
 
         Tensor { data: new_data, device: self.device.clone() }
     }
@@ -480,7 +478,7 @@ impl Tensor {
                     .indexed_iter()
                     .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
                     .map(|(index, _)| index)
-                    .unwrap() as usize
+                    .unwrap()
             })
             .into_dyn();
 
@@ -625,8 +623,8 @@ impl Tensor {
             slice2.push(ndarray::Slice::from(..));
         }
 
-        let data1 = self.data.slice_each_axis(|ax| slice1[ax.axis.0].clone()).to_owned().into_dyn();
-        let data2 = self.data.slice_each_axis(|ax| slice2[ax.axis.0].clone()).to_owned().into_dyn();
+        let data1 = self.data.slice_each_axis(|ax| slice1[ax.axis.0]).to_owned().into_dyn();
+        let data2 = self.data.slice_each_axis(|ax| slice2[ax.axis.0]).to_owned().into_dyn();
 
         (Tensor { data: data1, device: self.device.clone() }, Tensor {
             data: data2,
@@ -790,8 +788,9 @@ impl PartialEq for Tensor {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use ndarray::IxDyn;
+
+    use super::*;
 
     #[test]
     fn test_new() {
