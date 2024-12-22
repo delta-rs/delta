@@ -334,7 +334,7 @@ impl Sequential {
         let mut correct_predictions = 0;
         let mut total_samples = 0;
 
-        let num_batches = (test_data.len() + batch_size - 1) / batch_size;
+        let num_batches = test_data.len().div_ceil(batch_size);
 
         for batch_idx in 0..num_batches {
             let (inputs, targets) = test_data.get_batch(batch_idx, batch_size);
