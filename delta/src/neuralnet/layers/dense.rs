@@ -224,7 +224,7 @@ impl Layer for Dense {
         if let Some(ref bias_grad) = self.bias_grad {
             optimizer
                 .step(self.bias.as_mut().unwrap(), bias_grad)
-                .map_err(|e| LayerError::OptimizerError(e))?;
+                .map_err(LayerError::OptimizerError)?;
         }
 
         // Clear gradients after update
