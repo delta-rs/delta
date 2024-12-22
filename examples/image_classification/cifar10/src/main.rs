@@ -1,6 +1,6 @@
 use deltaml::activations::ReluActivation;
 use deltaml::activations::SoftmaxActivation;
-use deltaml::common::{IxDyn, Shape};
+use deltaml::common::ndarray::{IxDyn, Shape};
 use deltaml::dataset::Cifar10Dataset;
 use deltaml::dataset::base::ImageDatasetOps;
 use deltaml::losses::MeanSquaredLoss;
