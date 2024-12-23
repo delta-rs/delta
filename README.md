@@ -1,9 +1,9 @@
 <div align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/delta-rs/resources/refs/heads/main/logo/delta_logo_github_white.svg">
-    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/delta-rs/resources/refs/heads/main/logo/delta_logo_github_black.svg">
-    <img alt="The Rust Programming Language: A language empowering everyone to build reliable and efficient software"
-         src="https://raw.githubusercontent.com/delta-rs/resources/refs/heads/main/logo/delta_logo_github_white.svg"
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/delta-rs/resources/refs/heads/main/logo/Δ_white_logo_gh.svg">
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/delta-rs/resources/refs/heads/main/logo/Δ_black_logo_gh.svg">
+    <img alt="Delta Δ - An Open-Source Machine Learning Framework in Rust."
+         src="https://raw.githubusercontent.com/delta-rs/resources/refs/heads/main/logo/Δ_white_logo_gh.svg"
          width="50%">
   </picture>
 
