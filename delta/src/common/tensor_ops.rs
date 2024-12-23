@@ -8,9 +8,7 @@ use rand_distr::{Distribution, Normal};
 
 use crate::devices::Device;
 #[cfg(all(target_os = "macos", feature = "metal"))]
-use crate::devices::osx_metal::{
-    tensor_add_metal, tensor_divide_metal, tensor_subtract_metal,
-};
+use crate::devices::osx_metal::{tensor_add_metal, tensor_divide_metal, tensor_subtract_metal};
 
 /// A struct representing a tensor.
 #[derive(Debug, Clone)]
