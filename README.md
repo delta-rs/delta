@@ -8,6 +8,7 @@
   </picture>
 
 <br/>
+<br/>
 
 ![build](https://img.shields.io/github/actions/workflow/status/delta-rs/delta/core.yml?branch=master) 
 ![crates.io](https://img.shields.io/crates/v/deltaml.svg) 
