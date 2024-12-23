@@ -7,6 +7,8 @@
          width="100%">
   </picture>
 
+<br/>
+
 ![build](https://img.shields.io/github/actions/workflow/status/delta-rs/delta/core.yml?branch=master) 
 ![crates.io](https://img.shields.io/crates/v/deltaml.svg) 
 [![documentation](https://img.shields.io/badge/docs-deltaml-blue?logo=rust)](https://docs.rs/deltaml/latest/)
