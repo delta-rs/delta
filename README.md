@@ -1,20 +1,25 @@
 <div align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/delta-rs/resources/refs/heads/main/logo/delta_logo_github_white.svg">
-    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/delta-rs/resources/refs/heads/main/logo/delta_logo_github_black.svg">
-    <img alt="The Rust Programming Language: A language empowering everyone to build reliable and efficient software"
-         src="https://raw.githubusercontent.com/delta-rs/resources/refs/heads/main/logo/delta_logo_github_white.svg"
-         width="50%">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/delta-rs/resources/refs/heads/main/logo/Δ_white_logo_gh.svg">
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/delta-rs/resources/refs/heads/main/logo/Δ_black_logo_gh.svg">
+    <img alt="Delta Δ - An Open-Source Machine Learning Framework in Rust."
+         src="https://raw.githubusercontent.com/delta-rs/resources/refs/heads/main/logo/Δ_white_logo_gh.svg"
+         width="100%">
   </picture>
 
-[Website][Delta] | [Getting started] | [Learn] | [Documentation] | [Contributing]
+<br/>
+<br/>
+
+![build](https://img.shields.io/github/actions/workflow/status/delta-rs/delta/core.yml?branch=master) 
+![crates.io](https://img.shields.io/crates/v/deltaml.svg) 
+[![documentation](https://img.shields.io/badge/docs-deltaml-blue?logo=rust)](https://docs.rs/deltaml/latest/)
+[![discord badge]](https://discord.gg/g5HtkAzRNG)
+[![x handle]][x badge]
 </div>
 
-[Delta]: https://deltaml.org
-[Getting Started]: https://github.com/delta-rs/delta/wiki/Getting-Started
-[Learn]: https://github.com/delta-rs/delta/wiki
-[Documentation]: https://docs.rs/deltaml/latest/deltaml/
-[Contributing]: CONTRIBUTING.md
+[x badge]: https://twitter.com/intent/follow?screen_name=deltaml_org
+[x handle]: https://img.shields.io/twitter/follow/deltaml_org.svg?style=social&label=Follow
+[discord badge]: https://img.shields.io/discord/1320514043424931861
 
 An open-source machine learning framework in Rust Δ. 
 
