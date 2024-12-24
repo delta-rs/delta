@@ -4,7 +4,7 @@
     <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/delta-rs/resources/refs/heads/main/logo/Δ_black_logo.svg">
     <img alt="Delta Δ - An Open-Source Machine Learning Framework in Rust."
          src="https://raw.githubusercontent.com/delta-rs/resources/refs/heads/main/logo/Δ_white_logo.svg"
-         width="60%">
+         width="55%">
   </picture>
 
 <br/>
