@@ -175,6 +175,13 @@ impl MnistDataset {
         debug!("Downloading MNIST dataset from {}", &url);
 
         let response = reqwest::get(&url).await.map_err(|e| e.to_string())?;
+        if !response.status().is_success() {
+            return Err(format!(
+                "Request failed with status: {} for URL: {}",
+                response.status(),
+                url
+            ));
+        }
         let compressed_data = response.bytes().await.map_err(|e| e.to_string())?;
 
         async_fs::create_dir_all(format!("{}/.cache/dataset/mnist", workspace_dir.display()))
