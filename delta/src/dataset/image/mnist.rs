@@ -168,6 +168,7 @@ impl MnistDataset {
         let file_path = format!("{}/.cache/dataset/mnist/{}", workspace_dir.display(), filename);
 
         if Path::new(&file_path).exists() {
+            debug!("Using cached file: {}", &file_path);
             return Self::decompress_gz(&file_path).map_err(|e| e.to_string());
         }
 
