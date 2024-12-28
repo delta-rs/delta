@@ -23,6 +23,7 @@ jobs:
         with:
           token: ${{ secrets.DELTA_BOT_GH_TOKEN }}
           skip_pull_request: 'true'
+        continue-on-error: true # skip_pull_request exits with code 1 if changes are detected and pull request is not created
 
       - name: Check for Changes
         id: check_changes
