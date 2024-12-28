@@ -30,9 +30,10 @@
 use std::fs::File;
 use std::future::Future;
 use std::io::{self, Read};
-use std::path::Path;
+use std::path::PathBuf;
 use std::pin::Pin;
 
+use directories::BaseDirs;
 use flate2::read::GzDecoder;
 use log::debug;
 use ndarray::{IxDyn, Shape};
@@ -42,13 +43,27 @@ use tokio::fs as async_fs;
 
 use crate::common::Tensor;
 use crate::dataset::base::{Dataset, ImageDatasetOps};
-use crate::get_workspace_dir;
 
 /// A struct representing the MNIST dataset.
 pub struct MnistDataset {
     train: Option<Dataset>,
     test: Option<Dataset>,
     val: Option<Dataset>,
+}
+
+/// Returns the cache directory path where we store the MNIST dataset.
+///
+/// This uses dataset/mnist in the system’s cache directory if available.
+/// If the directories crate cannot find the base cache directory, it uses ./dataset/mnist.
+fn get_cache_dir() -> PathBuf {
+    if let Some(base_dirs) = BaseDirs::new() {
+        let mut cache_path = base_dirs.cache_dir().to_path_buf();
+        cache_path.push("dataset");
+        cache_path.push("mnist");
+        cache_path
+    } else {
+        PathBuf::from("./dataset/mnist")
+    }
 }
 
 impl MnistDataset {
@@ -164,25 +179,41 @@ impl MnistDataset {
     /// # Returns
     /// A vector containing the decompressed dataset
     async fn get_bytes_data(filename: &str) -> Result<Vec<u8>, String> {
-        let workspace_dir = get_workspace_dir();
-        let file_path = format!("{}/.cache/dataset/mnist/{}", workspace_dir.display(), filename);
+        let cache_dir = get_cache_dir();
+        let file_path = cache_dir.join(filename);
 
-        if Path::new(&file_path).exists() {
-            return Self::decompress_gz(&file_path).map_err(|e| e.to_string());
+        if file_path.exists() {
+            debug!("Using cached file: {:?}", file_path);
+            return Self::decompress_gz(file_path.to_str().unwrap()).map_err(|e| e.to_string());
         }
 
         let url = format!("{}/{}", Self::MNIST_URL, filename);
         debug!("Downloading MNIST dataset from {}", &url);
 
-        let response = reqwest::get(&url).await.map_err(|e| e.to_string())?;
-        let compressed_data = response.bytes().await.map_err(|e| e.to_string())?;
+        let client = reqwest::Client::builder()
+            .redirect(reqwest::redirect::Policy::limited(1))
+            .build()
+            .map_err(|e| e.to_string())?;
 
-        async_fs::create_dir_all(format!("{}/.cache/dataset/mnist", workspace_dir.display()))
+        let response = client
+            .get(&url)
+            .send()
             .await
             .map_err(|e| e.to_string())?;
+
+        if !response.status().is_success() {
+            return Err(format!(
+                "Request failed with status: {} for URL: {}",
+                response.status(),
+                url
+            ));
+        }
+
+        let compressed_data = response.bytes().await.map_err(|e| e.to_string())?;
+        async_fs::create_dir_all(&cache_dir).await.map_err(|e| e.to_string())?;
         async_fs::write(&file_path, &compressed_data).await.map_err(|e| e.to_string())?;
 
-        Self::decompress_gz(&file_path).map_err(|e| e.to_string())
+        Self::decompress_gz(file_path.to_str().unwrap()).map_err(|e| e.to_string())
     }
 
     /// Decompresses a gzip file.
@@ -493,10 +524,9 @@ mod tests {
     use super::*;
 
     fn setup() {
-        let workspace_dir = get_workspace_dir();
-        let cache_path = format!("{}/.cache/dataset/mnist", workspace_dir.display());
-        if Path::new(&cache_path).exists() {
-            fs::remove_dir_all(&cache_path).expect("Failed to delete cache directory");
+        let cache_dir = get_cache_dir();
+        if cache_dir.exists() {
+            fs::remove_dir_all(&cache_dir).expect("Failed to delete cache directory");
         }
     }
 
@@ -507,10 +537,9 @@ mod tests {
         let rt = Runtime::new().unwrap();
         rt.block_on(async {
             let _ = MnistDataset::load_data(true).await;
-            let workspace_dir = get_workspace_dir();
-            let cache_path = format!("{}/.cache/dataset/mnist", workspace_dir.display());
+            let cache_dir = get_cache_dir();
             assert!(
-                Path::new(&cache_path).exists(),
+                cache_dir.exists(),
                 "MNIST dataset should be downloaded and extracted"
             );
         });
