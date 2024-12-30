@@ -21,17 +21,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
 
       - name: Install Rust
-        uses: actions-rs/toolchain@v1
+        uses: actions-rs/toolchain@v1.0.6
         with:
           profile: minimal
           toolchain: stable
           override: true
 
       - name: Cache Cargo Dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v4.2.0
         with:
           path: |
             ~/.cargo
@@ -46,16 +46,16 @@ jobs:
     needs: clippy
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
 
       - name: Install Rust
-        uses: actions-rs/toolchain@v1
+        uses: actions-rs/toolchain@v1.0.6
         with:
           profile: minimal
           toolchain: stable
 
       - name: Cache Cargo Dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v4.2.0
         with:
           path: |
             ~/.cargo
@@ -70,23 +70,23 @@ jobs:
     needs: build
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
 
       - name: Install Rust
-        uses: actions-rs/toolchain@v1
+        uses: actions-rs/toolchain@v1.0.6
         with:
           profile: minimal
           toolchain: stable
 
       - name: Cache Cargo Dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v4.2.0
         with:
           path: |
             ~/.cargo
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Download and Cache Datasets
-        uses: actions/cache@v4
+        uses: actions/cache@v4.2.0
         id: datasets-cache
         with:
           path: |
@@ -121,10 +121,10 @@ jobs:
     needs: test
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
 
       - name: Install Rust
-        uses: actions-rs/toolchain@v1
+        uses: actions-rs/toolchain@v1.0.6
         with:
           profile: minimal
           toolchain: stable
@@ -136,7 +136,7 @@ jobs:
         run: cargo tarpaulin --out Html
 
       - name: Upload Coverage Report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.5.0
         with:
           name: coverage-report
           path: ./tarpaulin-report.html
