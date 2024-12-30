@@ -1,7 +1,7 @@
 use deltaml::activations::{ReluActivation, SoftmaxActivation};
 use deltaml::common::ndarray::{IxDyn, Shape};
 use deltaml::dataset::base::ImageDatasetOps;
-use deltaml::dataset::image::cifar100::Cifar100Dataset;
+use deltaml::dataset::image::Cifar100Dataset;
 use deltaml::losses::MeanSquaredLoss;
 use deltaml::neuralnet::{Dense, Flatten, Sequential};
 use deltaml::optimizers::Adam;
