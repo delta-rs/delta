@@ -85,22 +85,32 @@ jobs:
             ~/.cargo
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Download and Cache MNIST
+      - name: Download and Cache Datasets
         uses: actions/cache@v4
-        id: mnist-cache
+        id: datasets-cache
         with:
-          path: ${{ github.workspace }}/.cache/dataset/mnist
-          key: ${{ runner.os }}-mnist-${{ hashFiles('**/Cargo.lock') }}
+          path: |
+            ${{ github.workspace }}/.cache/dataset/cifar10
+            ${{ github.workspace }}/.cache/dataset/cifar100
+            ${{ github.workspace }}/.cache/dataset/imagenetv2
+            ${{ github.workspace }}/.cache/dataset/mnist
+          key: ${{ runner.os }}-datasets-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Download MNIST Data
-        if: steps.mnist-cache.outputs.cache-hit != 'true'
+      - name: Download Datasets
+        if: steps.datasets-cache.outputs.cache-hit != 'true'
         run: |
+          mkdir -p .cache/dataset/cifar10
+          mkdir -p .cache/dataset/cifar100
+          mkdir -p .cache/dataset/imagenetv2
           mkdir -p .cache/dataset/mnist
-          cd .cache/dataset/mnist
-          curl -L -O https://storage.googleapis.com/cvdf-datasets/mnist/train-images-idx3-ubyte.gz
-          curl -L -O https://storage.googleapis.com/cvdf-datasets/mnist/train-labels-idx1-ubyte.gz
-          curl -L -O https://storage.googleapis.com/cvdf-datasets/mnist/t10k-images-idx3-ubyte.gz
-          curl -L -O https://storage.googleapis.com/cvdf-datasets/mnist/t10k-labels-idx1-ubyte.gz
+          cd .cache/dataset
+          curl -L -o cifar10/cifar-10-binary.tar.gz https://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz
+          curl -L -o cifar100/cifar-100-binary.tar.gz https://www.cs.toronto.edu/~kriz/cifar-100-binary.tar.gz
+          curl -L -o imagenetv2/variant_0.tar.gz https://huggingface.co/datasets/vaishaal/ImageNetV2/resolve/main/imagenetv2-matched-frequency.tar.gz
+          curl -L -o mnist/train-images-idx3-ubyte.gz https://storage.googleapis.com/cvdf-datasets/mnist/train-images-idx3-ubyte.gz
+          curl -L -o mnist/train-labels-idx1-ubyte.gz https://storage.googleapis.com/cvdf-datasets/mnist/train-labels-idx1-ubyte.gz
+          curl -L -o mnist/t10k-images-idx3-ubyte.gz https://storage.googleapis.com/cvdf-datasets/mnist/t10k-images-idx3-ubyte.gz
+          curl -L -o mnist/t10k-labels-idx1-ubyte.gz https://storage.googleapis.com/cvdf-datasets/mnist/t10k-labels-idx1-ubyte.gz
 
       - name: Run Tests
         run: cargo test
