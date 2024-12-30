@@ -2,6 +2,7 @@
 members = [
     "delta",
     "delta_bench",
+    "examples/image_classification/cifar100",
     "examples/image_classification/cifar10",
     "examples/image_classification/mnist",
     "examples/image_classification/imagenet_v2",
