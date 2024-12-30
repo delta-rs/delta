@@ -102,6 +102,50 @@ jobs:
           curl -L -O https://storage.googleapis.com/cvdf-datasets/mnist/t10k-images-idx3-ubyte.gz
           curl -L -O https://storage.googleapis.com/cvdf-datasets/mnist/t10k-labels-idx1-ubyte.gz
 
+      - name: Download and Cache CIFAR-10
+        uses: actions/cache@v4
+        id: cifar10-cache
+        with:
+          path: ${{ github.workspace }}/.cache/dataset/cifar10
+          key: ${{ runner.os }}-cifar10-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Download CIFAR-10 Data
+        if: steps.cifar10-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p .cache/dataset/cifar10
+          cd .cache/dataset/cifar10
+          curl -L -O https://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz
+
+      - name: Download and Cache CIFAR-100
+        uses: actions/cache@v4
+        id: cifar100-cache
+        with:
+          path: ${{ github.workspace }}/.cache/dataset/cifar100
+          key: ${{ runner.os }}-cifar100-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Download CIFAR-100 Data
+        if: steps.cifar100-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p .cache/dataset/cifar100
+          cd .cache/dataset/cifar100
+          curl -L -O https://www.cs.toronto.edu/~kriz/cifar-100-binary.tar.gz
+
+      - name: Download and Cache ImageNetV2
+        uses: actions/cache@v4
+        id: imagenetv2-cache
+        with:
+          path: ${{ github.workspace }}/.cache/dataset/imagenetv2
+          key: ${{ runner.os }}-imagenetv2-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Download ImageNetV2 Data
+        if: steps.imagenetv2-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p .cache/dataset/imagenetv2
+          cd .cache/dataset/imagenetv2
+          curl -L -O https://huggingface.co/datasets/vaishaal/ImageNetV2/resolve/main/imagenetv2-matched-frequency.tar.gz
+          curl -L -O https://huggingface.co/datasets/vaishaal/ImageNetV2/resolve/main/imagenetv2-threshold0.7.tar.gz
+          curl -L -O https://huggingface.co/datasets/vaishaal/ImageNetV2/resolve/main/imagenetv2-top-images.tar.gz
+
       - name: Run Tests
         run: cargo test
 
