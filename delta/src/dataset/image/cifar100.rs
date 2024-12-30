@@ -45,42 +45,36 @@ use crate::dataset::base::{Dataset, ImageDatasetOps};
 use crate::devices::Device;
 use crate::get_workspace_dir;
 
-/// A struct representing the CIFAR-10 dataset.
-pub struct Cifar10Dataset {
+/// A struct representing the CIFAR-100 dataset.
+pub struct Cifar100Dataset {
     train: Option<Dataset>,
     test: Option<Dataset>,
     val: Option<Dataset>,
 }
 
-impl Cifar10Dataset {
-    const CIFAR10_URL: &'static str = "https://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz";
-    const CIFAR10_TRAIN_FILES: [&'static str; 5] = [
-        "data_batch_1.bin",
-        "data_batch_2.bin",
-        "data_batch_3.bin",
-        "data_batch_4.bin",
-        "data_batch_5.bin",
-    ];
-    const CIFAR10_TEST_FILE: &'static str = "test_batch.bin";
-    const CIFAR10_IMAGE_SIZE: usize = 32;
-    const CIFAR10_NUM_CLASSES: usize = 10;
+impl Cifar100Dataset {
+    const CIFAR100_URL: &'static str = "https://www.cs.toronto.edu/~kriz/cifar-100-binary.tar.gz";
+    const CIFAR100_TRAIN_FILE: &'static str = "train.bin";
+    const CIFAR100_TEST_FILE: &'static str = "test.bin";
+    const CIFAR100_IMAGE_SIZE: usize = 32;
+    const CIFAR100_NUM_CLASSES: usize = 100;
     const TRAIN_EXAMPLES: usize = 50_000;
     const TEST_EXAMPLES: usize = 10_000;
 
-    /// Downloads and extracts the CIFAR-10 dataset.
+    /// Downloads and extracts the CIFAR-100 dataset.
     ///
-    /// This function downloads the CIFAR-10 dataset from the specified URL
+    /// This function downloads the CIFAR-100 dataset from the specified URL
     /// and extracts it to the cache directory.
     async fn download_and_extract() {
         let workspace_dir = get_workspace_dir();
-        let cache_path = format!("{}/.cache/dataset/cifar10/", workspace_dir.display());
-        let tarball_path = format!("{}cifar-10-binary.tar.gz", cache_path);
+        let cache_path = format!("{}/.cache/dataset/cifar100/", workspace_dir.display());
+        let tarball_path = format!("{}cifar-100-binary.tar.gz", cache_path);
 
         if !Path::new(&tarball_path).exists() {
-            debug!("Downloading CIFAR-10 dataset from {}", Self::CIFAR10_URL);
+            debug!("Downloading CIFAR-100 dataset from {}", Self::CIFAR100_URL);
             let response =
-                reqwest::get(Self::CIFAR10_URL).await.expect("Failed to download CIFAR-10");
-            let data = response.bytes().await.expect("Failed to read CIFAR-10 dataset");
+                reqwest::get(Self::CIFAR100_URL).await.expect("Failed to download CIFAR-100");
+            let data = response.bytes().await.expect("Failed to read CIFAR-100 dataset");
             fs::create_dir_all(cache_path.clone()).unwrap();
             fs::write(&tarball_path, data).unwrap();
         }
@@ -110,28 +104,36 @@ impl Cifar10Dataset {
         }
     }
 
-    /// Parses a CIFAR-10 binary file.
+    /// Parses a CIFAR-100 binary file and returns the images and labels as vectors of `f32`.
+    ///
+    /// Each record in CIFAR-100 is structured as follows:
+    /// `[fine_label(1 byte), coarse_label(1 byte), 32x32x3 image(3072 bytes)]`.
+    /// The coarse label is ignored, and only the fine label is used for a one-hot label vector.
     ///
     /// # Arguments
-    /// * `file_path` - The path to the CIFAR-10 binary file.
+    /// * `file_path` - The path to the CIFAR-100 binary file.
     /// * `num_examples` - The number of examples in the file.
     ///
     /// # Returns
-    /// A tuple containing the images and labels as vectors of `f32`.
+    /// A tuple containing:
+    /// - `Vec<f32>`: Flattened and normalized image data.
+    /// - `Vec<f32>`: One-hot-encoded labels for each example.
     fn parse_file(file_path: &str, num_examples: usize) -> (Vec<f32>, Vec<f32>) {
-        let mut file = File::open(file_path).expect("Failed to open CIFAR-10 file");
-        let mut buffer = vec![0u8; 1 + Self::CIFAR10_IMAGE_SIZE * Self::CIFAR10_IMAGE_SIZE * 3];
+        let mut file = File::open(file_path).expect("Failed to open CIFAR-100 file");
+        let mut buffer = vec![0u8; 1 + 1 + Self::CIFAR100_IMAGE_SIZE * Self::CIFAR100_IMAGE_SIZE * 3];
+
         let mut images =
-            vec![0.0; num_examples * Self::CIFAR10_IMAGE_SIZE * Self::CIFAR10_IMAGE_SIZE * 3];
-        let mut labels = vec![0.0; num_examples * Self::CIFAR10_NUM_CLASSES];
+            vec![0.0; num_examples * Self::CIFAR100_IMAGE_SIZE * Self::CIFAR100_IMAGE_SIZE * 3];
+        let mut labels = vec![0.0; num_examples * Self::CIFAR100_NUM_CLASSES];
 
         for i in 0..num_examples {
-            file.read_exact(&mut buffer).expect("Failed to read CIFAR-10 example");
-            let label = buffer[0] as usize;
-            labels[i * Self::CIFAR10_NUM_CLASSES + label] = 1.0; // One-hot encode
+            file.read_exact(&mut buffer).expect("Failed to read CIFAR-100 example");
+            let fine_label = buffer[0] as usize;
 
-            for (j, &pixel) in buffer[1..].iter().enumerate() {
-                images[i * Self::CIFAR10_IMAGE_SIZE * Self::CIFAR10_IMAGE_SIZE * 3 + j] =
+            labels[i * Self::CIFAR100_NUM_CLASSES + fine_label] = 1.0; // One-hot encode
+
+            for (j, &pixel) in buffer[2..].iter().enumerate() {
+                images[i * Self::CIFAR100_IMAGE_SIZE * Self::CIFAR100_IMAGE_SIZE * 3 + j] =
                     pixel as f32 / 255.0; // Normalize to [0, 1]
             }
         }
@@ -139,38 +141,31 @@ impl Cifar10Dataset {
         (images, labels)
     }
 
-    /// Loads the CIFAR-10 dataset.
+    /// Loads the CIFAR-100 dataset from a specific file (train or test).
     ///
     /// # Arguments
-    /// * `files` - A slice of file names to load.
-    /// * `total_examples` - The total number of examples to load.
+    /// * `file` - The file name to load (e.g., `train.bin`, `test.bin`).
+    /// * `total_examples` - The total number of examples in the specified file.
     ///
     /// # Returns
     /// A `Dataset` containing the loaded images and labels.
-    fn load_data(files: &[&str], total_examples: usize) -> Dataset {
-        let mut images = Vec::new();
-        let mut labels = Vec::new();
-
-        for &file in files {
-            let (img, lbl) = Self::parse_file(
-                &format!("{}/.cache/dataset/cifar10/{}", get_workspace_dir().display(), file),
-                total_examples / files.len(),
-            );
-            images.extend(img);
-            labels.extend(lbl);
-        }
+    fn load_data(file: &str, total_examples: usize) -> Dataset {
+        let (images, labels) = Self::parse_file(
+            &format!("{}/.cache/dataset/cifar100/{}", get_workspace_dir().display(), file),
+            total_examples,
+        );
 
         Dataset::new(
             Tensor::new(
                 images,
                 Shape::from(IxDyn(&[
                     total_examples,
-                    Self::CIFAR10_IMAGE_SIZE,
-                    Self::CIFAR10_IMAGE_SIZE,
+                    Self::CIFAR100_IMAGE_SIZE,
+                    Self::CIFAR100_IMAGE_SIZE,
                     3,
                 ])),
             ),
-            Tensor::new(labels, Shape::from(IxDyn(&[total_examples, Self::CIFAR10_NUM_CLASSES]))),
+            Tensor::new(labels, Shape::from(IxDyn(&[total_examples, Self::CIFAR100_NUM_CLASSES]))),
         )
     }
 
@@ -200,38 +195,38 @@ impl Cifar10Dataset {
     }
 }
 
-impl ImageDatasetOps for Cifar10Dataset {
+impl ImageDatasetOps for Cifar100Dataset {
     type LoadFuture = Pin<Box<dyn Future<Output = Self> + Send>>;
 
-    /// Loads the training dataset.
+    /// Loads the training dataset for CIFAR-100.
     ///
     /// # Returns
-    /// A future that resolves to the `Cifar10Dataset` with the training dataset loaded.
+    /// A future that resolves to the `Cifar100Dataset` with the training dataset loaded.
     fn load_train() -> Self::LoadFuture {
         Box::pin(async {
             Self::download_and_extract().await;
-            let train_data = Self::load_data(&Self::CIFAR10_TRAIN_FILES, Self::TRAIN_EXAMPLES);
-            Cifar10Dataset { train: Some(train_data), test: None, val: None }
+            let train_data = Self::load_data(Self::CIFAR100_TRAIN_FILE, Self::TRAIN_EXAMPLES);
+            Cifar100Dataset { train: Some(train_data), test: None, val: None }
         })
     }
 
     /// Loads the test dataset.
     ///
     /// # Returns
-    /// A future that resolves to the `Cifar10Dataset` with the test dataset loaded.
+    /// A future that resolves to the `Cifar100Dataset` with the test dataset loaded.
     fn load_test() -> Self::LoadFuture {
         Box::pin(async {
             Self::download_and_extract().await;
-            let test_data = Self::load_data(&[Self::CIFAR10_TEST_FILE], Self::TEST_EXAMPLES);
-            Cifar10Dataset { train: None, test: Some(test_data), val: None }
+            let test_data = Self::load_data(Self::CIFAR100_TEST_FILE, Self::TEST_EXAMPLES);
+            Cifar100Dataset { train: None, test: Some(test_data), val: None }
         })
     }
 
     fn load_val() -> Self::LoadFuture {
         Box::pin(async {
             Self::download_and_extract().await;
-            let train_data = Self::load_data(&Self::CIFAR10_TRAIN_FILES, Self::TRAIN_EXAMPLES);
-            let mut dataset = Cifar10Dataset { train: Some(train_data), test: None, val: None };
+            let train_data = Self::load_data(Self::CIFAR100_TRAIN_FILE, Self::TRAIN_EXAMPLES);
+            let mut dataset = Cifar100Dataset { train: Some(train_data), test: None, val: None };
             dataset.split_train_validation(0.2);
             dataset
         })
@@ -297,9 +292,9 @@ impl ImageDatasetOps for Cifar10Dataset {
         let adjusted_end_idx = end_idx.min(total_samples);
 
         let inputs_batch =
-            dataset.inputs.slice(vec![start_idx..adjusted_end_idx, 0..32, 0..32, 0..3]);
+            dataset.inputs.slice(vec![start_idx..adjusted_end_idx, 0..Self::CIFAR100_IMAGE_SIZE, 0..Self::CIFAR100_IMAGE_SIZE, 0..3]);
 
-        let labels_batch = dataset.labels.slice(vec![start_idx..adjusted_end_idx, 0..10]);
+        let labels_batch = dataset.labels.slice(vec![start_idx..adjusted_end_idx, 0..Self::CIFAR100_NUM_CLASSES]);
 
         (inputs_batch, labels_batch)
     }
@@ -371,7 +366,7 @@ impl ImageDatasetOps for Cifar10Dataset {
     /// Clones the dataset.
     ///
     /// # Returns
-    /// A new `Cifar10Dataset` instance with the same dataset.
+    /// A new `Cifar100Dataset` instance with cloned data references.
     fn clone(&self) -> Self {
         Self { train: self.train.clone(), test: self.test.clone(), val: self.val.clone() }
     }
@@ -409,7 +404,7 @@ mod tests {
 
     fn setup() {
         let workspace_dir = get_workspace_dir();
-        let cache_path = format!("{}/.cache/dataset/cifar10", workspace_dir.display());
+        let cache_path = format!("{}/.cache/dataset/cifar100", workspace_dir.display());
         if Path::new(&cache_path).exists() {
             fs::remove_dir_all(&cache_path).expect("Failed to delete cache directory");
         }
@@ -419,64 +414,63 @@ mod tests {
     #[serial]
     async fn test_download_and_extract() {
         setup();
-        Cifar10Dataset::download_and_extract().await;
+        Cifar100Dataset::download_and_extract().await;
         let workspace_dir = get_workspace_dir();
         let cache_path =
-            format!("{}/.cache/dataset/cifar10/data_batch_1.bin", workspace_dir.display());
+            format!("{}/.cache/dataset/cifar100/{}", workspace_dir.display(), Cifar100Dataset::CIFAR100_TRAIN_FILE
+        );
         assert!(
             Path::new(&cache_path).exists(),
-            "CIFAR-10 dataset should be downloaded and extracted"
+            "CIFAR-100 dataset should be downloaded and extracted"
         );
     }
 
-    #[test]
+    #[tokio::test]
     #[serial]
-    fn test_parse_file() {
-        // Ensure the dataset is downloaded before parsing
-        test_download_and_extract();
-        let workspace_dir = get_workspace_dir();
-        let cache_path =
-            format!("{}/.cache/dataset/cifar10/data_batch_1.bin", workspace_dir.display());
+    async fn test_parse_file() {
+        setup();
+        Cifar100Dataset::download_and_extract().await;
 
-        let (images, labels) = Cifar10Dataset::parse_file(&cache_path, 10000);
-        assert_eq!(images.len(), 10000 * 32 * 32 * 3, "Images should have the correct length");
-        assert_eq!(labels.len(), 10000 * 10, "Labels should have the correct length");
+        let workspace_dir = get_workspace_dir();
+        let cache_path = format!(
+            "{}/.cache/dataset/cifar100/{}",
+            workspace_dir.display(),
+            Cifar100Dataset::CIFAR100_TRAIN_FILE
+        );
+
+        let (images, labels) = Cifar100Dataset::parse_file(&cache_path, 50000);
+        assert_eq!(images.len(), 50000 * 32 * 32 * 3);
+        assert_eq!(labels.len(), 50000 * 100);
     }
 
-    #[test]
+    #[tokio::test]
     #[serial]
-    fn test_load_data() {
-        // Ensure the dataset is downloaded before loading data
-        test_download_and_extract();
+    async fn test_load_data() {
+        setup();
+        Cifar100Dataset::download_and_extract().await;
 
-        let dataset = Cifar10Dataset::load_data(&["data_batch_1.bin"], 10000);
-
-        // Compare the shape of inputs
+        let dataset = Cifar100Dataset::load_data(Cifar100Dataset::CIFAR100_TRAIN_FILE, 50000);
         assert_eq!(
             dataset.inputs.shape().raw_dim().as_array_view().to_vec(),
-            &[10000, 32, 32, 3],
-            "Dataset inputs should have the correct shape"
+            &[50000, 32, 32, 3]
         );
-
-        // Compare the shape of labels
         assert_eq!(
             dataset.labels.shape().raw_dim().as_array_view().to_vec(),
-            &[10000, 10],
-            "Dataset labels should have the correct shape"
+            &[50000, 100]
         );
     }
 
     #[tokio::test]
     #[serial]
     async fn test_load_train() {
-        let dataset = Cifar10Dataset::load_train().await;
+        let dataset = Cifar100Dataset::load_train().await;
         assert!(dataset.train.is_some(), "Training dataset should be loaded");
     }
 
     #[tokio::test]
     #[serial]
     async fn test_load_test() {
-        let dataset = Cifar10Dataset::load_test().await;
+        let dataset = Cifar100Dataset::load_test().await;
         assert!(dataset.test.is_some(), "Test dataset should be loaded");
     }
 }
