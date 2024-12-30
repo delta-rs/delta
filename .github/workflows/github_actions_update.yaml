@@ -11,6 +11,9 @@ permissions:
 jobs:
   update-actions:
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.DELTA_BOT_GH_TOKEN }}
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
