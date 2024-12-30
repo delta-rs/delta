@@ -54,6 +54,9 @@ jobs:
         if: ${{ steps.check_changes.outputs.changes_detected == 'true' }}
         run: |
           DIFF=$(git diff HEAD~1 HEAD || true)
-          PR_BODY="Bump GitHub Actions versions\n\n\`\`\`diff\n$DIFF\n\`\`\`"
+          PR_BODY="Bump GitHub Actions versions
+            \`\`\`diff
+            $DIFF
+            \`\`\`"
           PR_URL=$(gh pr create --base master --head "${{ steps.commit_push.outputs.branch_name }}" --title "Update GitHub Actions" --body "$PR_BODY" --draft=false --label "dependencies")
           gh pr merge "$PR_URL" --merge --delete-branch --auto
