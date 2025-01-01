@@ -79,6 +79,7 @@ being awesome contributors to this project. **We'd like to take a moment to reco
 [<img src="https://github.com/chaseWillden.png?size=72" alt="chaseWillden" width="72">](https://github.com/chaseWillden)
 [<img src="https://github.com/distributedstatemachine.png?size=72" alt="distributedstatemachine" width="72">](https://github.com/distributedstatemachine)
 [<img src="https://github.com/hallabro.png?size=72" alt="hallabro" width="72">](https://github.com/hallabro)
+[<img src="https://github.com/SauersML.png?size=72" alt="SauersML" width="72">](https://github.com/SauersML)
 
 ## License
 
