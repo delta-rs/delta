@@ -87,7 +87,7 @@ impl Activation for SoftmaxActivation {
         }
         
         // Return a new Tensor with the same shape
-        Tensor::new(output_data, input.data.shape().clone())
+        Tensor::new(output_data, Shape::from(IxDyn(&[batch_size, num_classes])))
     }
 
     /// Computes the Jacobian of the Softmax function.
