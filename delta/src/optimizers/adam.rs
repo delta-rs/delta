@@ -30,7 +30,7 @@
 use std::fmt;
 use std::fmt::Debug;
 
-use ndarray::Dimension;
+use ndarray::{Dimension, IxDyn, Shape};
 
 use crate::common::Tensor;
 use crate::devices::Device;
@@ -91,6 +91,24 @@ impl Adam {
     {
         self.scheduler = Some(DebuggableScheduler(Box::new(scheduler)));
     }
+
+    /// Initializes the moving averages for the Adam optimizer.
+    ///
+    /// # Arguments
+    ///
+    /// * `shape` - The shape of the weights tensor.
+    fn initialize_moving_averages(&mut self, shape: &Vec<usize>) {
+        if self.m.is_none()
+            || self.m.as_ref().unwrap().shape().raw_dim().as_array_view().to_vec() != *shape
+        {
+            self.m = Some(Tensor::zeros(Shape::from(IxDyn(&shape)), self.device.clone()));
+        }
+        if self.v.is_none()
+            || self.v.as_ref().unwrap().shape().raw_dim().as_array_view().to_vec() != *shape
+        {
+            self.v = Some(Tensor::zeros(Shape::from(IxDyn(&shape)), self.device.clone()));
+        }
+    }
 }
 
 impl Optimizer for Adam {
@@ -109,21 +127,9 @@ impl Optimizer for Adam {
 
         self.timestep += 1;
 
-        // Initialize moving averages if not already done
-        if self.m.is_none()
-            || self.m.as_ref().unwrap().shape().raw_dim().as_array_view().to_vec()
-                != weights.shape().raw_dim().as_array_view().to_vec()
-        {
-            self.m = Some(Tensor::zeros(weights.shape().clone()));
-            self.m = Some(self.m.as_mut().unwrap().to_device(self.device.clone()).unwrap());
-        }
-        if self.v.is_none()
-            || self.v.as_ref().unwrap().shape().raw_dim().as_array_view().to_vec()
-                != weights.shape().raw_dim().as_array_view().to_vec()
-        {
-            self.v = Some(Tensor::zeros(weights.shape().clone()));
-            self.v = Some(self.v.as_mut().unwrap().to_device(self.device.clone()).unwrap());
-        }
+        let weights_shape = weights.shape().raw_dim().as_array_view().to_vec();
+
+        self.initialize_moving_averages(&weights_shape);
 
         let m = self.m.as_mut().unwrap();
         let v = self.v.as_mut().unwrap();
@@ -163,11 +169,7 @@ impl Optimizer for Adam {
         let v_hat = v.div_scalar(bias_correction_2);
 
         // Get learning rate
-        let lr = self
-            .scheduler
-            .as_ref()
-            .map(|scheduler| scheduler.0(self.timestep))
-            .unwrap_or(self.learning_rate);
+        let lr = self.scheduler.as_ref().map_or(self.learning_rate, |s| s.0(self.timestep));
 
         // Compute scaling factor based on max gradient magnitude
         let max_gradient = processed_gradients.data.iter().map(|g| g.abs()).fold(0.0, f32::max);
