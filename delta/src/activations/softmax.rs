@@ -60,20 +60,34 @@ impl Activation for SoftmaxActivation {
     ///
     /// The output tensor after applying the Softmax activation function.
     fn activate(&self, input: &Tensor) -> Tensor {
-        // Find the maximum value in the input tensor
-        let max_value = input.max();
-
-        // Subtract the maximum value from each element in the input tensor
-        let stabilized_input = input.map(|x| x - max_value);
-
-        // Compute the exponentials
-        let exps = stabilized_input.map(|x| x.exp());
-
-        // Compute the sum of the exponentials
-        let sum: f32 = exps.data.iter().sum();
-
-        // Normalize to get the softmax probabilities
-        exps.map(|x| x / sum)
+        let shape = &input.data.shape();
+        let batch_size = shape[0];
+        let num_classes = shape[1];
+        
+        // We'll build a new Vec for the output data
+        let mut output_data = Vec::with_capacity(batch_size * num_classes);
+        
+        for b in 0..batch_size {
+            // Extract the row
+            let row = input.data.slice(s![b, ..]);
+        
+            // Find the row-wise max for numerical stability
+            let max_in_row = row.fold(std::f32::MIN, |acc, &x| acc.max(x));
+        
+            // Exponentiate each element minus that row-wise max
+            let exps: Vec<f32> = row.iter().map(|&x| (x - max_in_row).exp()).collect();
+        
+            // Sum the exponentials
+            let sum_of_exps: f32 = exps.iter().sum();
+        
+            // Normalize each element by the sum of exponentials
+            for val in exps.iter() {
+                output_data.push(val / sum_of_exps);
+            }
+        }
+        
+        // Return a new Tensor with the same shape
+        Tensor::new(output_data, Shape::from(IxDyn(&[batch_size, num_classes])))
     }
 
     /// Computes the Jacobian of the Softmax function.
