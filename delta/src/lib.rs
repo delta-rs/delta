@@ -46,8 +46,9 @@ pub mod optimizers;
 ///
 /// A `PathBuf` representing the path to the workspace directory.
 pub fn get_workspace_dir() -> PathBuf {
-    let mut path = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
+    // Add a default for flamegraph's to work
+    let path = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+    let mut path = PathBuf::from(path);
     path.pop();
-
     path
 }

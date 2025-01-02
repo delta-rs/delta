@@ -94,9 +94,7 @@ impl Optimizer for RMSProp {
 
         // Initialize mean square tensor if not already done
         if self.mean_square.is_none() {
-            self.mean_square = Some(Tensor::zeros(weights.shape().clone()));
-            self.mean_square =
-                Some(self.mean_square.as_mut().unwrap().to_device(self.device.clone()).unwrap());
+            self.mean_square = Some(Tensor::zeros(weights.shape().clone(), self.device.clone()));
         }
 
         let mean_square = self.mean_square.as_mut().unwrap();

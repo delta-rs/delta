@@ -5,6 +5,7 @@ use image::{GenericImageView, ImageReader};
 use ndarray::{Array, ArrayD, Axis, Dimension, Ix2, IxDyn, Shape};
 use rand::{Rng, thread_rng};
 use rand_distr::{Distribution, Normal};
+use rayon::prelude::*;
 
 use crate::devices::Device;
 #[cfg(all(target_os = "macos", feature = "metal"))]
@@ -45,8 +46,8 @@ impl Tensor {
     /// # Returns
     ///
     /// A tensor filled with zeros.
-    pub fn zeros(shape: Shape<IxDyn>) -> Self {
-        Self { data: Array::zeros(shape), device: Device::default() }
+    pub fn zeros(shape: Shape<IxDyn>, device: Device) -> Self {
+        Self { data: Array::zeros(shape), device }
     }
 
     /// Creates a tensor filled with random values.
@@ -269,7 +270,19 @@ impl Tensor {
     ///
     /// * `amount` - The scalar value to multiply the tensor by.
     pub fn mul_scalar(&self, amount: f32) -> Tensor {
-        self.map(|x| x * amount)
+        let data: Vec<f32> = self
+            .data
+            .as_slice()
+            .expect("Tensor data must be contiguous")
+            .par_iter()
+            .map(|&x| x * amount)
+            .collect();
+
+        let shape = self.data.shape();
+        Tensor {
+            data: Array::from_shape_vec(IxDyn(shape), data).expect("Invalid shape"),
+            device: self.device.clone(),
+        }
     }
 
     /// Raises the tensor to a power.
@@ -278,7 +291,19 @@ impl Tensor {
     ///
     /// * `amount` - The power to raise the tensor to.
     pub fn pow(&self, amount: f32) -> Tensor {
-        self.map(|x| x.powf(amount))
+        let data: Vec<f32> = self
+            .data
+            .as_slice()
+            .expect("Tensor data must be contiguous")
+            .par_iter()
+            .map(|&x| x.powf(amount))
+            .collect();
+
+        let shape = self.data.shape();
+        Tensor {
+            data: Array::from_shape_vec(IxDyn(shape), data).expect("Invalid shape"),
+            device: self.device.clone(),
+        }
     }
 
     /// Divides the tensor by a scalar value.
@@ -287,7 +312,19 @@ impl Tensor {
     ///
     /// * `amount` - The scalar value to divide the tensor by.
     pub fn div_scalar(&self, amount: f32) -> Tensor {
-        self.map(|x| x / amount)
+        let data: Vec<f32> = self
+            .data
+            .as_slice()
+            .expect("Tensor data must be contiguous")
+            .par_iter()
+            .map(|&x| x / amount)
+            .collect();
+
+        let shape = self.data.shape();
+        Tensor {
+            data: Array::from_shape_vec(IxDyn(shape), data).expect("Invalid shape"),
+            device: self.device.clone(),
+        }
     }
 
     /// Computes the square root of each element in the tensor.
@@ -296,7 +333,19 @@ impl Tensor {
     ///
     /// A new tensor containing the square roots of the elements.
     pub fn sqrt(&self) -> Tensor {
-        self.map(|x| x.sqrt())
+        let data: Vec<f32> = self
+            .data
+            .as_slice()
+            .expect("Tensor data must be contiguous")
+            .par_iter()
+            .map(|&x| x.sqrt())
+            .collect();
+
+        let shape = self.data.shape();
+        Tensor {
+            data: Array::from_shape_vec(IxDyn(shape), data).expect("Invalid shape"),
+            device: self.device.clone(),
+        }
     }
 
     /// Adds a scalar value to each element in the tensor.
@@ -309,7 +358,19 @@ impl Tensor {
     ///
     /// A new tensor containing the result of the addition.
     pub fn add_scalar(&self, amount: f32) -> Tensor {
-        self.map(|x| x + amount)
+        let data: Vec<f32> = self
+            .data
+            .as_slice()
+            .expect("Tensor data must be contiguous")
+            .par_iter()
+            .map(|&x| x + amount)
+            .collect();
+
+        let shape = self.data.shape();
+        Tensor {
+            data: Array::from_shape_vec(IxDyn(shape), data).expect("Invalid shape"),
+            device: self.device.clone(),
+        }
     }
 
     /// Divides each element in the tensor.
@@ -413,7 +474,7 @@ impl Tensor {
         let current_max = self.data.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
 
         if current_min == current_max {
-            return Tensor::zeros(self.shape());
+            return Tensor::zeros(self.shape(), self.device.clone());
         }
 
         let normalized_data =
@@ -748,7 +809,7 @@ impl Default for Tensor {
     ///
     /// A new tensor with default values.
     fn default() -> Self {
-        Self::zeros(Shape::from(IxDyn(&[1, 1])))
+        Self::zeros(Shape::from(IxDyn(&[1, 1])), Device::default())
     }
 }
 
@@ -801,7 +862,7 @@ mod tests {
     #[test]
     fn test_zeros() {
         let shape = Shape::from(IxDyn(&[2, 3]));
-        let tensor = Tensor::zeros(shape);
+        let tensor = Tensor::zeros(shape, Device::Cpu);
         assert_eq!(tensor.data.shape(), &[2, 3]);
     }
 

@@ -29,6 +29,7 @@ image = "0.25.5"
 serial_test = "3.2"
 rand_distr = "0.4.3"
 libm = "0.2.11"
+rayon = "1.10.0"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 metal = { version = "0.30.0", optional = true }
