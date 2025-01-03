@@ -28,6 +28,7 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 pub use metal;
+use metal::MTLResourceOptions;
 use ndarray::{Array, IxDyn, Shape};
 
 use crate::common::Tensor;
@@ -48,8 +49,7 @@ pub fn to_device_metal(
 ) -> Result<metal::Buffer, String> {
     // Create a Metal buffer for the tensor's data
     let tensor_size = tensor.data.len() * size_of::<f32>();
-    let buffer =
-        metal_device.new_buffer(tensor_size as u64, metal::MTLResourceOptions::StorageModeShared);
+    let buffer = metal_device.new_buffer(tensor_size as u64, MTLResourceOptions::StorageModeShared);
 
     // Copy the tensor's data into the Metal buffer
     unsafe {
@@ -127,120 +127,90 @@ pub fn create_compute_pipeline(
         .map_err(|e| format!("Failed to create compute pipeline: {:?}", e))
 }
 
-fn execute_tensor_operation_metal(
-    tensor1: &Tensor,
-    tensor2: &Tensor,
-    operation: &str, // Name of the Metal shader function
+fn execute_tensor_operation(
+    tensor1: Option<&Tensor>,
+    tensor2: Option<&Tensor>,
+    operation: &str,
     device: &metal::Device,
     queue: &metal::CommandQueue,
+    extra_data: Option<&[f32]>,
 ) -> Result<Tensor, String> {
-    // Check if the tensors have the same shape
-    // if tensor1.data.shape() != tensor2.data.shape() {
-    //     return Err(format!(
-    //         "Tensors must have the same shape, got {:?} and {:?}",
-    //         tensor1.data.shape(),
-    //         tensor2.data.shape()
-    //     ));
-    // }
-
-    // Load shader and create compute pipeline
     let shader_source = include_str!("metal_shaders/tensor_ops.metal");
-    let library = device
-        .new_library_with_source(shader_source, &metal::CompileOptions::new())
-        .map_err(|e| format!("Failed to compile Metal shader: {:?}", e))?;
-    let kernel = library
-        .get_function(operation, None)
-        .map_err(|e| format!("Failed to get kernel function: {:?}", e))?;
-    let pipeline_descriptor = metal::ComputePipelineDescriptor::new();
-    pipeline_descriptor.set_compute_function(Some(&kernel));
-    let pipeline_state = device
-        .new_compute_pipeline_state(&pipeline_descriptor)
-        .map_err(|e| format!("Failed to create compute pipeline: {:?}", e))?;
+    let pipeline_state = create_compute_pipeline(device, shader_source, operation)?;
 
-    // Ensure the tensor data is contiguous and properly aligned
-    let tensor1_data = tensor1.data.as_slice().unwrap();
-    let tensor2_data = tensor2.data.as_slice().unwrap();
+    let input1_buffer = tensor1.map(|t| {
+        let size = t.data.len() * size_of::<f32>();
+        device.new_buffer_with_data(
+            t.data.as_slice().unwrap().as_ptr() as *const _,
+            size as u64,
+            MTLResourceOptions::StorageModeShared,
+        )
+    });
 
-    // Calculate buffer sizes
-    let tensor1_buffer_size = size_of_val(tensor1_data) as u64;
-    let tensor2_buffer_size = size_of_val(tensor2_data) as u64;
+    let input2_buffer = tensor2.map(|t| {
+        let size = t.data.len() * size_of::<f32>();
+        device.new_buffer_with_data(
+            t.data.as_slice().unwrap().as_ptr() as *const _,
+            size as u64,
+            MTLResourceOptions::StorageModeShared,
+        )
+    });
 
-    // Create aligned buffers for input tensors
-    let input1_buffer = device.new_buffer_with_data(
-        tensor1_data.as_ptr() as *const _,
-        tensor1_buffer_size,
-        metal::MTLResourceOptions::StorageModeShared,
-    );
+    let tensor_size = tensor1.map(|t| t.data.len()).unwrap_or_else(|| tensor2.unwrap().data.len());
+    let output_buffer = device
+        .new_buffer((tensor_size * size_of::<f32>()) as u64, MTLResourceOptions::StorageModeShared);
 
-    let input2_buffer = device.new_buffer_with_data(
-        tensor2_data.as_ptr() as *const _,
-        tensor2_buffer_size,
-        metal::MTLResourceOptions::StorageModeShared,
-    );
-
-    // Create an output buffer with the same size as the input tensors
-    let output_buffer =
-        device.new_buffer(tensor1_buffer_size, metal::MTLResourceOptions::StorageModeShared);
-
-    // Create a buffer for tensor length
-    let tensor_length = tensor1_data.len() as u32;
-    let length_buffer = device.new_buffer_with_data(
-        &tensor_length as *const u32 as *const _,
+    let tensor_length_buffer = device.new_buffer_with_data(
+        &(tensor_size as u32) as *const _ as *const _,
         size_of::<u32>() as u64,
-        metal::MTLResourceOptions::StorageModeShared,
+        MTLResourceOptions::StorageModeShared,
     );
 
-    // Check for buffer alignment and size correctness
-    assert_eq!(input1_buffer.length(), tensor1_buffer_size);
-    assert_eq!(input2_buffer.length(), tensor2_buffer_size);
-    assert_eq!(output_buffer.length(), tensor1_buffer_size);
+    let extra_buffer = extra_data.map(|data| {
+        device.new_buffer_with_data(
+            data.as_ptr() as *const _,
+            (data.len() * size_of::<f32>()) as u64,
+            MTLResourceOptions::StorageModeShared,
+        )
+    });
 
-    // Create command buffer and encoder
     let command_buffer = queue.new_command_buffer();
     let encoder = command_buffer.new_compute_command_encoder();
     encoder.set_compute_pipeline_state(&pipeline_state);
-    encoder.set_buffer(0, Some(input1_buffer.as_ref()), 0);
-    encoder.set_buffer(1, Some(input2_buffer.as_ref()), 0);
-    encoder.set_buffer(2, Some(output_buffer.as_ref()), 0);
-    encoder.set_buffer(3, Some(length_buffer.as_ref()), 0);
 
-    // Dispatch threads
-    let tensor_length = tensor1.data.len() as u64;
+    if let Some(buffer) = &input1_buffer {
+        encoder.set_buffer(0, Some(buffer), 0);
+    }
+    if let Some(buffer) = &input2_buffer {
+        encoder.set_buffer(1, Some(buffer), 0);
+    }
+    encoder.set_buffer(2, Some(&output_buffer), 0);
+    encoder.set_buffer(3, Some(&tensor_length_buffer), 0);
 
-    let threadgroup_size = metal::MTLSize {
-        width: 256, // Typical value for threadgroup size
-        height: 1,
-        depth: 1,
-    };
+    if let Some(buffer) = &extra_buffer {
+        encoder.set_buffer(4, Some(buffer), 0);
+    }
 
-    // Compute the threadgroup count based on the actual data size
+    let threadgroup_size = metal::MTLSize { width: 256, height: 1, depth: 1 };
     let threadgroup_count = metal::MTLSize {
-        width: tensor_length.div_ceil(threadgroup_size.width),
+        width: (tensor_size as u64 + threadgroup_size.width - 1) / threadgroup_size.width,
         height: 1,
         depth: 1,
     };
-    assert!(
-        threadgroup_count.width * threadgroup_size.width >= tensor_length,
-        "Thread group size mismatch!"
-    );
 
-    // Dispatch threads
     encoder.dispatch_thread_groups(threadgroup_count, threadgroup_size);
     encoder.end_encoding();
 
-    // Commit and wait for execution
     command_buffer.commit();
     command_buffer.wait_until_completed();
 
-    // Copy result back to CPU
-    let output_data = unsafe {
-        std::slice::from_raw_parts(output_buffer.contents() as *const f32, tensor1.data.len())
-    }
-    .to_vec();
+    let output_data =
+        unsafe { std::slice::from_raw_parts(output_buffer.contents() as *const f32, tensor_size) }
+            .to_vec();
 
     Ok(Tensor {
-        data: Array::from_shape_vec(tensor1.shape(), output_data).unwrap(),
-        device: tensor1.device.clone(),
+        data: Array::from_shape_vec(tensor1.unwrap().shape(), output_data).unwrap(),
+        device: tensor1.unwrap().device.clone(),
     })
 }
 
@@ -250,8 +220,7 @@ pub fn tensor_add_metal(
     device: &metal::Device,
     queue: &metal::CommandQueue,
 ) -> Result<Tensor, String> {
-    // println!("tensor_add_metal");
-    execute_tensor_operation_metal(tensor1, tensor2, "tensor_add", device, queue)
+    execute_tensor_operation(Some(tensor1), Some(tensor2), "tensor_add", device, queue, None)
 }
 
 pub fn tensor_subtract_metal(
@@ -260,8 +229,7 @@ pub fn tensor_subtract_metal(
     device: &metal::Device,
     queue: &metal::CommandQueue,
 ) -> Result<Tensor, String> {
-    // println!("tensor_subtract_metal");
-    execute_tensor_operation_metal(tensor1, tensor2, "tensor_subtract", device, queue)
+    execute_tensor_operation(Some(tensor1), Some(tensor2), "tensor_subtract", device, queue, None)
 }
 
 pub fn tensor_multiply_metal(
@@ -270,8 +238,7 @@ pub fn tensor_multiply_metal(
     device: &metal::Device,
     queue: &metal::CommandQueue,
 ) -> Result<Tensor, String> {
-    // println!("tensor_multiply_metal");
-    execute_tensor_operation_metal(tensor1, tensor2, "tensor_multiply", device, queue)
+    execute_tensor_operation(Some(tensor1), Some(tensor2), "tensor_multiply", device, queue, None)
 }
 
 pub fn tensor_divide_metal(
@@ -280,8 +247,16 @@ pub fn tensor_divide_metal(
     device: &metal::Device,
     queue: &metal::CommandQueue,
 ) -> Result<Tensor, String> {
-    // println!("tensor_divide_metal");
-    execute_tensor_operation_metal(tensor1, tensor2, "tensor_divide", device, queue)
+    execute_tensor_operation(Some(tensor1), Some(tensor2), "tensor_divide", device, queue, None)
+}
+
+pub fn tensor_power_metal(
+    tensor: &Tensor,
+    amount: f32,
+    device: &metal::Device,
+    queue: &metal::CommandQueue,
+) -> Result<Tensor, String> {
+    execute_tensor_operation(Some(tensor), None, "tensor_power", device, queue, Some(&[amount]))
 }
 
 #[cfg(test)]
@@ -345,5 +320,25 @@ mod tests {
             result.data,
             Tensor::new(vec![0.2, 0.33333334, 0.42857146, 0.5], Shape::from(IxDyn(&[2, 2]))).data
         );
+    }
+
+    #[test]
+    fn test_tensor_power_metal() {
+        let tensor1 = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], Shape::from(IxDyn(&[2, 2])));
+        let device = metal::Device::system_default().unwrap();
+        let queue = device.new_command_queue();
+        let amount = 2.0;
+        let result = tensor_power_metal(&tensor1, amount, &device, &queue).unwrap();
+
+        let expected = Tensor::new(vec![1.0, 4.0, 9.0, 16.0], Shape::from(IxDyn(&[2, 2])));
+
+        // Apparently GPU floating point power operations are not exact
+        let tolerance = 1e-5;
+
+        assert!(result
+            .data
+            .iter()
+            .zip(expected.data.iter())
+            .all(|(a, b)| (a - b).abs() < tolerance));
     }
 }

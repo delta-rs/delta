@@ -38,6 +38,10 @@ async fn main() {
     {
         println!("Transferring data to Metal device.");
         let (metal_device, metal_queue) = osx_metal::get_device_and_queue_metal();
+
+        model
+            .set_device(Device::Metal { device: metal_device.clone(), queue: metal_queue.clone() });
+
         let _ = train_data
             .to_device(Device::Metal { device: metal_device.clone(), queue: metal_queue.clone() });
 

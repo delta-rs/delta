@@ -18,7 +18,7 @@ kernel void tensor_add(const device float* input1 [[ buffer(0) ]],
 
         // Perform addition
         float result = a + b;
-        
+
         output[id] = result;
     }
 }
@@ -84,6 +84,21 @@ kernel void tensor_divide(const device float* input1 [[ buffer(0) ]],
 
         // Perform division
         float result = a / b;
+
+        output[id] = result;
+    }
+}
+
+kernel void tensor_power(const device float* input1 [[ buffer(0) ]],
+                         constant float& power [[ buffer(4) ]],
+                         device float* output [[ buffer(2) ]],
+                         constant uint& tensor_length [[ buffer(3) ]],
+                         uint id [[ thread_position_in_grid ]]) {
+    if (id < tensor_length) {
+        float a = input1[id];
+
+        // Perform power operation
+        float result = pow(a, power);
 
         output[id] = result;
     }
