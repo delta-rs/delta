@@ -28,7 +28,7 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use ndarray::{
-    Array, Array4, Axis, Ix4, IxDyn, Shape, s,
+    Array, Array4, Axis, Ix4, IxDyn, Shape, s, Dimension
 };
 use crate::common::tensor_ops::Tensor;
 use crate::neuralnet::layers::Layer;
