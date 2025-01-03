@@ -46,3 +46,7 @@ name = "sgd_benchmark"
 harness = false
 path = "src/optimizers/sgd_benchmark.rs"
 
+[[bench]]
+name = "sgd_momentum_benchmark"
+harness = false
+path = "src/optimizers/sgd_momentum_benchmark.rs"
