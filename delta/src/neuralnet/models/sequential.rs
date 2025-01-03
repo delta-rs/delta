@@ -393,15 +393,25 @@ impl Sequential {
                 })
             }).collect::<Vec<_>>()
         });
-
+    
         let path = Path::new(path_str);
-        let path = path.parent().unwrap();
-        std::fs::create_dir_all(path)?;
-
-        let mut file = File::create(path.join("model.json"))?;
-
+        let parent = match path.parent() {
+            Some(dir) if !dir.as_os_str().is_empty() => dir,
+            _ => Path::new("."),
+        };
+    
+        std::fs::create_dir_all(parent)?;
+    
+        let filename = match path.file_name() {
+            Some(name) => name,
+            None => std::ffi::OsStr::new("model.json"),
+        };
+    
+        let target_path = parent.join(filename);
+        let mut file = File::create(&target_path)?;
+    
         file.write_all(serde_json::to_string_pretty(&model_state)?.as_bytes())?;
-
+    
         Ok(())
     }
 
