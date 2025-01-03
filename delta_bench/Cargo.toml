@@ -20,3 +20,8 @@ path = "src/optimizers/adam_benchmark.rs"
 name = "ada_delta_benchmark"
 harness = false
 path = "src/optimizers/ada_delta_benchmark.rs"
+
+[[bench]]
+name = "ada_grad_benchmark"
+harness = false
+path = "src/optimizers/ada_grad_benchmark.rs"
