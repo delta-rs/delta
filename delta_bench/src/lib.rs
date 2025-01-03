@@ -3,4 +3,5 @@ mod optimizers {
     mod ada_grad_benchmark;
     mod adam_benchmark;
     mod gradient_descent_benchmark;
+    mod mini_batch_gd_benchmark;
 }
