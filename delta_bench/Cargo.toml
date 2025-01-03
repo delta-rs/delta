@@ -25,3 +25,9 @@ path = "src/optimizers/ada_delta_benchmark.rs"
 name = "ada_grad_benchmark"
 harness = false
 path = "src/optimizers/ada_grad_benchmark.rs"
+
+[[bench]]
+name = "gradient_descent_benchmark"
+harness = false
+path = "src/optimizers/gradient_descent_benchmark.rs"
+
