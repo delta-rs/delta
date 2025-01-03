@@ -31,3 +31,9 @@ name = "gradient_descent_benchmark"
 harness = false
 path = "src/optimizers/gradient_descent_benchmark.rs"
 
+[[bench]]
+name = "mini_batch_gd_benchmark"
+harness = false
+path = "src/optimizers/mini_batch_gd_benchmark.rs"
+
+
