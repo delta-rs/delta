@@ -390,7 +390,7 @@ mod tests {
         layer.build(shape).unwrap();
 
         // Pooling has no weights, so update_weights() should be Ok and do nothing.
-        let mut dummy_optimizer = Box::new(MockOptimizer {});
+        let mut dummy_optimizer: Box<dyn Optimizer> = Box::new(MockOptimizer {});
         let result = layer.update_weights(&mut dummy_optimizer);
         assert!(result.is_ok(), "update_weights should be a no-op for a pooling layer.");
     }
