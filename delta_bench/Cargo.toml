@@ -36,4 +36,9 @@ name = "mini_batch_gd_benchmark"
 harness = false
 path = "src/optimizers/mini_batch_gd_benchmark.rs"
 
+[[bench]]
+name = "rms_prop_benchmark"
+harness = false
+path = "src/optimizers/rms_prop_benchmark.rs"
+
 

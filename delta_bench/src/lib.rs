@@ -4,4 +4,5 @@ mod optimizers {
     mod adam_benchmark;
     mod gradient_descent_benchmark;
     mod mini_batch_gd_benchmark;
+    mod rms_prop_benchmark;
 }
