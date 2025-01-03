@@ -90,7 +90,6 @@ impl Layer for MaxPooling2D {
         if self.pool_size == 0 || self.stride == 0 {
             return Err(LayerError::InvalidInputShape);
         }
-        self.input_shape = Some(input_shape);
         Ok(())
     }
 
