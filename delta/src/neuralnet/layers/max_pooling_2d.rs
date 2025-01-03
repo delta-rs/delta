@@ -341,7 +341,7 @@ mod tests {
         // 2x2 windows => max values: [6, 8, 14, 16].
         let expected = vec![6.0, 8.0, 14.0, 16.0];
 
-        assert_eq!(output.shape().raw_dim().as_slice(), &[1, 1, 2, 2]);
+        assert_eq!(output.shape().raw_dim().slice(), &[1, 1, 2, 2]);
         assert_eq!(output.to_vec(), expected);
     }
 
