@@ -27,9 +27,8 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use ndarray::{
-    Array, Array4, Axis, Ix4, IxDyn, Shape, s, Dimension
-};
+use ndarray::{Array, Dimension, Ix4, IxDyn, Shape, s};
+
 use crate::common::tensor_ops::Tensor;
 use crate::neuralnet::layers::Layer;
 use crate::neuralnet::layers::error::LayerError;
@@ -62,12 +61,7 @@ impl MaxPooling2D {
     ///
     /// A new `MaxPooling2D` instance.
     pub fn new(pool_size: usize, stride: usize) -> Self {
-        Self {
-            pool_size,
-            stride,
-            input_shape: None,
-            max_indices: None,
-        }
+        Self { pool_size, stride, input_shape: None, max_indices: None }
     }
 }
 
@@ -115,7 +109,9 @@ impl Layer for MaxPooling2D {
         let (n, c, h, w) = (raw[0], raw[1], raw[2], raw[3]);
 
         // Reshape input data to 4D array [N, C, H, W].
-        let input_4d = input.data.clone()
+        let input_4d = input
+            .data
+            .clone()
             .into_dimensionality::<Ix4>()
             .map_err(|_| LayerError::InvalidInputShape)?;
 
@@ -157,7 +153,8 @@ impl Layer for MaxPooling2D {
                         }
                         output[[batch, ch, out_i, out_j]] = max_val;
                         // Store absolute position in the original input:
-                        max_positions[[batch, ch, out_i, out_j]] = (start_i + max_pos.0, start_j + max_pos.1);
+                        max_positions[[batch, ch, out_i, out_j]] =
+                            (start_i + max_pos.0, start_j + max_pos.1);
                     }
                 }
             }
@@ -167,10 +164,7 @@ impl Layer for MaxPooling2D {
         self.max_indices = Some(max_positions);
 
         // Convert output to a dynamic shape tensor.
-        let output_tensor = Tensor {
-            data: output.into_dyn(),
-            device: input.device.clone(),
-        };
+        let output_tensor = Tensor { data: output.into_dyn(), device: input.device.clone() };
         Ok(output_tensor)
     }
 
@@ -192,7 +186,9 @@ impl Layer for MaxPooling2D {
         let (n, c, h, w) = (raw[0], raw[1], raw[2], raw[3]);
 
         // Convert grad to 4D.
-        let grad_4d = grad.data.clone()
+        let grad_4d = grad
+            .data
+            .clone()
             .into_dimensionality::<Ix4>()
             .map_err(|_| LayerError::InvalidInputShape)?;
 
@@ -217,10 +213,7 @@ impl Layer for MaxPooling2D {
         }
 
         // Return gradient w.r.t. the input.
-        Ok(Tensor {
-            data: dx.into_dyn(),
-            device: grad.device.clone(),
-        })
+        Ok(Tensor { data: dx.into_dyn(), device: grad.device.clone() })
     }
 
     /// Returns the shape of the output tensor.
@@ -280,10 +273,11 @@ impl Layer for MaxPooling2D {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use ndarray::{IxDyn, Shape};
+
+    use super::*;
     use crate::common::tensor_ops::Tensor;
-    use crate::neuralnet::layers::{Layer, error::LayerError};
+    use crate::neuralnet::layers::Layer;
 
     #[test]
     fn test_build_valid_shape() {
@@ -305,10 +299,10 @@ mod tests {
 
     #[test]
     fn test_build_too_small_for_pool_size() {
-        let mut layer = MaxPooling2D::new(5, 2); 
+        let mut layer = MaxPooling2D::new(5, 2);
         let shape = Shape::from(IxDyn(&[1, 1, 4, 4])); // H=4, W=4, but pool_size=5.
         layer.build(shape).unwrap();
-        
+
         // Querying output shape should fail because pool_size > input height/width.
         let out_shape_result = layer.output_shape();
         assert!(out_shape_result.is_err(), "Pool size exceeding input dims should produce error.");
@@ -333,10 +327,7 @@ mod tests {
 
         // Input data: 4x4 = 16 values from 1..16.
         let data = vec![
-            1.0,  2.0,  3.0,  4.0,
-            5.0,  6.0,  7.0,  8.0,
-            9.0,  10.0, 11.0, 12.0,
-            13.0, 14.0, 15.0, 16.0,
+            1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0,
         ];
         let input = Tensor::new(data, shape);
 
@@ -357,14 +348,11 @@ mod tests {
 
         // Forward input:
         let forward_data = vec![
-            1.0,  2.0,  3.0,  4.0,
-            5.0,  6.0,  7.0,  8.0,
-            9.0,  10.0, 11.0, 12.0,
-            13.0, 14.0, 15.0, 16.0,
+            1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0,
         ];
         let forward_input = Tensor::new(forward_data, shape.clone());
         // Call forward so max_indices are stored.
-        layer.forward(&forward_input).unwrap(); 
+        layer.forward(&forward_input).unwrap();
 
         // Suppose gradient from next layer is 1.0 in the 2x2 output.
         let grad_data = vec![1.0, 1.0, 1.0, 1.0];
@@ -378,12 +366,8 @@ mod tests {
 
         // The maxima were at indices (1,1), (1,3), (3,1), (3,3) => each gets +1. Others get 0.
         let dx_data = dx.to_vec();
-        let expected = vec![
-            0.0, 0.0, 0.0, 0.0,
-            0.0, 1.0, 0.0, 1.0,
-            0.0, 0.0, 0.0, 0.0,
-            0.0, 1.0, 0.0, 1.0,
-        ];
+        let expected =
+            vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0];
         assert_eq!(dx_data, expected);
     }
 
@@ -406,7 +390,7 @@ mod tests {
         fn step(
             &mut self,
             _weights: &mut Tensor,
-            _gradients: &Tensor
+            _gradients: &Tensor,
         ) -> Result<(), crate::optimizers::error::OptimizerError> {
             Ok(())
         }

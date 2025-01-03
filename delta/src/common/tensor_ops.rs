@@ -9,7 +9,9 @@ use rayon::prelude::*;
 
 use crate::devices::Device;
 #[cfg(all(target_os = "macos", feature = "metal"))]
-use crate::devices::osx_metal::{tensor_add_metal, tensor_divide_metal, tensor_subtract_metal};
+use crate::devices::osx_metal::{
+    tensor_add_metal, tensor_divide_metal, tensor_power_metal, tensor_subtract_metal,
+};
 
 /// A struct representing a tensor.
 #[derive(Debug, Clone)]
@@ -291,18 +293,26 @@ impl Tensor {
     ///
     /// * `amount` - The power to raise the tensor to.
     pub fn pow(&self, amount: f32) -> Tensor {
-        let data: Vec<f32> = self
-            .data
-            .as_slice()
-            .expect("Tensor data must be contiguous")
-            .par_iter()
-            .map(|&x| x.powf(amount))
-            .collect();
+        match &self.device {
+            Device::Cpu => {
+                let data: Vec<f32> = self
+                    .data
+                    .as_slice()
+                    .expect("Tensor data must be contiguous")
+                    .par_iter()
+                    .map(|&x| x.powf(amount))
+                    .collect();
 
-        let shape = self.data.shape();
-        Tensor {
-            data: Array::from_shape_vec(IxDyn(shape), data).expect("Invalid shape"),
-            device: self.device.clone(),
+                let shape = self.data.shape();
+                Tensor {
+                    data: Array::from_shape_vec(IxDyn(shape), data).expect("Invalid shape"),
+                    device: self.device.clone(),
+                }
+            }
+            #[cfg(all(target_os = "macos", feature = "metal"))]
+            Device::Metal { device, queue } => tensor_power_metal(self, amount, device, queue)
+                .expect("Failed to perform power operation on Metal device"),
+            _ => panic!("Unsupported device for tensor power operation."),
         }
     }
 
@@ -768,15 +778,6 @@ impl Tensor {
     pub fn to_device(&mut self, device: Device) -> Result<Self, String> {
         self.device = device.clone();
         Ok(self.clone())
-        // match device {
-        //     Device::Cpu => Ok(self.clone()), // Already on CPU
-        //     #[cfg(feature = "metal")]
-        //     Device::Metal { device, queue } => {
-        //         let buffer = to_device_metal(self, &device, &queue)?;
-        //         Ok(from_device_metal(&buffer, self.shape()))
-        //     }
-        //     _ => Err("Device not supported yet.".to_string()),
-        // }
     }
 }
 
