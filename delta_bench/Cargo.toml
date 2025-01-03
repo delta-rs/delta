@@ -41,4 +41,8 @@ name = "rms_prop_benchmark"
 harness = false
 path = "src/optimizers/rms_prop_benchmark.rs"
 
+[[bench]]
+name = "sgd_benchmark"
+harness = false
+path = "src/optimizers/sgd_benchmark.rs"
 

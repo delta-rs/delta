@@ -5,4 +5,5 @@ mod optimizers {
     mod gradient_descent_benchmark;
     mod mini_batch_gd_benchmark;
     mod rms_prop_benchmark;
+    mod sgd_benchmark;
 }
