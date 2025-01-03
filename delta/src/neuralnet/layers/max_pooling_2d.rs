@@ -370,7 +370,7 @@ mod tests {
         // Backward
         let dx = layer.backward(&grad_tensor).unwrap();
         // dx should be [1,1,4,4].
-        assert_eq!(dx.shape().raw_dim().as_slice(), &[1, 1, 4, 4]);
+        assert_eq!(dx.shape().raw_dim().slice(), &[1, 1, 4, 4]);
 
         // The maxima were at indices (1,1), (1,3), (3,1), (3,3) => each gets +1. Others get 0.
         let dx_data = dx.to_vec();
