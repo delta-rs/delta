@@ -270,13 +270,14 @@ impl Layer for MaxPooling2D {
         Ok(())
     }
 
-    /// Sets the device for the layer. No-op in this case.
+    /// Sets the device for the layer.
+    ///
+    /// Since `MaxPooling2D` does not maintain any device-specific resources, this method is a no-op.
     fn set_device(&mut self, _device: &crate::devices::Device) {
-        // No device-specific resources for a pure CPU pooling layer.
+        // CPU-only, no device-specific resources.
     }
 }
 
-// Below is the test module, which you can keep in the same file or move into a separate test file.
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -393,15 +394,15 @@ mod tests {
         layer.build(shape).unwrap();
 
         // Pooling has no weights, so update_weights() should be Ok and do nothing.
-        let mut dummy_optimizer: Box<dyn Optimizer> = Box::new(MockOptimizer {});
+        let mut dummy_optimizer: Box<dyn Optimizer> = Box::new(Mocktimizer {});
         let result = layer.update_weights(&mut dummy_optimizer);
         assert!(result.is_ok(), "update_weights should be a no-op for a pooling layer.");
     }
 
     // A mock optimizer for testing update_weights(). It does nothing.
     #[derive(Debug)]
-    struct MockOptimizer;
-    impl crate::optimizers::Optimizer for MockOptimizer {
+    struct Mocktimizer;
+    impl crate::optimizers::Optimizer for Mocktimizer {
         fn step(
             &mut self,
             _weights: &mut Tensor,
