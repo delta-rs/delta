@@ -87,6 +87,9 @@ impl Layer for MaxPooling2D {
         if raw.ndim() != 4 {
             return Err(LayerError::InvalidInputShape);
         }
+        if self.pool_size == 0 || self.stride == 0 {
+            return Err(LayerError::InvalidInputShape);
+        }
         self.input_shape = Some(input_shape);
         Ok(())
     }
@@ -141,7 +144,7 @@ impl Layer for MaxPooling2D {
                         // Slice the window [start_i..end_i, start_j..end_j].
                         let window = input_4d.slice(s![batch, ch, start_i..end_i, start_j..end_j]);
 
-                        let mut max_val = f32::MIN;
+                        let mut max_val = f32::NEG_INFINITY;
                         let mut max_pos = (0, 0);
                         for wi in 0..self.pool_size {
                             for wj in 0..self.pool_size {
