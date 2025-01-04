@@ -154,6 +154,8 @@ impl Sequential {
             println!("\nEpoch {}/{}", epoch + 1, epochs);
             self.train_one_epoch(train_data, batch_size, &mut optimizer)?;
         }
+        
+        self.optimizer = Some(optimizer);
 
         println!();
         Ok(())

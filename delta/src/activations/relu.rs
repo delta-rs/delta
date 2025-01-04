@@ -60,7 +60,7 @@ impl Activation for ReluActivation {
     /// The output tensor after applying ReLU activation.
     #[inline(always)]
     fn activate(&self, input: &Tensor) -> Tensor {
-        input.map(|x| x.max(0.0))
+        input.map_max(0.0)
     }
 
     /// Computes the derivative of ReLU activation for the input tensor.

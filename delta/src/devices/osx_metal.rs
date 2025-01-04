@@ -323,6 +323,22 @@ pub fn tensor_matmul_metal(
     Ok(from_device_metal(&output_buffer, Shape::from(IxDyn(&[rows_a, cols_b]))))
 }
 
+pub fn tensor_map_max_metal(
+    tensor: &Tensor,
+    threshold: f32,
+    device: &metal::Device,
+    queue: &metal::CommandQueue,
+) -> Result<Tensor, String> {
+    execute_tensor_operation(
+        Some(tensor),
+        None, // No second tensor is needed
+        "tensor_map_max",
+        device,
+        queue,
+        Some(&[threshold]),
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use ndarray::{IxDyn, Shape};
@@ -419,5 +435,14 @@ mod tests {
             result.data,
             Tensor::new(vec![19.0, 22.0, 43.0, 50.0], Shape::from(IxDyn(&[2, 2]))).data
         );
+    }
+
+    #[test]
+    fn test_tensor_map_max_metal() {
+        let tensor1 = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], Shape::from(IxDyn(&[2, 2])));
+        let device = metal::Device::system_default().unwrap();
+        let queue = device.new_command_queue();
+        let result = tensor_map_max_metal(&tensor1, 0.0, &device, &queue).unwrap();
+        assert_eq!(result.data.shape(), &[2, 2]);
     }
 }

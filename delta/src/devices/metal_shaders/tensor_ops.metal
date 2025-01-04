@@ -122,3 +122,14 @@ kernel void tensor_power(const device float* input1 [[ buffer(0) ]],
         output[id] = result;
     }
 }
+
+kernel void tensor_map_max(const device float* input [[ buffer(0) ]],
+                           constant float& threshold [[ buffer(4) ]],
+                           device float* output [[ buffer(2) ]],
+                           constant uint& tensor_length [[ buffer(3) ]],
+                           uint id [[ thread_position_in_grid ]]) {
+    if (id < tensor_length) {
+        float x = input[id];
+        output[id] = fmax(x, threshold);
+    }
+}
