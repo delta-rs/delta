@@ -10,7 +10,8 @@ use rayon::prelude::*;
 use crate::devices::Device;
 #[cfg(all(target_os = "macos", feature = "metal"))]
 use crate::devices::osx_metal::{
-    tensor_add_metal, tensor_divide_metal, tensor_power_metal, tensor_subtract_metal,
+    tensor_add_metal, tensor_divide_metal, tensor_map_max_metal, tensor_matmul_metal,
+    tensor_power_metal, tensor_subtract_metal,
 };
 
 /// A struct representing a tensor.
@@ -193,21 +194,21 @@ impl Tensor {
             .into_dimensionality::<Ix2>()
             .expect("Other tensor must be 2D for matmul");
 
-        Tensor { data: self_2d.dot(&other_2d).into_dyn(), device: self.device.clone() }
-        // match &self.device {
-        //     Device::Cpu => {
-        //         Tensor { data: self_2d.dot(&other_2d).into_dyn(), device: self.device.clone() }
-        //     }
-        //     #[cfg(feature = "metal")]
-        //     Device::Metal { device, queue } => tensor_multiply_metal(
-        //         &Tensor { data: self_2d.to_owned().into_dyn(), device: self.device.clone() },
-        //         &Tensor { data: other_2d.to_owned().into_dyn(), device: self.device.clone() },
-        //         device,
-        //         queue,
-        //     )
-        //     .expect("Failed to perform matrix multiplication on Metal device"),
-        //     _ => panic!("Unsupported device for matrix multiplication."),
-        // }
+        // Tensor { data: self_2d.dot(&other_2d).into_dyn(), device: self.device.clone() }
+        match &self.device {
+            Device::Cpu => {
+                Tensor { data: self_2d.dot(&other_2d).into_dyn(), device: self.device.clone() }
+            }
+            #[cfg(feature = "metal")]
+            Device::Metal { device, queue } => tensor_matmul_metal(
+                &Tensor { data: self_2d.to_owned().into_dyn(), device: self.device.clone() },
+                &Tensor { data: other_2d.to_owned().into_dyn(), device: self.device.clone() },
+                device,
+                queue,
+            )
+            .expect("Failed to perform matrix multiplication on Metal device"),
+            _ => panic!("Unsupported device for matrix multiplication."),
+        }
     }
 
     /// Transposes the tensor by swapping axes.
@@ -399,6 +400,39 @@ impl Tensor {
             Device::Metal { device, queue } => tensor_divide_metal(self, other, device, queue)
                 .expect("Failed to perform division on Metal device"),
             _ => panic!("Unsupported device for tensor division."),
+        }
+    }
+
+    /// Applies a threshold to each element in the tensor.
+    ///
+    /// # Arguments
+    ///
+    /// * `threshold` - The threshold value to apply.
+    ///
+    /// # Returns
+    ///
+    /// A new tensor containing the result of the threshold operation.
+    pub fn map_max(&self, threshold: f32) -> Tensor {
+        match &self.device {
+            Device::Cpu => {
+                let data: Vec<f32> = self
+                    .data
+                    .as_slice()
+                    .expect("Tensor data must be contiguous")
+                    .par_iter()
+                    .map(|&x| x.max(threshold))
+                    .collect();
+
+                let shape = self.data.shape();
+                Tensor {
+                    data: Array::from_shape_vec(IxDyn(shape), data).expect("Invalid shape"),
+                    device: self.device.clone(),
+                }
+            }
+            #[cfg(all(target_os = "macos", feature = "metal"))]
+            Device::Metal { device, queue } => tensor_map_max_metal(self, threshold, device, queue)
+                .expect("Failed to perform map_max operation on Metal device"),
+            _ => panic!("Unsupported device for tensor map_max operation."),
         }
     }
 

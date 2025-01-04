@@ -205,6 +205,25 @@ impl Layer for Dense {
         &self.name
     }
 
+    /// Sets the device for the layer.
+    ///
+    /// # Arguments
+    ///
+    /// * `device` - The device to set for the layer.
+    fn set_device(&mut self, device: &Device) {
+        self.device = device.clone();
+
+        if let Some(ref mut weights) = self.weights {
+            weights.device = device.clone();
+        }
+        if let Some(ref mut bias) = self.bias {
+            bias.device = device.clone();
+        }
+        if let Some(ref mut input) = self.input {
+            input.device = device.clone();
+        }
+    }
+
     /// Updates the weights of the layer using the given gradient and optimizer.
     ///
     /// # Arguments
@@ -249,25 +268,6 @@ impl Layer for Dense {
             "trainable": self.trainable,
             "activation": self.activation.as_ref().map(|a| a.name())
         })
-    }
-
-    /// Sets the device for the layer.
-    ///
-    /// # Arguments
-    ///
-    /// * `device` - The device to set for the layer.
-    fn set_device(&mut self, device: &Device) {
-        self.device = device.clone();
-
-        if let Some(ref mut weights) = self.weights {
-            weights.device = device.clone();
-        }
-        if let Some(ref mut bias) = self.bias {
-            bias.device = device.clone();
-        }
-        if let Some(ref mut input) = self.input {
-            input.device = device.clone();
-        }
     }
 }
 

@@ -37,30 +37,27 @@ use crate::common::Tensor;
 ///
 /// # Arguments
 ///
-/// * `metal_device` - The Metal device to transfer the tensor to.
+/// * `device` - The Metal device to transfer the tensor to.
 ///
 /// # Returns
 ///
 /// A new tensor with data stored on the Metal device.
 pub fn to_device_metal(
     tensor: &Tensor,
-    metal_device: &metal::Device,
+    device: &metal::Device,
     _queue: &metal::CommandQueue,
-) -> Result<metal::Buffer, String> {
-    // Create a Metal buffer for the tensor's data
-    let tensor_size = tensor.data.len() * size_of::<f32>();
-    let buffer = metal_device.new_buffer(tensor_size as u64, MTLResourceOptions::StorageModeShared);
+) -> metal::Buffer {
+    let size = tensor.data.len() * size_of::<f32>();
+    let view = tensor.data.view();
+    let flat_data = view.to_shape(tensor.data.len()).unwrap();
 
-    // Copy the tensor's data into the Metal buffer
-    unsafe {
-        std::ptr::copy_nonoverlapping(
-            tensor.data.as_slice().unwrap().as_ptr(),
-            buffer.contents() as *mut f32,
-            tensor.data.len(),
-        );
-    }
+    let buffer = device.new_buffer_with_data(
+        flat_data.as_slice().unwrap().as_ptr() as *const _,
+        size as u64,
+        MTLResourceOptions::StorageModeShared,
+    );
 
-    Ok(buffer)
+    buffer
 }
 
 /// Transfers the tensor's data back from a Metal buffer to the CPU.
@@ -138,38 +135,29 @@ fn execute_tensor_operation(
     let shader_source = include_str!("metal_shaders/tensor_ops.metal");
     let pipeline_state = create_compute_pipeline(device, shader_source, operation)?;
 
-    let input1_buffer = tensor1.map(|t| {
-        let size = t.data.len() * size_of::<f32>();
-        device.new_buffer_with_data(
-            t.data.as_slice().unwrap().as_ptr() as *const _,
-            size as u64,
-            MTLResourceOptions::StorageModeShared,
-        )
-    });
+    // Set the Tensor1 data into Metal buffers
+    let input1_buffer = tensor1.map(|t| to_device_metal(t, device, queue));
 
-    let input2_buffer = tensor2.map(|t| {
-        let size = t.data.len() * size_of::<f32>();
-        device.new_buffer_with_data(
-            t.data.as_slice().unwrap().as_ptr() as *const _,
-            size as u64,
-            MTLResourceOptions::StorageModeShared,
-        )
-    });
+    // Set the Tensor2 data into Metal buffers
+    let input2_buffer = tensor2.map(|t| to_device_metal(t, device, queue));
 
+    // Set the tensor_size, which is tensor1.len() or tensor2.len()
     let tensor_size = tensor1.map(|t| t.data.len()).unwrap_or_else(|| tensor2.unwrap().data.len());
     let output_buffer = device
         .new_buffer((tensor_size * size_of::<f32>()) as u64, MTLResourceOptions::StorageModeShared);
 
+    // Set the tensor_length into Metal buffers
     let tensor_length_buffer = device.new_buffer_with_data(
         &(tensor_size as u32) as *const _ as *const _,
         size_of::<u32>() as u64,
         MTLResourceOptions::StorageModeShared,
     );
 
+    // Used for power and other operations
     let extra_buffer = extra_data.map(|data| {
         device.new_buffer_with_data(
             data.as_ptr() as *const _,
-            (data.len() * size_of::<f32>()) as u64,
+            std::mem::size_of_val(data) as u64,
             MTLResourceOptions::StorageModeShared,
         )
     });
@@ -178,6 +166,7 @@ fn execute_tensor_operation(
     let encoder = command_buffer.new_compute_command_encoder();
     encoder.set_compute_pipeline_state(&pipeline_state);
 
+    // Set the data to the buffers
     if let Some(buffer) = &input1_buffer {
         encoder.set_buffer(0, Some(buffer), 0);
     }
@@ -187,23 +176,28 @@ fn execute_tensor_operation(
     encoder.set_buffer(2, Some(&output_buffer), 0);
     encoder.set_buffer(3, Some(&tensor_length_buffer), 0);
 
+    // Optional set the extra data buffer
     if let Some(buffer) = &extra_buffer {
         encoder.set_buffer(4, Some(buffer), 0);
     }
 
-    let threadgroup_size = metal::MTLSize { width: 256, height: 1, depth: 1 };
-    let threadgroup_count = metal::MTLSize {
-        width: (tensor_size as u64 + threadgroup_size.width - 1) / threadgroup_size.width,
+    // Calculating the thread group size and count
+    let thread_group_size = metal::MTLSize { width: 256, height: 1, depth: 1 };
+    let thread_group_count = metal::MTLSize {
+        width: (tensor_size as u64).div_ceil(thread_group_size.width),
         height: 1,
         depth: 1,
     };
 
-    encoder.dispatch_thread_groups(threadgroup_count, threadgroup_size);
+    // Run the kernel
+    encoder.dispatch_thread_groups(thread_group_count, thread_group_size);
     encoder.end_encoding();
 
+    // Commit the command buffer and wait for completion
     command_buffer.commit();
     command_buffer.wait_until_completed();
 
+    // Extract the data from the kernel back to the CPU
     let output_data =
         unsafe { std::slice::from_raw_parts(output_buffer.contents() as *const f32, tensor_size) }
             .to_vec();
@@ -257,6 +251,92 @@ pub fn tensor_power_metal(
     queue: &metal::CommandQueue,
 ) -> Result<Tensor, String> {
     execute_tensor_operation(Some(tensor), None, "tensor_power", device, queue, Some(&[amount]))
+}
+
+pub fn tensor_matmul_metal(
+    tensor1: &Tensor,
+    tensor2: &Tensor,
+    device: &metal::Device,
+    queue: &metal::CommandQueue,
+) -> Result<Tensor, String> {
+    let tensor1_shape = tensor1.shape();
+    let tensor2_shape = tensor2.shape();
+    let tensor1_dim = tensor1_shape.raw_dim();
+    let tensor2_dim = tensor2_shape.raw_dim();
+
+    let rows_a = tensor1_dim[0];
+    let cols_a = tensor1_dim[1];
+    let cols_b = tensor2_dim[1];
+
+    let shader_source = include_str!("metal_shaders/tensor_ops.metal");
+    let pipeline_state = create_compute_pipeline(device, shader_source, "tensor_matmul")?;
+
+    let input1_buffer = to_device_metal(tensor1, device, queue);
+    let input2_buffer = to_device_metal(tensor2, device, queue);
+
+    let output_size = rows_a * cols_b;
+    let output_buffer = device.new_buffer(
+        (output_size * size_of::<f32>()) as u64,
+        MTLResourceOptions::StorageModeShared,
+    );
+
+    let rows_a_buffer = device.new_buffer_with_data(
+        &(rows_a as u32) as *const _ as *const _,
+        size_of::<u32>() as u64,
+        MTLResourceOptions::StorageModeShared,
+    );
+    let cols_a_buffer = device.new_buffer_with_data(
+        &(cols_a as u32) as *const _ as *const _,
+        size_of::<u32>() as u64,
+        MTLResourceOptions::StorageModeShared,
+    );
+    let cols_b_buffer = device.new_buffer_with_data(
+        &(cols_b as u32) as *const _ as *const _,
+        size_of::<u32>() as u64,
+        MTLResourceOptions::StorageModeShared,
+    );
+
+    let command_buffer = queue.new_command_buffer();
+    let encoder = command_buffer.new_compute_command_encoder();
+    encoder.set_compute_pipeline_state(&pipeline_state);
+
+    encoder.set_buffer(0, Some(&input1_buffer), 0);
+    encoder.set_buffer(1, Some(&input2_buffer), 0);
+    encoder.set_buffer(2, Some(&output_buffer), 0);
+    encoder.set_buffer(3, Some(&rows_a_buffer), 0);
+    encoder.set_buffer(4, Some(&cols_a_buffer), 0);
+    encoder.set_buffer(5, Some(&cols_b_buffer), 0);
+
+    let thread_group_size = metal::MTLSize { width: 256, height: 1, depth: 1 };
+    let thread_group_count = metal::MTLSize {
+        width: (output_size as u64 + thread_group_size.width - 1) / thread_group_size.width,
+        height: 1,
+        depth: 1,
+    };
+
+    encoder.dispatch_thread_groups(thread_group_count, thread_group_size);
+    encoder.end_encoding();
+
+    command_buffer.commit();
+    command_buffer.wait_until_completed();
+
+    Ok(from_device_metal(&output_buffer, Shape::from(IxDyn(&[rows_a, cols_b]))))
+}
+
+pub fn tensor_map_max_metal(
+    tensor: &Tensor,
+    threshold: f32,
+    device: &metal::Device,
+    queue: &metal::CommandQueue,
+) -> Result<Tensor, String> {
+    execute_tensor_operation(
+        Some(tensor),
+        None, // No second tensor is needed
+        "tensor_map_max",
+        device,
+        queue,
+        Some(&[threshold]),
+    )
 }
 
 #[cfg(test)]
@@ -340,5 +420,29 @@ mod tests {
             .iter()
             .zip(expected.data.iter())
             .all(|(a, b)| (a - b).abs() < tolerance));
+    }
+
+    #[test]
+    fn test_tensor_matmul_metal() {
+        let tensor1 = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], Shape::from(IxDyn(&[2, 2])));
+        let tensor2 = Tensor::new(vec![5.0, 6.0, 7.0, 8.0], Shape::from(IxDyn(&[2, 2])));
+        let device = metal::Device::system_default().unwrap();
+        let queue = device.new_command_queue();
+        let result = tensor_matmul_metal(&tensor1, &tensor2, &device, &queue).unwrap();
+
+        assert_eq!(result.data.shape(), &[2, 2]);
+        assert_eq!(
+            result.data,
+            Tensor::new(vec![19.0, 22.0, 43.0, 50.0], Shape::from(IxDyn(&[2, 2]))).data
+        );
+    }
+
+    #[test]
+    fn test_tensor_map_max_metal() {
+        let tensor1 = Tensor::new(vec![1.0, 2.0, 3.0, 4.0], Shape::from(IxDyn(&[2, 2])));
+        let device = metal::Device::system_default().unwrap();
+        let queue = device.new_command_queue();
+        let result = tensor_map_max_metal(&tensor1, 0.0, &device, &queue).unwrap();
+        assert_eq!(result.data.shape(), &[2, 2]);
     }
 }
