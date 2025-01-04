@@ -30,7 +30,15 @@ jobs:
           toolchain: stable
           override: true
 
+      - name: Cache Target Directory
+        uses: actions/cache@v4.2.0
+        with:
+          path: shared-target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
       - name: Run Clippy
+        env:
+          CARGO_TARGET_DIR: shared-target
         run: cargo clippy --all-targets
 
   build:
@@ -47,14 +55,16 @@ jobs:
           profile: minimal
           toolchain: stable
 
-      - name: Build Project
-        run: cargo build --release
-
-      - name: Upload Target Directory
-        uses: actions/upload-artifact@v4.5.0
+      - name: Cache Target Directory
+        uses: actions/cache@v4.2.0
         with:
-          name: target
-          path: target
+          path: shared-target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build Project
+        env:
+          CARGO_TARGET_DIR: shared-target
+        run: cargo build --release
 
   test:
     name: Tests
@@ -70,13 +80,15 @@ jobs:
           profile: minimal
           toolchain: stable
 
-      - name: Download Target Directory
-        uses: actions/download-artifact@v4
+      - name: Cache Target Directory
+        uses: actions/cache@v4.2.0
         with:
-          name: target
-          path: target
+          path: shared-target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Run Tests
+        env:
+          CARGO_TARGET_DIR: shared-target
         run: cargo test
 
   coverage:
@@ -93,16 +105,18 @@ jobs:
           profile: minimal
           toolchain: stable
 
-      - name: Download Target Directory
-        uses: actions/download-artifact@v4
+      - name: Cache Target Directory
+        uses: actions/cache@v4.2.0
         with:
-          name: target
-          path: target
+          path: shared-target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Install Tarpaulin
         run: cargo install cargo-tarpaulin
 
       - name: Run Coverage
+        env:
+          CARGO_TARGET_DIR: shared-target
         run: cargo tarpaulin --out Html
 
       - name: Upload Coverage Report
