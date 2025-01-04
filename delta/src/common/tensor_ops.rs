@@ -10,7 +10,7 @@ use rayon::prelude::*;
 use crate::devices::Device;
 #[cfg(all(target_os = "macos", feature = "metal"))]
 use crate::devices::osx_metal::{
-    tensor_add_metal, tensor_divide_metal, tensor_power_metal, tensor_subtract_metal,
+    tensor_add_metal, tensor_divide_metal, tensor_power_metal, tensor_subtract_metal, tensor_matmul_metal,
 };
 
 /// A struct representing a tensor.
@@ -193,21 +193,21 @@ impl Tensor {
             .into_dimensionality::<Ix2>()
             .expect("Other tensor must be 2D for matmul");
 
-        Tensor { data: self_2d.dot(&other_2d).into_dyn(), device: self.device.clone() }
-        // match &self.device {
-        //     Device::Cpu => {
-        //         Tensor { data: self_2d.dot(&other_2d).into_dyn(), device: self.device.clone() }
-        //     }
-        //     #[cfg(feature = "metal")]
-        //     Device::Metal { device, queue } => tensor_multiply_metal(
-        //         &Tensor { data: self_2d.to_owned().into_dyn(), device: self.device.clone() },
-        //         &Tensor { data: other_2d.to_owned().into_dyn(), device: self.device.clone() },
-        //         device,
-        //         queue,
-        //     )
-        //     .expect("Failed to perform matrix multiplication on Metal device"),
-        //     _ => panic!("Unsupported device for matrix multiplication."),
-        // }
+        // Tensor { data: self_2d.dot(&other_2d).into_dyn(), device: self.device.clone() }
+        match &self.device {
+            Device::Cpu => {
+                Tensor { data: self_2d.dot(&other_2d).into_dyn(), device: self.device.clone() }
+            }
+            #[cfg(feature = "metal")]
+            Device::Metal { device, queue } => tensor_matmul_metal(
+                &Tensor { data: self_2d.to_owned().into_dyn(), device: self.device.clone() },
+                &Tensor { data: other_2d.to_owned().into_dyn(), device: self.device.clone() },
+                device,
+                queue,
+            )
+            .expect("Failed to perform matrix multiplication on Metal device"),
+            _ => panic!("Unsupported device for matrix multiplication."),
+        }
     }
 
     /// Transposes the tensor by swapping axes.

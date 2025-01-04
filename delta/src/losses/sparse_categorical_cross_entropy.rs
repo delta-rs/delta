@@ -79,7 +79,7 @@ impl SparseCategoricalCrossEntropyLoss {
                 one_hot.shape()
             );
         }
-
+    
         let rows = one_hot.shape().raw_dim()[0];
         let indices: Vec<f32> = one_hot
             .data
@@ -91,7 +91,7 @@ impl SparseCategoricalCrossEntropyLoss {
                     as f32
             })
             .collect();
-
+    
         let mut indices = Tensor::new(indices, Shape::from(IxDyn(&[rows])));
         indices.device = one_hot.device.clone();
         indices

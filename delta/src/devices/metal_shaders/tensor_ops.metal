@@ -67,6 +67,25 @@ kernel void tensor_multiply(const device float* input1 [[ buffer(0) ]],
     }
 }
 
+kernel void tensor_matmul(const device float* input1 [[ buffer(0) ]],
+                          const device float* input2 [[ buffer(1) ]],
+                          device float* output [[ buffer(2) ]],
+                          constant uint& rows_a [[ buffer(3) ]],
+                          constant uint& cols_a [[ buffer(4) ]],
+                          constant uint& cols_b [[ buffer(5) ]],
+                          uint id [[ thread_position_in_grid ]]) {
+    uint row = id / cols_b; // Compute row of output matrix
+    uint col = id % cols_b; // Compute column of output matrix
+
+    if (row < rows_a && col < cols_b) {
+        float sum = 0.0;
+        for (uint k = 0; k < cols_a; k++) {
+            sum += input1[row * cols_a + k] * input2[k * cols_b + col];
+        }
+        output[row * cols_b + col] = sum;
+    }
+}
+
 kernel void tensor_divide(const device float* input1 [[ buffer(0) ]],
                           const device float* input2 [[ buffer(1) ]],
                           device float* output [[ buffer(2) ]],
