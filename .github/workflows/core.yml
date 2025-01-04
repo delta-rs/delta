@@ -30,14 +30,6 @@ jobs:
           toolchain: stable
           override: true
 
-      - name: Cache Cargo Dependencies and Target
-        uses: actions/cache@v4.2.0
-        with:
-          path: |
-            ~/.cargo
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
       - name: Run Clippy
         run: cargo clippy --all-targets
 
@@ -55,16 +47,14 @@ jobs:
           profile: minimal
           toolchain: stable
 
-      - name: Cache Cargo Dependencies and Target
-        uses: actions/cache@v4.2.0
-        with:
-          path: |
-            ~/.cargo
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
       - name: Build Project
         run: cargo build --release
+
+      - name: Upload Target Directory
+        uses: actions/upload-artifact@v4.5.0
+        with:
+          name: target
+          path: target
 
   test:
     name: Tests
@@ -80,13 +70,11 @@ jobs:
           profile: minimal
           toolchain: stable
 
-      - name: Cache Cargo Dependencies and Target
-        uses: actions/cache@v4.2.0
+      - name: Download Target Directory
+        uses: actions/download-artifact@v4
         with:
-          path: |
-            ~/.cargo
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          name: target
+          path: target
 
       - name: Run Tests
         run: cargo test
@@ -105,13 +93,11 @@ jobs:
           profile: minimal
           toolchain: stable
 
-      - name: Cache Cargo Dependencies and Target
-        uses: actions/cache@v4.2.0
+      - name: Download Target Directory
+        uses: actions/download-artifact@v4
         with:
-          path: |
-            ~/.cargo
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          name: target
+          path: target
 
       - name: Install Tarpaulin
         run: cargo install cargo-tarpaulin
