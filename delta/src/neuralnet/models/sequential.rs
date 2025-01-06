@@ -37,11 +37,14 @@ use serde_json;
 
 use crate::common::Tensor;
 use crate::dataset::ImageDatasetOps;
+#[cfg(feature = "metal")]
+use crate::devices::osx_metal;
 use crate::devices::Device;
 use crate::losses::Loss;
 use crate::neuralnet::layers::Layer;
 use crate::neuralnet::models::error::ModelError;
 use crate::optimizers::Optimizer;
+use crate::utils::number_format::format_with_commas;
 
 /// A sequential model that contains a list of layers, an optimizer, and a loss function.
 #[derive(Debug)]
@@ -51,6 +54,8 @@ pub struct Sequential {
     pub loss: Option<Box<dyn Loss>>,
 
     layer_names: Vec<String>,
+
+    device: Option<Device>,
 }
 
 impl Default for Sequential {
@@ -66,7 +71,13 @@ impl Sequential {
     ///
     /// A new instance of the sequential model.
     pub fn new() -> Self {
-        Self { layers: Vec::new(), layer_names: Vec::new(), optimizer: None, loss: None }
+        Self {
+            layers: Vec::new(),
+            layer_names: Vec::new(),
+            optimizer: None,
+            loss: None,
+            device: None,
+        }
     }
 
     /// Add a layer to the model
@@ -118,17 +129,6 @@ impl Sequential {
         self.loss = Some(Box::new(loss));
     }
 
-    /// Sets the device for all layers in the model.
-    ///
-    /// # Arguments
-    ///
-    /// * `device` - The device to set.
-    pub fn set_device(&mut self, device: Device) {
-        for layer in self.layers.iter_mut() {
-            layer.set_device(&device);
-        }
-    }
-
     /// Trains the model with the given training dataset, number of epochs, and batch size.
     ///
     /// # Arguments
@@ -146,6 +146,7 @@ impl Sequential {
         epochs: i32,
         batch_size: usize,
     ) -> Result<(), ModelError> {
+        self.set_device_to_dataset(train_data).map_err(ModelError::DeviceError)?;
         self.ensure_optimizer_and_loss()?;
 
         let mut optimizer = self.optimizer.take().unwrap();
@@ -154,7 +155,7 @@ impl Sequential {
             println!("\nEpoch {}/{}", epoch + 1, epochs);
             self.train_one_epoch(train_data, batch_size, &mut optimizer)?;
         }
-        
+
         self.optimizer = Some(optimizer);
 
         println!();
@@ -308,9 +309,10 @@ impl Sequential {
     /// The average validation loss.
     pub fn validate<D: ImageDatasetOps>(
         &mut self,
-        validation_data: &D,
+        validation_data: &mut D,
         batch_size: usize,
     ) -> Result<f32, ModelError> {
+        self.set_device_to_dataset(validation_data).map_err(ModelError::DeviceError)?;
         self.ensure_optimizer_and_loss()?;
 
         let loss_fn = self.loss.as_ref().ok_or(ModelError::MissingLossFunction)?;
@@ -344,9 +346,10 @@ impl Sequential {
     /// The evaluation metric.
     pub fn evaluate<D: ImageDatasetOps>(
         &mut self,
-        test_data: &D,
+        test_data: &mut D,
         batch_size: usize,
     ) -> Result<f32, ModelError> {
+        self.set_device_to_dataset(test_data).map_err(ModelError::DeviceError)?;
         let mut correct_predictions = 0;
         let mut total_samples = 0;
 
@@ -470,9 +473,40 @@ impl Sequential {
         }
 
         println!("{:-<65}", "");
-        println!("Total params: {}", total_params);
-        println!("Trainable params: {}", trainable_params);
-        println!("Non-trainable params: {}", non_trainable_params);
+        println!("Total params: {}", format_with_commas(total_params));
+        println!("Trainable params: {}", format_with_commas(trainable_params));
+        println!("Non-trainable params: {}", format_with_commas(non_trainable_params));
         println!("{:-<65}", "");
+    }
+
+    /// Sets the device to use for the model.
+    pub fn use_optimized_device(&mut self) {
+        self.device = Some(Device::Cpu);
+
+        #[cfg(feature = "metal")]
+        {
+            println!("Transferring data to Metal device.");
+            let (metal_device, metal_queue) = osx_metal::get_device_and_queue_metal();
+
+            self.device =
+                Some(Device::Metal { device: metal_device.clone(), queue: metal_queue.clone() });
+        }
+
+        for layer in self.layers.iter_mut() {
+            layer.set_device(&self.device.clone().unwrap());
+        }
+    }
+
+    /// Sets the device to use for the model.
+    ///
+    /// # Arguments
+    ///
+    /// * `dataset` - The dataset to set the device for.
+    ///
+    /// # Returns
+    ///
+    /// A result indicating success or failure.
+    fn set_device_to_dataset<D: ImageDatasetOps>(&mut self, dataset: &mut D) -> Result<(), String> {
+        dataset.to_device(self.device.clone().unwrap())
     }
 }

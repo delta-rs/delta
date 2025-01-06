@@ -44,6 +44,8 @@ pub enum ModelError {
     TrainingError(String),
     /// Error related to a specific layer in the model.
     LayerError(LayerError),
+    /// Error related to a device, with a message describing the issue.
+    DeviceError(String),
 }
 
 impl fmt::Display for ModelError {
@@ -65,6 +67,7 @@ impl fmt::Display for ModelError {
             ModelError::DatasetError(msg) => write!(f, "Dataset error: {}", msg),
             ModelError::TrainingError(msg) => write!(f, "Training error: {}", msg),
             ModelError::LayerError(err) => write!(f, "Layer error: {}", err),
+            ModelError::DeviceError(msg) => write!(f, "Device error: {}", msg),
         }
     }
 }

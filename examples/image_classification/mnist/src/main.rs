@@ -1,8 +1,6 @@
 use deltaml::activations::{ReluActivation, SoftmaxActivation};
 use deltaml::common::ndarray::{IxDyn, Shape};
 use deltaml::dataset::{ImageDatasetOps, MnistDataset};
-#[cfg(feature = "metal")]
-use deltaml::devices::{Device, osx_metal};
 use deltaml::losses::SparseCategoricalCrossEntropyLoss;
 use deltaml::neuralnet::{Dense, Flatten, Sequential};
 use deltaml::optimizers::Adam;
@@ -20,6 +18,9 @@ async fn main() {
     // Display the model summary
     model.summary();
 
+    // Chose either CPU or GPU
+    model.use_optimized_device();
+
     // Define an optimizer
     let optimizer = Adam::new(0.001);
 
@@ -34,24 +35,6 @@ async fn main() {
     #[allow(unused_mut)]
     let mut val_data = MnistDataset::load_val().await;
 
-    #[cfg(feature = "metal")]
-    {
-        println!("Transferring data to Metal device.");
-        let (metal_device, metal_queue) = osx_metal::get_device_and_queue_metal();
-
-        model
-            .set_device(Device::Metal { device: metal_device.clone(), queue: metal_queue.clone() });
-
-        let _ = train_data
-            .to_device(Device::Metal { device: metal_device.clone(), queue: metal_queue.clone() });
-
-        let _ = test_data
-            .to_device(Device::Metal { device: metal_device.clone(), queue: metal_queue.clone() });
-
-        let _ = val_data
-            .to_device(Device::Metal { device: metal_device.clone(), queue: metal_queue.clone() });
-    }
-
     println!("Training the model...");
     println!("Train dataset size: {}", train_data.len());
 
@@ -64,13 +47,13 @@ async fn main() {
     }
 
     // Validate the model
-    match model.validate(&val_data, batch_size) {
+    match model.validate(&mut val_data, batch_size) {
         Ok(validation_loss) => println!("Validation Loss: {:.6}", validation_loss),
         Err(e) => println!("Failed to validate model: {}", e),
     }
 
     // Evaluate the model
-    let accuracy = match model.evaluate(&test_data, batch_size) {
+    let accuracy = match model.evaluate(&mut test_data, batch_size) {
         Ok(accuracy) => accuracy,
         Err(e) => panic!("Failed to evaluate model: {}", e),
     };

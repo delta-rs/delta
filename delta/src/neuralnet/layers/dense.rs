@@ -130,8 +130,8 @@ impl Layer for Dense {
     ///
     /// The output tensor.
     fn forward(&mut self, input: &Tensor) -> Result<Tensor, LayerError> {
-        let weights = self.weights.as_ref().expect("Weights must be initialized");
-        let bias = self.bias.as_ref().expect("Bias must be initialized");
+        let weights = self.weights.as_ref().ok_or(LayerError::UninitializedWeights)?;
+        let bias = self.bias.as_ref().ok_or(LayerError::UninitializedBias)?;
 
         self.input = Some(input.clone());
 
