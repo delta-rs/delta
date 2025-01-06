@@ -27,6 +27,8 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use ndarray::Ix;
+
 use crate::activations::Activation;
 use crate::common::Tensor;
 
@@ -76,6 +78,19 @@ impl Activation for ReluActivation {
     fn derivative(&self, input: &Tensor) -> Tensor {
         input.map(|x| if x > 0.0 { 1.0 } else { 0.0 })
     }
+
+    /// Initializes the activation function with the given input units.
+    /// 
+    /// # Arguments
+    ///
+    /// * `input_units` - The number of input units.
+    /// 
+    /// # Returns
+    /// 
+    /// The standard deviation to use for weight initialization. 
+    fn initialize(&self, input_units: Ix) -> f32 {
+        (2.0 / input_units as f32).sqrt()
+    }
 }
 
 #[cfg(test)]
@@ -102,5 +117,11 @@ mod tests {
 
         assert_eq!(derivative.data.iter().cloned().collect::<Vec<f32>>(), vec![1.0, 0.0, 1.0, 0.0]);
         assert_eq!(derivative.data.shape().to_vec(), vec![2, 2]);
+    }
+    
+    #[test]
+    fn test_relu_initialize() {
+        let relu = ReluActivation::new();
+        assert_eq!(relu.initialize(10), 0.4472136);
     }
 }

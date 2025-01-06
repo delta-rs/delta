@@ -30,7 +30,7 @@
 use std::f64::consts::PI;
 
 use libm::{erff, expf, sqrt};
-
+use ndarray::Ix;
 use crate::activations::Activation;
 use crate::common::Tensor;
 
@@ -111,6 +111,19 @@ impl Activation for GeluActivation {
     fn derivative(&self, input: &Tensor) -> Tensor {
         input.map(Self::gelu_derivative)
     }
+
+    /// Initializes the weights for the Softmax activation function.
+    ///
+    /// # Arguments
+    ///
+    /// * `input_units` - The number of input units.
+    ///
+    /// # Returns
+    ///
+    /// The initial weight value for the Softmax activation function.
+    fn initialize(&self, input_units: Ix) -> f32 {
+        (1.0 / input_units as f32).sqrt()
+    }
 }
 
 #[cfg(test)]
@@ -140,5 +153,10 @@ mod tests {
         ];
         let output = Tensor::new(expected_values, Shape::from(IxDyn(&[1, 3])));
         assert_eq!(GeluActivation::new().derivative(&input), output);
+    }
+    
+    #[test]
+    fn test_gelu_initialize() {
+        assert_eq!(GeluActivation::new().initialize(10), 0.31622776);
     }
 }

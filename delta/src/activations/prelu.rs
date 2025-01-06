@@ -27,6 +27,7 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use ndarray::Ix;
 use crate::activations::Activation;
 use crate::common::Tensor;
 
@@ -76,6 +77,19 @@ impl Activation for PreluActivation {
         let alpha = self.alpha;
         input.map(|x| if x > 0.0 { 1.0 } else { alpha })
     }
+
+    /// Initializes the weights for the Softmax activation function.
+    ///
+    /// # Arguments
+    ///
+    /// * `input_units` - The number of input units.
+    ///
+    /// # Returns
+    ///
+    /// The initial weight value for the Softmax activation function.
+    fn initialize(&self, input_units: Ix) -> f32 {
+        (1.0 / input_units as f32).sqrt()
+    }
 }
 
 #[cfg(test)]
@@ -102,5 +116,11 @@ mod tests {
 
         assert_eq!(derivative.data.iter().cloned().collect::<Vec<f32>>(), vec![1.0, 0.1, 1.0, 0.1]);
         assert_eq!(derivative.data.shape().to_vec(), vec![2, 2]);
+    }
+    
+    #[test]
+    fn test_prelu_initialize() {
+        let prelu = PreluActivation::new(0.1);
+        assert_eq!(prelu.initialize(10), 0.31622776);
     }
 }
