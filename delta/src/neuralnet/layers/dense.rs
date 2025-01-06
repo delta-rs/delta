@@ -136,7 +136,7 @@ impl Layer for Dense {
         self.input = Some(input.clone());
 
         // Perform forward pass: Z = input · weights + bias
-        let z = input.matmul(weights).add(bias);
+        let z = input.dot(weights).add(bias);
 
         // Apply activation if present
         let z =
@@ -160,7 +160,7 @@ impl Layer for Dense {
         let input = self.input.as_ref().expect("Input must be initialized");
 
         // Calculate the gradient with respect to weights and bias
-        let weights_grad = input.transpose().matmul(grad);
+        let weights_grad = input.transpose().dot(grad);
         let bias_grad = grad.sum_along_axis(0);
 
         // Store the gradients
@@ -170,7 +170,7 @@ impl Layer for Dense {
         }
 
         // Calculate the gradient with respect to the input
-        let input_grad = grad.matmul(&weights.transpose());
+        let input_grad = grad.dot(&weights.transpose());
 
         Ok(input_grad)
     }
