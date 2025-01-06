@@ -19,6 +19,9 @@ async fn main() {
     // Display the model summary
     model.summary();
 
+    // Chose either CPU or GPU
+    model.use_optimized_device();
+
     // Define an optimizer
     let optimizer = Adam::new(0.001);
 
@@ -27,8 +30,8 @@ async fn main() {
 
     // Load the train and test dataset
     let mut train_data = ImageNetV2Dataset::load_train().await;
-    let test_data = ImageNetV2Dataset::load_test().await;
-    let val_data = ImageNetV2Dataset::load_val().await;
+    let mut test_data = ImageNetV2Dataset::load_test().await;
+    let mut val_data = ImageNetV2Dataset::load_val().await;
 
     println!("Training the model...");
     println!("Train dataset size: {}", train_data.len());
@@ -42,14 +45,14 @@ async fn main() {
     }
 
     // Validate the model
-    match model.validate(&val_data, batch_size) {
+    match model.validate(&mut val_data, batch_size) {
         Ok(validation_loss) => println!("Validation Loss: {:.6}", validation_loss),
         Err(e) => println!("Failed to validate model: {}", e),
     }
 
     // Evaluate the model
     println!("Evaluating the model...");
-    let accuracy = model.evaluate(&test_data, batch_size).expect("Failed to evaluate model");
+    let accuracy = model.evaluate(&mut test_data, batch_size).expect("Failed to evaluate model");
     println!("Test Accuracy: {:.2} %", accuracy * 100.0);
 
     // Save the model

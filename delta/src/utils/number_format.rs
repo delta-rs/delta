@@ -27,29 +27,34 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-extern crate core;
+pub fn format_with_commas(num: usize) -> String {
+    let num_str = num.to_string();
+    let mut formatted = String::new();
 
-use std::path::PathBuf;
+    for (count, c) in num_str.chars().rev().enumerate() {
+        if count > 0 && count % 3 == 0 {
+            formatted.push(',');
+        }
+        formatted.push(c);
+    }
 
-pub mod activations;
-pub mod common;
-pub mod dataset;
-pub mod devices;
-pub mod encoders;
-pub mod losses;
-pub mod neuralnet;
-pub mod optimizers;
-pub mod utils;
+    formatted.chars().rev().collect()
+}
 
-/// Returns the path to the workspace directory.
-///
-/// # Returns
-///
-/// A `PathBuf` representing the path to the workspace directory.
-pub fn get_workspace_dir() -> PathBuf {
-    // Add a default for flamegraph's to work
-    let path = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-    let mut path = PathBuf::from(path);
-    path.pop();
-    path
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_format_with_commas() {
+        assert_eq!(format_with_commas(0), "0");
+        assert_eq!(format_with_commas(1), "1");
+        assert_eq!(format_with_commas(10), "10");
+        assert_eq!(format_with_commas(100), "100");
+        assert_eq!(format_with_commas(1000), "1,000");
+        assert_eq!(format_with_commas(10000), "10,000");
+        assert_eq!(format_with_commas(100000), "100,000");
+        assert_eq!(format_with_commas(1000000), "1,000,000");
+        assert_eq!(format_with_commas(1000000000), "1,000,000,000");
+    }
 }
