@@ -34,7 +34,7 @@ pub mod relu;
 pub mod softmax;
 
 use std::fmt::Debug;
-
+use ndarray::Ix;
 pub use gelu::GeluActivation;
 pub use leaky_relu::LeakyReluActivation;
 pub use prelu::PreluActivation;
@@ -75,4 +75,15 @@ pub trait Activation: Debug {
     fn name(&self) -> &str {
         std::any::type_name::<Self>().split("::").last().unwrap_or("Unknown")
     }
+    
+    /// Initializes the activation function with the given input units.
+    ///
+    /// # Arguments
+    ///
+    /// * `input_units` - The number of input units.
+    ///
+    /// # Returns
+    ///
+    /// The initialization value for the activation function.
+    fn initialize(&self, input_units: Ix) -> f32;
 }

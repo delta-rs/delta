@@ -99,10 +99,7 @@ impl Layer for Dense {
 
         // Choose initialization strategy based on the activation function
         let stddev = if let Some(ref activation) = self.activation {
-            match activation.name() {
-                "relu" | "leaky_relu" => (2.0 / *input_units as f32).sqrt(), // He initialization
-                _ => (1.0 / *input_units as f32).sqrt(), // Xavier initialization
-            }
+            activation.initialize(*input_units)
         } else {
             (1.0 / *input_units as f32).sqrt() // Xavier initialization for no activation
         };
