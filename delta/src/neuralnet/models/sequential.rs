@@ -38,7 +38,8 @@ use serde_json;
 use crate::common::Tensor;
 use crate::dataset::ImageDatasetOps;
 #[cfg(feature = "metal")]
-use crate::devices::{Device, osx_metal};
+use crate::devices::osx_metal;
+use crate::devices::Device;
 use crate::losses::Loss;
 use crate::neuralnet::layers::Layer;
 use crate::neuralnet::models::error::ModelError;
