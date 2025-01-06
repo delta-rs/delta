@@ -176,7 +176,7 @@ impl Tensor {
     /// # Returns
     ///
     /// A new tensor containing the result of the matrix multiplication.
-    pub fn matmul(&self, other: &Tensor) -> Tensor {
+    pub fn dot(&self, other: &Tensor) -> Tensor {
         // Ensure both tensors have at least 2 dimensions for matrix multiplication
         if self.data.ndim() < 2 || other.data.ndim() < 2 {
             panic!("Both tensors must have at least 2 dimensions for matmul");
@@ -861,7 +861,7 @@ impl Mul for Tensor {
     ///
     /// A new tensor containing the result of the multiplication.
     fn mul(self, rhs: Self) -> Self::Output {
-        self.matmul(&rhs)
+        self.dot(&rhs)
     }
 }
 
@@ -960,7 +960,7 @@ mod tests {
         let tensor1 = Tensor::new(data1, Shape::from(IxDyn(&[2, 2])));
         let data2 = vec![5.0, 6.0, 7.0, 8.0];
         let tensor2 = Tensor::new(data2, Shape::from(IxDyn(&[2, 2])));
-        let result = tensor1.matmul(&tensor2);
+        let result = tensor1.dot(&tensor2);
         assert_eq!(result.data.shape(), &[2, 2]);
     }
 
