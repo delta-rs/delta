@@ -429,7 +429,7 @@ mod tests {
     }
     #[test]
     fn test_conv1d_build() {
-        let input_shape = Shape::from(IxDyn(&[2, 5]));
+        let input_shape = Shape::from(IxDyn(&[1, 2, 5]));
         let mut conv1d_layer = Conv1D::new(
             2,
             2,
@@ -444,7 +444,7 @@ mod tests {
     }
     #[test]
     fn test_conv1d_param_count_with_bias() {
-        let input_shape = Shape::from(IxDyn(&[2, 5]));
+        let input_shape = Shape::from(IxDyn(&[1, 2, 5]));
         let mut conv1d_layer = Conv1D::new(
             2,
             2,
@@ -458,7 +458,7 @@ mod tests {
     }
     #[test]
     fn test_conv1d_param_count_without_bias() {
-        let input_shape = Shape::from(IxDyn(&[2, 5]));
+        let input_shape = Shape::from(IxDyn(&[1, 2, 5]));
         let mut conv1d_layer = Conv1D::new(
             2,
             2,
