@@ -99,10 +99,7 @@ impl Layer for Dense {
 
         // Choose initialization strategy based on the activation function
         let stddev = if let Some(ref activation) = self.activation {
-            match activation.name() {
-                "relu" | "leaky_relu" => (2.0 / *input_units as f32).sqrt(), // He initialization
-                _ => (1.0 / *input_units as f32).sqrt(), // Xavier initialization
-            }
+            activation.initialize(*input_units)
         } else {
             (1.0 / *input_units as f32).sqrt() // Xavier initialization for no activation
         };
@@ -130,13 +127,13 @@ impl Layer for Dense {
     ///
     /// The output tensor.
     fn forward(&mut self, input: &Tensor) -> Result<Tensor, LayerError> {
-        let weights = self.weights.as_ref().expect("Weights must be initialized");
-        let bias = self.bias.as_ref().expect("Bias must be initialized");
+        let weights = self.weights.as_ref().ok_or(LayerError::UninitializedWeights)?;
+        let bias = self.bias.as_ref().ok_or(LayerError::UninitializedBias)?;
 
         self.input = Some(input.clone());
 
         // Perform forward pass: Z = input · weights + bias
-        let z = input.matmul(weights).add(bias);
+        let z = input.dot(weights).add(bias);
 
         // Apply activation if present
         let z =
@@ -160,7 +157,7 @@ impl Layer for Dense {
         let input = self.input.as_ref().expect("Input must be initialized");
 
         // Calculate the gradient with respect to weights and bias
-        let weights_grad = input.transpose().matmul(grad);
+        let weights_grad = input.transpose().dot(grad);
         let bias_grad = grad.sum_along_axis(0);
 
         // Store the gradients
@@ -170,7 +167,7 @@ impl Layer for Dense {
         }
 
         // Calculate the gradient with respect to the input
-        let input_grad = grad.matmul(&weights.transpose());
+        let input_grad = grad.dot(&weights.transpose());
 
         Ok(input_grad)
     }

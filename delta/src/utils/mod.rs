@@ -27,29 +27,4 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-extern crate core;
-
-use std::path::PathBuf;
-
-pub mod activations;
-pub mod common;
-pub mod dataset;
-pub mod devices;
-pub mod encoders;
-pub mod losses;
-pub mod neuralnet;
-pub mod optimizers;
-pub mod utils;
-
-/// Returns the path to the workspace directory.
-///
-/// # Returns
-///
-/// A `PathBuf` representing the path to the workspace directory.
-pub fn get_workspace_dir() -> PathBuf {
-    // Add a default for flamegraph's to work
-    let path = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-    let mut path = PathBuf::from(path);
-    path.pop();
-    path
-}
+pub mod number_format;

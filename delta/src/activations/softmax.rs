@@ -27,7 +27,7 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use ndarray::{IxDyn, Shape, s};
+use ndarray::{IxDyn, Shape, s, Ix};
 
 use crate::activations::Activation;
 use crate::common::Tensor;
@@ -131,6 +131,19 @@ impl Activation for SoftmaxActivation {
         // Step 4: Return the Jacobian tensor
         Tensor::new(jacobian_data, Shape::from(IxDyn(&[batch_size, num_classes, num_classes])))
     }
+
+    /// Initializes the weights for the Softmax activation function.
+    ///
+    /// # Arguments
+    ///
+    /// * `input_units` - The number of input units.
+    ///
+    /// # Returns
+    ///
+    /// The initial weight value for the Softmax activation function.
+    fn initialize(&self, input_units: Ix) -> f32 {
+        (1.0 / input_units as f32).sqrt()   
+    }
 }
 
 #[cfg(test)]
@@ -185,5 +198,11 @@ mod tests {
                 expected
             );
         }
+    }
+    
+    #[test]
+    fn test_softmax_initialize() {
+        let softmax = SoftmaxActivation::new();
+        assert_eq!(softmax.initialize(3), 0.57735026);
     }
 }
