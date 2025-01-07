@@ -29,12 +29,14 @@
 
 pub mod dense;
 pub mod error;
+pub mod conv_1d;
 pub mod flatten;
 pub mod max_pooling_2d;
 
 use std::fmt::Debug;
 
 pub use dense::Dense;
+pub use conv_1d::Conv1D;
 pub use flatten::Flatten;
 pub use max_pooling_2d::MaxPooling2D;
 use ndarray::{IxDyn, Shape};

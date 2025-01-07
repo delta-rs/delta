@@ -53,6 +53,19 @@ impl Tensor {
         Self { data: Array::zeros(shape), device }
     }
 
+    /// Creates a tensor filled with ones.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `shape` - A vector representing the shape of the tensor.
+    /// 
+    /// # Returns
+    /// 
+    /// A tensor filled with ones.
+    pub fn ones(shape: Shape<IxDyn>, device: Device) -> Self {
+        Self { data: Array::ones(shape), device }
+    }
+
     /// Creates a tensor filled with random values.
     ///
     /// # Arguments
@@ -1065,8 +1078,8 @@ mod tests {
     fn test_broadcast() {
         let data = vec![1.0, 2.0, 3.0, 4.0];
         let tensor = Tensor::new(data, Shape::from(IxDyn(&[2, 2])));
-        let broadcasted = tensor.broadcast(Shape::from(IxDyn(&[2, 2])));
-        assert_eq!(broadcasted.data.shape(), &[2, 2]);
+        let broadcasted = tensor.broadcast(Shape::from(IxDyn(&[2, 2, 2])));
+        assert_eq!(broadcasted.data.shape(), &[2, 2, 2]);
     }
 
     #[test]
