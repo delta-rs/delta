@@ -1,6 +1,6 @@
 //! BSD 3-Clause License
 //!
-//! Copyright (c) 2024, The Delta Project Δ
+//! Copyright (c) 2025, BlackPortal ○
 //!
 //! Redistribution and use in source and binary forms, with or without
 //! modification, are permitted provided that the following conditions are met:
@@ -31,6 +31,7 @@ use std::f64::consts::PI;
 
 use libm::{erff, expf, sqrt};
 use ndarray::Ix;
+
 use crate::activations::Activation;
 use crate::common::Tensor;
 
@@ -154,7 +155,7 @@ mod tests {
         let output = Tensor::new(expected_values, Shape::from(IxDyn(&[1, 3])));
         assert_eq!(GeluActivation::new().derivative(&input), output);
     }
-    
+
     #[test]
     fn test_gelu_initialize() {
         assert_eq!(GeluActivation::new().initialize(10), 0.31622776);

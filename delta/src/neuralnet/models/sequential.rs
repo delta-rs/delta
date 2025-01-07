@@ -1,6 +1,6 @@
 //! BSD 3-Clause License
 //!
-//! Copyright (c) 2024, The Delta Project Δ
+//! Copyright (c) 2025, BlackPortal ○
 //!
 //! Redistribution and use in source and binary forms, with or without
 //! modification, are permitted provided that the following conditions are met:
@@ -37,9 +37,9 @@ use serde_json;
 
 use crate::common::Tensor;
 use crate::dataset::ImageDatasetOps;
+use crate::devices::Device;
 #[cfg(feature = "metal")]
 use crate::devices::osx_metal;
-use crate::devices::Device;
 use crate::losses::Loss;
 use crate::neuralnet::layers::Layer;
 use crate::neuralnet::models::error::ModelError;
