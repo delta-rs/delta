@@ -1,16 +1,19 @@
 # Contributing to Delta
 
-We love contributions! However, note that it's important that you first talk to us in [Discussions](https://github.com/orgs/delta-rs/discussions) about what you are planning to do so we both save time and effort.
+We love contributions! However, note that it's important that you first talk to us
+in [Discussions](https://github.com/orgs/delta-rs/discussions) about what you are planning to do so we both save time
+and effort.
 If it's only bug fixes or documentation, feel free to send PR, those are more likely to pass directly.
 
 ## Copypasta for license when adding new files
 
-For all new files we create please add the license to the top of the files, see `delta/src/neuralnet/layers/dense.rs` for an example.
+For all new files we create please add the license to the top of the files, see `delta/src/neuralnet/layers/dense.rs`
+for an example.
 
 ```rust
 //! BSD 3-Clause License
 //!
-//! Copyright (c) 2024, The Delta Project Δ
+//! Copyright (c) 2025, BlackPortal ○
 //!
 //! Redistribution and use in source and binary forms, with or without
 //! modification, are permitted provided that the following conditions are met:

@@ -1,6 +1,6 @@
 //! BSD 3-Clause License
 //!
-//! Copyright (c) 2024, The Delta Project Δ
+//! Copyright (c) 2025, BlackPortal ○
 //!
 //! Redistribution and use in source and binary forms, with or without
 //! modification, are permitted provided that the following conditions are met:
@@ -120,7 +120,8 @@ impl Cifar100Dataset {
     /// - `Vec<f32>`: One-hot-encoded labels for each example.
     fn parse_file(file_path: &str, num_examples: usize) -> (Vec<f32>, Vec<f32>) {
         let mut file = File::open(file_path).expect("Failed to open CIFAR-100 file");
-        let mut buffer = vec![0u8; 1 + 1 + Self::CIFAR100_IMAGE_SIZE * Self::CIFAR100_IMAGE_SIZE * 3];
+        let mut buffer =
+            vec![0u8; 1 + 1 + Self::CIFAR100_IMAGE_SIZE * Self::CIFAR100_IMAGE_SIZE * 3];
 
         let mut images =
             vec![0.0; num_examples * Self::CIFAR100_IMAGE_SIZE * Self::CIFAR100_IMAGE_SIZE * 3];
@@ -291,10 +292,15 @@ impl ImageDatasetOps for Cifar100Dataset {
 
         let adjusted_end_idx = end_idx.min(total_samples);
 
-        let inputs_batch =
-            dataset.inputs.slice(vec![start_idx..adjusted_end_idx, 0..Self::CIFAR100_IMAGE_SIZE, 0..Self::CIFAR100_IMAGE_SIZE, 0..3]);
+        let inputs_batch = dataset.inputs.slice(vec![
+            start_idx..adjusted_end_idx,
+            0..Self::CIFAR100_IMAGE_SIZE,
+            0..Self::CIFAR100_IMAGE_SIZE,
+            0..3,
+        ]);
 
-        let labels_batch = dataset.labels.slice(vec![start_idx..adjusted_end_idx, 0..Self::CIFAR100_NUM_CLASSES]);
+        let labels_batch =
+            dataset.labels.slice(vec![start_idx..adjusted_end_idx, 0..Self::CIFAR100_NUM_CLASSES]);
 
         (inputs_batch, labels_batch)
     }
@@ -416,8 +422,10 @@ mod tests {
         setup();
         Cifar100Dataset::download_and_extract().await;
         let workspace_dir = get_workspace_dir();
-        let cache_path =
-            format!("{}/.cache/dataset/cifar100/{}", workspace_dir.display(), Cifar100Dataset::CIFAR100_TRAIN_FILE
+        let cache_path = format!(
+            "{}/.cache/dataset/cifar100/{}",
+            workspace_dir.display(),
+            Cifar100Dataset::CIFAR100_TRAIN_FILE
         );
         assert!(
             Path::new(&cache_path).exists(),
@@ -450,14 +458,8 @@ mod tests {
         Cifar100Dataset::download_and_extract().await;
 
         let dataset = Cifar100Dataset::load_data(Cifar100Dataset::CIFAR100_TRAIN_FILE, 50000);
-        assert_eq!(
-            dataset.inputs.shape().raw_dim().as_array_view().to_vec(),
-            &[50000, 32, 32, 3]
-        );
-        assert_eq!(
-            dataset.labels.shape().raw_dim().as_array_view().to_vec(),
-            &[50000, 100]
-        );
+        assert_eq!(dataset.inputs.shape().raw_dim().as_array_view().to_vec(), &[50000, 32, 32, 3]);
+        assert_eq!(dataset.labels.shape().raw_dim().as_array_view().to_vec(), &[50000, 100]);
     }
 
     #[tokio::test]

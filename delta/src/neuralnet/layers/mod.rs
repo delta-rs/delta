@@ -1,6 +1,6 @@
 //! BSD 3-Clause License
 //!
-//! Copyright (c) 2024, The Delta Project Δ
+//! Copyright (c) 2025, BlackPortal ○
 //!
 //! Redistribution and use in source and binary forms, with or without
 //! modification, are permitted provided that the following conditions are met:
@@ -27,16 +27,16 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+pub mod conv_1d;
 pub mod dense;
 pub mod error;
-pub mod conv_1d;
 pub mod flatten;
 pub mod max_pooling_2d;
 
 use std::fmt::Debug;
 
-pub use dense::Dense;
 pub use conv_1d::Conv1D;
+pub use dense::Dense;
 pub use flatten::Flatten;
 pub use max_pooling_2d::MaxPooling2D;
 use ndarray::{IxDyn, Shape};

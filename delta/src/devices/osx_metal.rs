@@ -1,6 +1,6 @@
 //! BSD 3-Clause License
 //!
-//! Copyright (c) 2024, The Delta Project Δ
+//! Copyright (c) 2025, BlackPortal ○
 //!
 //! Redistribution and use in source and binary forms, with or without
 //! modification, are permitted provided that the following conditions are met:
@@ -275,10 +275,8 @@ pub fn tensor_matmul_metal(
     let input2_buffer = to_device_metal(tensor2, device, queue);
 
     let output_size = rows_a * cols_b;
-    let output_buffer = device.new_buffer(
-        (output_size * size_of::<f32>()) as u64,
-        MTLResourceOptions::StorageModeShared,
-    );
+    let output_buffer = device
+        .new_buffer((output_size * size_of::<f32>()) as u64, MTLResourceOptions::StorageModeShared);
 
     let rows_a_buffer = device.new_buffer_with_data(
         &(rows_a as u32) as *const _ as *const _,
@@ -415,11 +413,9 @@ mod tests {
         // Apparently GPU floating point power operations are not exact
         let tolerance = 1e-5;
 
-        assert!(result
-            .data
-            .iter()
-            .zip(expected.data.iter())
-            .all(|(a, b)| (a - b).abs() < tolerance));
+        assert!(
+            result.data.iter().zip(expected.data.iter()).all(|(a, b)| (a - b).abs() < tolerance)
+        );
     }
 
     #[test]
