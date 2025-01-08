@@ -54,13 +54,13 @@ impl Tensor {
     }
 
     /// Creates a tensor filled with ones.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `shape` - A vector representing the shape of the tensor.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A tensor filled with ones.
     pub fn ones(shape: Shape<IxDyn>, device: Device) -> Self {
         Self { data: Array::ones(shape), device }
@@ -212,7 +212,7 @@ impl Tensor {
             Device::Cpu => {
                 Tensor { data: self_2d.dot(&other_2d).into_dyn(), device: self.device.clone() }
             }
-            #[cfg(feature = "metal")]
+            #[cfg(all(target_os = "macos", feature = "metal"))]
             Device::Metal { device, queue } => tensor_matmul_metal(
                 &Tensor { data: self_2d.to_owned().into_dyn(), device: self.device.clone() },
                 &Tensor { data: other_2d.to_owned().into_dyn(), device: self.device.clone() },
