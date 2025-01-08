@@ -38,7 +38,7 @@ use serde_json;
 use crate::common::Tensor;
 use crate::dataset::ImageDatasetOps;
 use crate::devices::Device;
-#[cfg(feature = "metal")]
+#[cfg(all(target_os = "macos", feature = "metal"))]
 use crate::devices::osx_metal;
 use crate::losses::Loss;
 use crate::neuralnet::layers::Layer;
@@ -483,7 +483,7 @@ impl Sequential {
     pub fn use_optimized_device(&mut self) {
         self.device = Some(Device::Cpu);
 
-        #[cfg(feature = "metal")]
+        #[cfg(all(target_os = "macos", feature = "metal"))]
         {
             println!("Transferring data to Metal device.");
             let (metal_device, metal_queue) = osx_metal::get_device_and_queue_metal();
