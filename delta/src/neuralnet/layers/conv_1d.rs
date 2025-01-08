@@ -28,7 +28,8 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use log::debug;
-use ndarray::{Array, Axis, Dim, Dimension, Ix1, Ix4, IxDyn, IxDynImpl, Shape, s};
+
+use ndarray::{s, Axis, Dim, Dimension, IxDyn, IxDynImpl, Shape};
 use serde_json;
 
 use crate::activations::Activation;
@@ -38,9 +39,13 @@ use crate::neuralnet::layers::Layer;
 use crate::neuralnet::layers::error::LayerError;
 use crate::optimizers::Optimizer;
 
-type ArrayView<'a> = ndarray::ArrayBase<ndarray::ViewRepr<&'a f32>, Dim<[usize; 1]>>;
 
-/// A dense (fully connected) layer.
+// used for operations on Tensors
+use crate::neuralnet::functional as F;
+
+// type ArrayView<'a> = ndarray::ArrayBase<ndarray::ViewRepr<&'a f32>, Dim<[usize; 1]>>;
+
+/// A 1D convolutional layer.
 #[derive(Debug)]
 pub struct Conv1D {
     name: String,
@@ -49,6 +54,8 @@ pub struct Conv1D {
     kernel_units: usize,
     kernel_size: usize,
     stride: usize,
+    padding: usize,
+    dilation: usize,
     include_bias: bool,
     activation: Option<Box<dyn Activation>>,
     trainable: bool,
@@ -60,6 +67,7 @@ pub struct Conv1D {
 }
 
 impl Conv1D {
+
     /// Creates a new dense layer.
     ///
     /// # Arguments
@@ -84,8 +92,10 @@ impl Conv1D {
             bias: None,
             kernel_units,
             kernel_size,
-            stride,
-            include_bias,
+            stride,     
+            padding: 0_usize, // keeping the value 0 as usize for now!
+            dilation: 1_usize, // keeping the value 1 as usize for now!
+            include_bias,    
             activation: activation.map(|a| Box::new(a) as Box<dyn Activation>),
             trainable,
             weights_grad: None,
@@ -95,18 +105,14 @@ impl Conv1D {
             device: Device::default(),
         }
     }
-    // fn get_input_shape(&self) -> Result<(usize, usize), LayerError> {
-    //     let raw_dim = self
-    //                 .input_shape
-    //                 .as_ref()
-    //                 .ok_or(LayerError::InvalidInputShape)? // Return a custom error
-    //                 .raw_dim();
-    //     let array_view = raw_dim.as_array_view();
-    //     let input_units = array_view.last().ok_or(LayerError::InvalidInputShape)?;
-    //     let input_kernel_units = array_view.first().ok_or(LayerError::InvalidInputShape)?;
 
-    //     Ok((*input_kernel_units, *input_units))
-    // }
+    /// Returns the input shape of the layer.
+    /// 
+    /// # Returns
+    /// A `Dim<IxDynImpl>` representing the input shape of the layer.
+    /// 
+    /// # Errors
+    /// Returns a `LayerError` if the input shape is not valid.
     fn get_input_shape(&self) -> Result<Dim<IxDynImpl>, LayerError> {
         let shape = self.input_shape.as_ref().ok_or(LayerError::MissingInput)?;
         let raw = shape.raw_dim(); // IxDyn
@@ -114,36 +120,13 @@ impl Conv1D {
             return Err(LayerError::InvalidInputShape);
         }
         Ok(raw.clone())
+
+
     }
-}
-
-/// Convolution operation for 1D data.
-///
-/// # Arguments
-///
-/// * `input` - The input tensor.
-/// * `kernel` - The kernel tensor.
-/// * `stride` - The stride for the convolution operation.
-///
-/// # Returns
-///
-/// The output tensor.
-fn conv1d_raw(input: ArrayView, kernel: ArrayView, stride: usize) -> Array<f32, Ix1> {
-    let input_len = input.len();
-    let kernel_len = kernel.len();
-    let output_len = (input_len - kernel_len) / stride + 1;
-    let mut output = Array::<f32, Ix1>::zeros(output_len);
-
-    for i in 0..output_len {
-        let start = i * stride;
-        let end = start + kernel_len;
-        output[i] = input.slice(s![start..end]).dot(&kernel);
-    }
-
-    output
 }
 
 impl Layer for Conv1D {
+
     /// Builds the layer with the given input shape.
     ///
     /// # Arguments
@@ -155,9 +138,12 @@ impl Layer for Conv1D {
             input_shape, self.kernel_units, self.kernel_size, self.stride
         );
 
+        // Store input shape for later use
         self.input_shape = Some(input_shape);
+
+        // Get input dimensions
         let raw = self.get_input_shape()?;
-        let (n, input_kernel_units, input_units) = (raw[0], raw[1], raw[2]);
+        let (_, input_kernel_units, input_units) = (raw[0], raw[1], raw[2]);
 
         // Choose initialization strategy based on the activation function
         let stddev = if let Some(ref activation) = self.activation {
@@ -171,36 +157,33 @@ impl Layer for Conv1D {
 
         // Initialize weights using random normal distribution
         self.weights = Some(Tensor::random_normal(
-            Shape::from(IxDyn(&[n, self.kernel_units, input_kernel_units, self.kernel_size])), // [out_channels, in_channels, kernel_size]
+            Shape::from(IxDyn(&[self.kernel_units, input_kernel_units, self.kernel_size])), // [out_channels, in_channels, kernel_size]
             0.0,
             stddev,
         ));
 
-        // Just for debugging
-        self.weights = Some(Tensor::ones(
-            Shape::from(IxDyn(&[n, self.kernel_units, input_kernel_units, self.kernel_size])),
-            self.device.clone(),
-        ));
 
         #[cfg(debug_assertions)] // for debugging purposes
         {
             self.weights = Some(Tensor::ones(
-                Shape::from(IxDyn(&[n, self.kernel_units, input_kernel_units, self.kernel_size])),
-                self.device.clone(),
+                Shape::from(IxDyn(&[self.kernel_units, input_kernel_units, self.kernel_size])),
+                self.device.clone()
+
             ));
         }
 
-        // CHECK THIS IMPLEMENATION, Instead of this add `device` parameter in Tensor::random_normal
-        self.weights.as_mut().unwrap().device = self.device.clone();
+        // Set device for weights
+        self.weights.as_mut().expect("Weight not initialized properly!").device = self.device.clone();
 
         // Initialize bias to zeros
-        self.bias = if self.include_bias {
-            Some(Tensor::zeros(Shape::from(IxDyn(&[n, self.kernel_units])), self.device.clone()))
-        } else {
-            None
-        };
+        self.bias = if self.include_bias { Some(Tensor::zeros(
+            Shape::from(IxDyn(&[self.kernel_units])),
+            self.device.clone())
+        )} else { None };
+
 
         Ok(())
+
     }
 
     /// Performs a forward pass through the layer.
@@ -213,52 +196,19 @@ impl Layer for Conv1D {
     ///
     /// The output tensor.
     fn forward(&mut self, input: &Tensor) -> Result<Tensor, LayerError> {
+
+        // Save input for backward pass
         self.input = Some(input.clone());
-        let raw = self.get_input_shape()?;
-        // Extract (N, C, L)
-        let (n, c, l) = (raw[0], raw[1], raw[2]);
-
-        let weights = self.weights.as_ref().expect("Weights must be initialized");
-        let bias = match self.bias {
-            Some(ref bias) => bias,
-            None => {
-                &Tensor::zeros(Shape::from(IxDyn(&[n, self.kernel_units])), self.device.clone())
-            }
-        };
-
-        // Reshape input data to 3D array [N, C, L].
-        let input_3d = input
-            .data
-            .clone()
-            .into_dimensionality::<IxDyn>()
-            .map_err(|_| LayerError::InvalidInputShape)?;
-
-        println!("Input in 3D format {}", input_3d);
-
-        let out_shape = self.output_shape()?;
-        let mut z = Tensor::zeros(out_shape.clone(), self.device.clone());
-
-        // Prepare output array [N, C, outH, outW].
-        let out_shape_raw = out_shape.raw_dim();
-        let (out_n, out_c, out_l) = (out_shape_raw[0], out_shape_raw[1], out_shape_raw[2]);
-        let mut output = Array::<f32, Ix4>::zeros((out_n, out_c, c, out_l));
-        println!("out_c = {}, out_l = {}", out_c, out_l);
-
-        // Perform convolution
-        for batch in 0..out_n {
-            for out_channel in 0..out_c {
-                for in_channels in 0..c {
-                    let kernel: ndarray::ArrayBase<ndarray::ViewRepr<&f32>, Dim<[usize; 1]>> =
-                        weights.data.slice(s![batch, out_channel, in_channels, ..]);
-                    let input_slice = input_3d.slice(s![batch, in_channels, ..]);
-                    let _conv = conv1d_raw(input_slice, kernel, self.stride);
-                    for i in 0..out_l {
-                        output[[batch, out_channel, in_channels, i]] = _conv[i];
-                    }
-                }
-            }
-        }
-        let z = Tensor { data: output.sum_axis(Axis(2)).into_dyn(), device: input.device.clone() };
+        
+        // Apply convolution operation
+        let z = F::conv1d(
+            input,
+            self.weights.as_ref().unwrap(),
+            Some(self.bias.as_ref().unwrap()),
+            self.stride,
+            self.padding, // 0 for now!
+            self.dilation // 1 for now!
+        ).unwrap();
 
         // Apply activation if present
         let z =
@@ -277,24 +227,55 @@ impl Layer for Conv1D {
     ///
     /// The gradient tensor with respect to the input.
     fn backward(&mut self, grad: &Tensor) -> Result<Tensor, LayerError> {
-        // // Ensure weights and input are initialized
-        // let weights = self.weights.as_ref().expect("Weights must be initialized");
-        // let input = self.input.as_ref().expect("Input must be initialized");
 
-        // // Calculate the gradient with respect to weights and bias
-        // let weights_grad = input.transpose().matmul(grad);
-        // let bias_grad = grad.sum_along_axis(0);
+        // Get weights shape
+        // let raw = self.get_input_shape()?;
+        // let (batch_size, c_out, c_in, kernel_size) = (raw[0], self.kernel_units, raw[1],self.kernel_size);
 
-        // // Store the gradients
-        // if self.trainable {
-        //     self.weights_grad = Some(weights_grad);
-        //     self.bias_grad = Some(bias_grad);
-        // }
+        // Get permuted weight
+        // let w_perm = self.weights.as_ref().unwrap().data.view().permuted_axes(Dim(IxDyn(&[1, 0, 2])));
+        let mut w_perm = self.weights.as_ref().unwrap().permute(vec![1, 0, 2]);
+        // Flip the kernel
+        w_perm.data.slice_mut(s![.., .., ..;-1]);
+        debug!("w_perm: {:?}", w_perm);
+        
+        // Get permuted input
+        let input_perm = self.input.as_ref().unwrap().permute(vec![1, 0, 2]);
+        debug!("input_perm: {:?}", input_perm);
 
-        // // Calculate the gradient with respect to the input
-        // let input_grad = grad.matmul(&weights.transpose());
-        // Ok(input_grad)
-        todo!();
+        // Get permuted gradient
+        let grad_perm = grad.permute(vec![1, 0, 2]);
+        debug!("grad_perm: {:?}", grad_perm);
+        
+        let grad_padded = F::pad_1d(grad, self.kernel_size-1, Axis(2));
+        
+        let input_grad = F::conv1d(
+            grad_padded.as_ref().unwrap(),
+            &w_perm,
+            None,
+            self.stride,
+            self.padding, // 0 for now!
+            self.dilation // 1 for now!
+        ).unwrap();
+        debug!("input_grad: {:?}", input_grad);
+
+        let weight_grad = F::conv1d(
+            &input_perm,
+            &grad_perm,
+            None,
+            self.stride,
+            self.padding, // 0 for now!
+            self.dilation // 1 for now!
+        ).unwrap();
+        debug!("weight_grad: {:?}", weight_grad);
+
+        // Store the gradient 
+        if self.trainable {
+            self.weights_grad = Some(weight_grad.permute(vec![1, 0, 2]));
+            // self.bias_grad = 
+        }
+
+        Ok(grad.clone())
     }
 
     /// Updates the weights of the layer using the given gradient and optimizer.
@@ -402,6 +383,7 @@ impl Layer for Conv1D {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
     use crate::activations::ReluActivation;
 
@@ -444,6 +426,9 @@ mod tests {
             vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0],
             input_shape.clone(),
         );
+
+        // let input = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0], input_shape.clone());
+
         conv1d_layer.build(input_shape).expect("Failed to build layer");
         assert_eq!(conv1d_layer.param_count().unwrap(), (8, 0));
     }
@@ -461,4 +446,56 @@ mod tests {
         let out = conv1d_layer.forward(&input).unwrap();
         println!("Output: {:?}", out);
     }
+
+    #[test]
+    fn test_conv1d_backward() {
+        let input_shape = Shape::from(IxDyn(&[1, 2, 5]));
+        let mut conv1d_layer = Conv1D::new(
+            3,
+            2,
+            1,
+            None::<ReluActivation>, 
+            false,
+            true
+        );
+        let input = Tensor::new((1..=10).map(|x| x as f32).collect() , input_shape.clone());
+        conv1d_layer.build(input_shape.clone()).expect("Failed to build layer");
+        
+        let out = conv1d_layer.forward(&input).unwrap();
+        println!("Output: {:?}", out);
+        let grad = Tensor::new((1..=12).map(|x| x as f32).collect(), out.shape());
+        
+        // running backward
+        let next_grad = conv1d_layer.backward(&grad).unwrap();
+        println!("Next grad: {:?}", next_grad);
+    }
+
+
+
 }
+
+
+// Get input
+// let input_3d = self.input.as_ref().expect("Input must be initialized")
+//             .data
+//             .clone()
+//             .into_dimensionality::<IxDyn>()
+//             .map_err(|_| LayerError::InvalidInputShape)?;
+
+// initialize the weights gradient
+// let mut w_grad = Array::<f32, Ix4>::zeros((batch_size, c_out, c_in, kernel_size));
+
+// get the gradient of the weights
+// for b in 0..batch_size {
+//     for o in 0..c_out {
+//         for i in 0..c_in {
+//             let grad_slice = grad.data.slice(s![b, o, ..]);
+//             let input_slice = input_3d.slice(s![b, i, ..]);
+//             let w_grad_slice = conv1d_raw(input_slice, grad_slice, self.stride);
+
+//             for x in 0..kernel_size {
+//                 w_grad[[b, c_out, c_in, x]] = w_grad_slice[x];
+//             }
+//         }
+//     }
+// }
