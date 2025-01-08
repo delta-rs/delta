@@ -90,8 +90,8 @@ impl Conv1D {
             kernel_units,
             kernel_size,
             stride,     
-            padding: 0 as usize, // keeping the value 0 as usize for now!
-            dilation: 1 as usize, // keeping the value 1 as usize for now!
+            padding: 0_usize, // keeping the value 0 as usize for now!
+            dilation: 1_usize, // keeping the value 1 as usize for now!
             include_bias,    
             activation: activation.map(|a| Box::new(a) as Box<dyn Activation>),
             trainable,
@@ -241,7 +241,7 @@ impl Layer for Conv1D {
         let grad_perm = grad.permute(vec![1, 0, 2]);
         debug!("grad_perm: {:?}", grad_perm);
         
-        let grad_padded = F::pad_1d(&grad, self.kernel_size-1, Axis(2));
+        let grad_padded = F::pad_1d(grad, self.kernel_size-1, Axis(2));
         
         let input_grad = F::conv1d(
             grad_padded.as_ref().unwrap(),

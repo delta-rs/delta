@@ -46,7 +46,7 @@ pub fn pad1d_raw(input: &ArrayView<f32, Ix1>, padding: usize) -> Array<f32, Ix1>
     let padded_len = input_len + 2 * padding;
     let mut padded_input = Array::zeros(padded_len);
     padded_input.slice_mut(s![padding..padding + input_len])
-        .assign(&input);
+        .assign(input);
     
     padded_input
 }
@@ -175,7 +175,7 @@ pub fn conv1d_raw(input: &ArrayView<f32, Ix1>, kernel: &ArrayView<f32, Ix1>, str
     let padded_len = input_len + 2 * padding;
     let mut padded_input = Array::zeros(padded_len);
     padded_input.slice_mut(s![padding..padding + input_len])
-        .assign(&input);
+        .assign(input);
     
     // Perform convolution
     for out_idx in 0..output_len {
