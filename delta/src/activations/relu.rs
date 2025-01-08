@@ -1,6 +1,6 @@
 //! BSD 3-Clause License
 //!
-//! Copyright (c) 2024, The Delta Project Δ
+//! Copyright (c) 2025, BlackPortal ○
 //!
 //! Redistribution and use in source and binary forms, with or without
 //! modification, are permitted provided that the following conditions are met:
@@ -80,14 +80,14 @@ impl Activation for ReluActivation {
     }
 
     /// Initializes the activation function with the given input units.
-    /// 
+    ///
     /// # Arguments
     ///
     /// * `input_units` - The number of input units.
-    /// 
+    ///
     /// # Returns
-    /// 
-    /// The standard deviation to use for weight initialization. 
+    ///
+    /// The standard deviation to use for weight initialization.
     fn initialize(&self, input_units: Ix) -> f32 {
         (2.0 / input_units as f32).sqrt()
     }
@@ -118,7 +118,7 @@ mod tests {
         assert_eq!(derivative.data.iter().cloned().collect::<Vec<f32>>(), vec![1.0, 0.0, 1.0, 0.0]);
         assert_eq!(derivative.data.shape().to_vec(), vec![2, 2]);
     }
-    
+
     #[test]
     fn test_relu_initialize() {
         let relu = ReluActivation::new();

@@ -1,6 +1,6 @@
 //! BSD 3-Clause License
 //!
-//! Copyright (c) 2024, The Delta Project Δ
+//! Copyright (c) 2025, BlackPortal ○
 //!
 //! Redistribution and use in source and binary forms, with or without
 //! modification, are permitted provided that the following conditions are met:
@@ -27,7 +27,7 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use ndarray::{IxDyn, Shape, s, Ix};
+use ndarray::{Ix, IxDyn, Shape, s};
 
 use crate::activations::Activation;
 use crate::common::Tensor;
@@ -63,29 +63,29 @@ impl Activation for SoftmaxActivation {
         let shape = &input.data.shape();
         let batch_size = shape[0];
         let num_classes = shape[1];
-        
+
         // We'll build a new Vec for the output data
         let mut output_data = Vec::with_capacity(batch_size * num_classes);
-        
+
         for b in 0..batch_size {
             // Extract the row
             let row = input.data.slice(s![b, ..]);
-        
+
             // Find the row-wise max for numerical stability
             let max_in_row = row.fold(std::f32::MIN, |acc, &x| acc.max(x));
-        
+
             // Exponentiate each element minus that row-wise max
             let exps: Vec<f32> = row.iter().map(|&x| (x - max_in_row).exp()).collect();
-        
+
             // Sum the exponentials
             let sum_of_exps: f32 = exps.iter().sum();
-        
+
             // Normalize each element by the sum of exponentials
             for val in exps.iter() {
                 output_data.push(val / sum_of_exps);
             }
         }
-        
+
         // Return a new Tensor with the same shape
         Tensor::new(output_data, Shape::from(IxDyn(&[batch_size, num_classes])))
     }
@@ -142,7 +142,7 @@ impl Activation for SoftmaxActivation {
     ///
     /// The initial weight value for the Softmax activation function.
     fn initialize(&self, input_units: Ix) -> f32 {
-        (1.0 / input_units as f32).sqrt()   
+        (1.0 / input_units as f32).sqrt()
     }
 }
 
@@ -199,7 +199,7 @@ mod tests {
             );
         }
     }
-    
+
     #[test]
     fn test_softmax_initialize() {
         let softmax = SoftmaxActivation::new();
