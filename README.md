@@ -1,24 +1,24 @@
 <div align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/delta-rs/resources/refs/heads/main/logo/Δ_white_logo.svg">
-    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/delta-rs/resources/refs/heads/main/logo/Δ_black_logo.svg">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/blackportal-ai/resources/refs/heads/main/delta/logo/Δ_white_logo.svg">
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/blackportal-ai/resources/refs/heads/main/delta/logo/Δ_black_logo.svg">
     <img alt="Delta Δ - An Open-Source Machine Learning Framework in Rust."
-         src="https://raw.githubusercontent.com/delta-rs/resources/refs/heads/main/logo/Δ_white_logo.svg"
+         src="https://raw.githubusercontent.com/blackportal-ai/resources/refs/heads/main/delta/logo/Δ_white_logo.svg"
          width="55%">
   </picture>
 
 <br/>
 <br/>
 
-![build](https://img.shields.io/github/actions/workflow/status/delta-rs/delta/core.yml?branch=master) 
+![build](https://img.shields.io/github/actions/workflow/status/blackportal-ai/delta/core.yml?branch=master) 
 ![crates.io](https://img.shields.io/crates/v/deltaml.svg) 
 [![documentation](https://img.shields.io/badge/docs-deltaml-blue?logo=rust)](https://docs.rs/deltaml/latest/)
 [![discord badge]](https://discord.gg/g5HtkAzRNG)
 [![x handle]][x badge]
 </div>
 
-[x badge]: https://twitter.com/intent/follow?screen_name=deltaml_org
-[x handle]: https://img.shields.io/twitter/follow/deltaml_org.svg?style=social&label=Follow
+[x badge]: https://twitter.com/intent/follow?screen_name=BlackPortal_AI
+[x handle]: https://img.shields.io/twitter/follow/BlackPortal_AI.svg?style=social&label=Follow
 [discord badge]: https://img.shields.io/discord/1320514043424931861
 
 An open-source machine learning framework in Rust Δ. 
