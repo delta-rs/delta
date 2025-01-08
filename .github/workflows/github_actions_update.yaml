@@ -43,7 +43,7 @@ jobs:
         run: |
           BRANCH_NAME="update-github-actions-$(date +%Y%m%d%H%M%S)"
           git checkout -b "$BRANCH_NAME"
-          git config --global user.name "dmlops"
+          git config --global user.name "singulon"
           git config --global user.email "deltaml@icloud.com"
           git add .
           git commit -m "Update GitHub Actions"

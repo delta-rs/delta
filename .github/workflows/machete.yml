@@ -53,7 +53,7 @@ jobs:
 
           # Check if there are changes after fixing
           if [[ -n "$(git status --porcelain)" ]]; then
-            git config --global user.name "dmlops"
+            git config --global user.name "singulon"
             git config --global user.email "deltaml@icloud.com"
             git add .
             git commit -m "Fixing unused dependencies"

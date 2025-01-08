@@ -1,6 +1,6 @@
 //! BSD 3-Clause License
 //!
-//! Copyright (c) 2024, The Delta Project Δ
+//! Copyright (c) 2025, BlackPortal ○
 //!
 //! Redistribution and use in source and binary forms, with or without
 //! modification, are permitted provided that the following conditions are met:
@@ -34,9 +34,10 @@ pub mod relu;
 pub mod softmax;
 
 use std::fmt::Debug;
-use ndarray::Ix;
+
 pub use gelu::GeluActivation;
 pub use leaky_relu::LeakyReluActivation;
+use ndarray::Ix;
 pub use prelu::PreluActivation;
 pub use relu::ReluActivation;
 pub use softmax::SoftmaxActivation;
@@ -75,7 +76,7 @@ pub trait Activation: Debug {
     fn name(&self) -> &str {
         std::any::type_name::<Self>().split("::").last().unwrap_or("Unknown")
     }
-    
+
     /// Initializes the activation function with the given input units.
     ///
     /// # Arguments

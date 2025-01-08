@@ -1,6 +1,6 @@
 //! BSD 3-Clause License
 //!
-//! Copyright (c) 2024, The Delta Project Δ
+//! Copyright (c) 2025, BlackPortal ○
 //!
 //! Redistribution and use in source and binary forms, with or without
 //! modification, are permitted provided that the following conditions are met:
@@ -28,6 +28,7 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use ndarray::Ix;
+
 use crate::activations::Activation;
 use crate::common::Tensor;
 
@@ -117,7 +118,7 @@ mod tests {
         assert_eq!(derivative.data.iter().cloned().collect::<Vec<f32>>(), vec![1.0, 0.1, 1.0, 0.1]);
         assert_eq!(derivative.data.shape().to_vec(), vec![2, 2]);
     }
-    
+
     #[test]
     fn test_prelu_initialize() {
         let prelu = PreluActivation::new(0.1);

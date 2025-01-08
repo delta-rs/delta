@@ -64,7 +64,7 @@ jobs:
       - name: Commit and Push Changes
         if: steps.update_step.outputs.changes_detected == 'true'
         run: |
-          git config --global user.name "dmlops"
+          git config --global user.name "singulon"
           git config --global user.email "deltaml@icloud.com"
           git add .
           UPDATED_DEPS=$(diff -u outdated_before.txt outdated_after.txt | grep '^+[^+]' | sed 's/^+//')

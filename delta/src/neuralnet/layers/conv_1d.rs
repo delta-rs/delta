@@ -1,6 +1,6 @@
 //! BSD 3-Clause License
 //!
-//! Copyright (c) 2024, The Delta Project Δ
+//! Copyright (c) 2025, BlackPortal ○
 //!
 //! Redistribution and use in source and binary forms, with or without
 //! modification, are permitted provided that the following conditions are met:
@@ -28,6 +28,7 @@
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 use log::debug;
+
 use ndarray::{s, Axis, Dim, Dimension, IxDyn, IxDynImpl, Shape};
 use serde_json;
 
@@ -37,6 +38,7 @@ use crate::devices::Device;
 use crate::neuralnet::layers::Layer;
 use crate::neuralnet::layers::error::LayerError;
 use crate::optimizers::Optimizer;
+
 
 // used for operations on Tensors
 use crate::neuralnet::functional as F;
@@ -75,7 +77,8 @@ impl Conv1D {
     /// * `stride` - Controls the stride for cross-correlation operation.
     /// * `activation` - The activation function to use.
     /// * `trainable` - Whether the layer is trainable.
-    pub fn new<A: Activation + 'static>( //IMP: since it's dynamic dispatch and hence the type A could be a reference as well hence compiler needs to make sure that the value has a static lifetime!, even though box own the value (cause the value could be a reference!)
+    pub fn new<A: Activation + 'static>(
+        //IMP: since it's dynamic dispatch and hence the type A could be a reference as well hence compiler needs to make sure that the value has a static lifetime!, even though box own the value (cause the value could be a reference!)
         kernel_units: usize,
         kernel_size: usize,
         stride: usize,
@@ -111,13 +114,13 @@ impl Conv1D {
     /// # Errors
     /// Returns a `LayerError` if the input shape is not valid.
     fn get_input_shape(&self) -> Result<Dim<IxDynImpl>, LayerError> {
-
         let shape = self.input_shape.as_ref().ok_or(LayerError::MissingInput)?;
         let raw = shape.raw_dim(); // IxDyn
         if raw.ndim() != 3 {
             return Err(LayerError::InvalidInputShape);
         }
         Ok(raw.clone())
+
 
     }
 }
@@ -146,7 +149,7 @@ impl Layer for Conv1D {
         let stddev = if let Some(ref activation) = self.activation {
             match activation.name() {
                 "relu" | "leaky_relu" => (2.0 / input_units as f32).sqrt(), // He initialization
-                _ => (1.0 / input_units as f32).sqrt(), // Xavier initialization
+                _ => (1.0 / input_units as f32).sqrt(),                     // Xavier initialization
             }
         } else {
             (1.0 / input_units as f32).sqrt() // Xavier initialization for no activation
@@ -159,11 +162,13 @@ impl Layer for Conv1D {
             stddev,
         ));
 
+
         #[cfg(debug_assertions)] // for debugging purposes
         {
             self.weights = Some(Tensor::ones(
                 Shape::from(IxDyn(&[self.kernel_units, input_kernel_units, self.kernel_size])),
                 self.device.clone()
+
             ));
         }
 
@@ -175,6 +180,7 @@ impl Layer for Conv1D {
             Shape::from(IxDyn(&[self.kernel_units])),
             self.device.clone())
         )} else { None };
+
 
         Ok(())
 
@@ -302,7 +308,7 @@ impl Layer for Conv1D {
 
         Ok(())
     }
-    
+
     /// Returns the output shape of the layer.
     ///
     /// # Returns
@@ -377,20 +383,16 @@ impl Layer for Conv1D {
 
 #[cfg(test)]
 mod tests {
+
     use crate::activations::ReluActivation;
 
+
     use super::*;
+    use crate::activations::ReluActivation;
 
     #[test]
     fn test_conv1d_name() {
-        let conv1d_layer = Conv1D::new(
-            2,
-            2,
-            1,
-            None::<ReluActivation>,
-            false,
-            false,
-        );
+        let conv1d_layer = Conv1D::new(2, 2, 1, None::<ReluActivation>, false, false);
         println!("{}", conv1d_layer.name());
 
         // checking the dim trait
@@ -399,19 +401,15 @@ mod tests {
         let array_view = raw_dim.as_array_view();
         let input_kernel_units = array_view.first().ok_or(LayerError::InvalidInputShape);
 
-        println!("raw-dim: {:?}, array_view: {}, input_units: {:?}", raw_dim, array_view, input_kernel_units);
+        println!(
+            "raw-dim: {:?}, array_view: {}, input_units: {:?}",
+            raw_dim, array_view, input_kernel_units
+        );
     }
     #[test]
     fn test_conv1d_build() {
         let input_shape = Shape::from(IxDyn(&[1, 2, 5]));
-        let mut conv1d_layer = Conv1D::new(
-            2,
-            2,
-            1,
-            None::<ReluActivation>,
-            false,
-            false
-        );
+        let mut conv1d_layer = Conv1D::new(2, 2, 1, None::<ReluActivation>, false, false);
         conv1d_layer.build(input_shape).expect("Failed to build layer");
         println!("weights: {:?}", conv1d_layer.weights);
         println!("bias: {:?}", conv1d_layer.bias);
@@ -419,29 +417,21 @@ mod tests {
     #[test]
     fn test_conv1d_param_count_with_bias() {
         let input_shape = Shape::from(IxDyn(&[1, 2, 5]));
-        let mut conv1d_layer = Conv1D::new(
-            2,
-            2,
-            1,
-            None::<ReluActivation>,
-            false,
-            true
-        );
+        let mut conv1d_layer = Conv1D::new(2, 2, 1, None::<ReluActivation>, false, true);
         conv1d_layer.build(input_shape).expect("Failed to build layer");
         assert_eq!(conv1d_layer.param_count().unwrap(), (8, 2));
     }
     #[test]
     fn test_conv1d_param_count_without_bias() {
         let input_shape = Shape::from(IxDyn(&[1, 2, 5]));
-        let mut conv1d_layer = Conv1D::new(
-            2,
-            2,
-            1,
-            None::<ReluActivation>,
-            false,
-            false
+        let mut conv1d_layer = Conv1D::new(2, 2, 1, None::<ReluActivation>, false, false);
+        let input = Tensor::new(
+            vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0],
+            input_shape.clone(),
         );
+
         // let input = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0], input_shape.clone());
+
         conv1d_layer.build(input_shape).expect("Failed to build layer");
         assert_eq!(conv1d_layer.param_count().unwrap(), (8, 0));
     }
@@ -449,20 +439,17 @@ mod tests {
     #[test]
     fn test_conv1d_forward_with_bias() {
         let input_shape = Shape::from(IxDyn(&[1, 2, 5]));
-        let mut conv1d_layer = Conv1D::new(
-            3,
-            2,
-            1,
-            None::<ReluActivation>,
-            false,
-            true
+        let mut conv1d_layer = Conv1D::new(3, 2, 1, None::<ReluActivation>, false, true);
+        let input = Tensor::new(
+            vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0],
+            input_shape.clone(),
         );
-        let input = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0], input_shape.clone());
         conv1d_layer.build(input_shape).expect("Failed to build layer");
 
         let out = conv1d_layer.forward(&input).unwrap();
         println!("Output: {:?}", out);
     }
+
     #[test]
     fn test_conv1d_backward() {
         let input_shape = Shape::from(IxDyn(&[1, 2, 5]));
@@ -485,6 +472,7 @@ mod tests {
         let next_grad = conv1d_layer.backward(&grad).unwrap();
         println!("Next grad: {:?}", next_grad);
     }
+
 
 
 }
