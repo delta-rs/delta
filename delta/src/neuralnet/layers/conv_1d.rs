@@ -384,9 +384,6 @@ impl Layer for Conv1D {
 #[cfg(test)]
 mod tests {
 
-    use crate::activations::ReluActivation;
-
-
     use super::*;
     use crate::activations::ReluActivation;
 
