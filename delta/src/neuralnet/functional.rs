@@ -203,7 +203,7 @@ mod tests {
     use std::f32;
 
     use crate::{common::Tensor, devices::Device, neuralnet::functional as F};
-    use ndarray::{arr3, array, Array, ArrayD, Axis, IxDyn, Shape};
+    use ndarray::{array, Array, ArrayD, Axis, IxDyn, Shape};
 
     #[test]
     fn test_conv1d_raw() {
