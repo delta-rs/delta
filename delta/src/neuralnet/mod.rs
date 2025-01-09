@@ -30,6 +30,9 @@
 pub mod layers;
 pub mod models;
 
+// used for operations on Tensors
+pub mod functional; 
+
 pub use layers::{Dense, Flatten};
 pub use models::Sequential;
 

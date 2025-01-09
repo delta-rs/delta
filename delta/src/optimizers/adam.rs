@@ -101,12 +101,12 @@ impl Adam {
         if self.m.is_none()
             || self.m.as_ref().unwrap().shape().raw_dim().as_array_view().to_vec() != *shape
         {
-            self.m = Some(Tensor::zeros(Shape::from(IxDyn(&shape)), self.device.clone()));
+            self.m = Some(Tensor::zeros(Shape::from(IxDyn(shape)), self.device.clone()));
         }
         if self.v.is_none()
             || self.v.as_ref().unwrap().shape().raw_dim().as_array_view().to_vec() != *shape
         {
-            self.v = Some(Tensor::zeros(Shape::from(IxDyn(&shape)), self.device.clone()));
+            self.v = Some(Tensor::zeros(Shape::from(IxDyn(shape)), self.device.clone()));
         }
     }
 }
