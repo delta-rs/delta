@@ -47,8 +47,6 @@ jobs:
           git checkout -b "$BRANCH_NAME"
           git config --global user.name "singulon"
           git config --global user.email "deltaml@icloud.com"
-          git add .
-          git commit -m "Update GitHub Actions"
           git push "https://x-access-token:${{ secrets.DELTA_BOT_GH_TOKEN }}@github.com/${{ github.repository }}" "$BRANCH_NAME"
           echo "branch_name=$BRANCH_NAME" >> "$GITHUB_OUTPUT"
 
