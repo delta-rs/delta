@@ -24,6 +24,8 @@ reqwest = "0.12.9"
 ndarray = "0.16.1"
 tar = "0.4.43"
 serde_json = "1.0.133"
+serde = { version = "1.0", features = ["derive"] }
+approx = "0.5.1"
 walkdir = "2.5.0"
 image = "0.25.5"
 serial_test = "3.2"

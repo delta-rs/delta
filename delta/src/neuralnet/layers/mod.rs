@@ -32,10 +32,12 @@ pub mod dense;
 pub mod error;
 pub mod flatten;
 pub mod max_pooling_2d;
+pub mod conv_2d;
 
 use std::fmt::Debug;
 
 pub use conv_1d::Conv1D;
+pub use conv_2d::Conv2D;
 pub use dense::Dense;
 pub use flatten::Flatten;
 pub use max_pooling_2d::MaxPooling2D;

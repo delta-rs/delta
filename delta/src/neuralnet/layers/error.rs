@@ -44,8 +44,11 @@ pub enum LayerError {
     MissingInput,
     /// Error when the input shape is invalid.
     InvalidInputShape,
+    /// Error when the parameters are invalid.
+    InvalidParameters,
     /// Error when an optimizer error occurs.
     OptimizerError(OptimizerError),
+
 }
 
 impl fmt::Display for LayerError {
@@ -54,6 +57,7 @@ impl fmt::Display for LayerError {
             LayerError::UninitializedWeights => write!(f, "Weights must be initialized"),
             LayerError::UninitializedBias => write!(f, "Bias must be initialized"),
             LayerError::UninitializedInput => write!(f, "Input must be initialized"),
+            LayerError::InvalidParameters => write!(f, "Invalid parameters"),
             LayerError::MissingInput => write!(f, "Input must be set"),
             LayerError::OptimizerError(err) => write!(f, "Optimizer error: {}", err),
             LayerError::InvalidInputShape => write!(f, "Invalid input shape"),
