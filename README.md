@@ -49,7 +49,7 @@ Are you having trouble with Delta? We want to help!
 
 - Ask a question we monitor stackoverflow.com for questions tagged with `deltaml`.
 
-- Report bugs with Delta at https://github.com/delta-rs/delta/issues.
+- Report bugs with Delta at https://github.com/blackportal-ai/delta/issues.
 
 ## Reporting Issues
 
@@ -67,7 +67,7 @@ Delta uses GitHub’s integrated issue tracking system to record bugs and featur
 
 ## Contributing
 
-Before contributing, please read the [contribution](https://github.com/delta-rs/Delta/blob/master/CONTRIBUTING.md) guide for useful information how to get started with Delta as well as what should be included when submitting a contribution to the project.
+Before contributing, please read the [contribution](https://github.com/blackportal-ai/delta/blob/master/CONTRIBUTING.md) guide for useful information how to get started with Delta as well as what should be included when submitting a contribution to the project.
 
 ## Contributors
 
