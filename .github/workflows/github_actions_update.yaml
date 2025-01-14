@@ -1,4 +1,4 @@
-name: github actions update
+name: GitHub Actions Version Update
 
 on:
   schedule:
@@ -26,7 +26,9 @@ jobs:
         with:
           token: ${{ secrets.DELTA_BOT_GH_TOKEN }}
           skip_pull_request: 'true'
-        continue-on-error: true # skip_pull_request exits with code 1 if changes are detected and pull request is not created
+          committer_username: 'singulon'
+          committer_email: 'deltaml@icloud.com'
+        continue-on-error: true
 
       - name: Check for Changes
         id: check_changes
