@@ -4,6 +4,7 @@ use deltaml::common::ndarray::{Dimension, IxDyn, Shape};
 use deltaml::optimizers::{AdaGrad, Optimizer};
 use rand::Rng;
 
+#[allow(dead_code)]
 fn benchmark_adagrad_optimizer_small(c: &mut Criterion) {
     let mut rng = rand::thread_rng();
 
@@ -25,6 +26,7 @@ fn benchmark_adagrad_optimizer_small(c: &mut Criterion) {
     });
 }
 
+#[allow(dead_code)]
 fn benchmark_adagrad_optimizer_large(c: &mut Criterion) {
     let mut rng = rand::thread_rng();
 
