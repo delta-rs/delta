@@ -422,12 +422,6 @@ mod tests {
     fn test_conv1d_param_count_without_bias() {
         let input_shape = Shape::from(IxDyn(&[1, 2, 5]));
         let mut conv1d_layer = Conv1D::new(2, 2, 1, None::<ReluActivation>, false, false);
-        let input = Tensor::new(
-            vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0],
-            input_shape.clone(),
-        );
-
-        // let input = Tensor::new(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0], input_shape.clone());
 
         conv1d_layer.build(input_shape).expect("Failed to build layer");
         assert_eq!(conv1d_layer.param_count().unwrap(), (8, 0));

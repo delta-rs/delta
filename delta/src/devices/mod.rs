@@ -32,17 +32,57 @@ use std::fmt;
 #[cfg(all(target_os = "macos", feature = "metal"))]
 pub mod osx_metal;
 
+/// Represents a computational device that can be utilized for machine learning operations.
+///
+/// # Variants
+///
+/// - `Cpu`: The central processing unit (CPU), available on all platforms.
+///
+/// - `Metal`: Represents a Metal-based device for macOS. This variant is only available
+///   when compiled on macOS with the `metal` feature enabled. It includes:
+///     - `device`: A `metal::Device` object representing the Metal device.
+///     - `queue`: A `metal::CommandQueue` used for issuing commands to the device.
+///
+/// # Future Work
+///
+/// The following device types are planned for future support but are currently not implemented:
+///
+/// - `Cuda`: Support for NVIDIA GPUs using the CUDA API.
+/// - `OpenCL`: Cross-platform GPU support using OpenCL.
+/// - `OpenCLCuda`: A specialized OpenCL implementation for NVIDIA GPUs.
+/// - `Vulkan`: Cross-platform GPU support using the Vulkan API.
+/// - `DirectX12`: Windows-based GPU support via DirectX 12.
+/// - `Sycl`: Intel's SYCL API for heterogeneous computing.
+/// - `Tpu`: Support for Google's TPUs (Tensor Processing Units).
+/// - `WebGpu`: Lightweight GPU computing in browsers or embedded environments using WebGPU.
+///
+/// These variants are currently commented out in the codebase and will be introduced as the
+/// framework evolves to support additional hardware platforms.
 #[derive(Debug, Clone)]
 pub enum Device {
+    /// The central processing unit (CPU).
     Cpu,
+
+    /// A Metal-based device for macOS.
+    ///
+    /// This variant includes:
+    /// - `device`: A Metal device object.
+    /// - `queue`: A command queue for issuing commands to the device.
     #[cfg(all(target_os = "macos", feature = "metal"))]
     Metal {
         device: metal::Device,
         queue: metal::CommandQueue,
     },
-    Cuda,
-    OpenCL,
-    OpenCLCuda,
+
+    // Placeholder for future device types.
+    // Cuda,
+    // OpenCL,
+    // OpenCLCuda,
+    // Vulkan,
+    // DirectX12,
+    // Sycl,
+    // Tpu,
+    // WebGpu,
 }
 
 impl Default for Device {
@@ -57,9 +97,6 @@ impl fmt::Display for Device {
             Device::Cpu => write!(f, "CPU"),
             #[cfg(all(target_os = "macos", feature = "metal"))]
             Device::Metal { .. } => write!(f, "Metal"),
-            Device::Cuda => write!(f, "CUDA"),
-            Device::OpenCL => write!(f, "OpenCL"),
-            Device::OpenCLCuda => write!(f, "OpenCL + CUDA"),
         }
     }
 }
