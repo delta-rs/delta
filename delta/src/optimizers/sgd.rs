@@ -98,7 +98,7 @@ impl Optimizer for SGD {
 
 #[cfg(test)]
 mod tests {
-    use ndarray::{ArrayD, IxDyn, Shape};
+    use ndarray::{IxDyn, Shape};
     use crate::optimizers::assert_almost_equal;
     use super::*;
 

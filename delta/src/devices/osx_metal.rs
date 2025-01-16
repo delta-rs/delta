@@ -124,6 +124,20 @@ pub fn create_compute_pipeline(
         .map_err(|e| format!("Failed to create compute pipeline: {:?}", e))
 }
 
+/// Executes a tensor operation on a Metal device.
+///
+/// # Arguments
+///
+/// * `tensor1` - An optional reference to the first tensor.
+/// * `tensor2` - An optional reference to the second tensor.
+/// * `operation` - The name of the operation to perform.
+/// * `device` - The Metal device to use.
+/// * `queue` - The Metal command queue to use.
+/// * `extra_data` - Optional extra data for the operation.
+///
+/// # Returns
+///
+/// A `Result` containing the resulting tensor or an error message.
 fn execute_tensor_operation(
     tensor1: Option<&Tensor>,
     tensor2: Option<&Tensor>,
@@ -208,6 +222,18 @@ fn execute_tensor_operation(
     })
 }
 
+/// Adds two tensors using a Metal device.
+///
+/// # Arguments
+///
+/// * `tensor1` - A reference to the first tensor.
+/// * `tensor2` - A reference to the second tensor.
+/// * `device` - The Metal device to use.
+/// * `queue` - The Metal command queue to use.
+///
+/// # Returns
+///
+/// A `Result` containing the resulting tensor or an error message.
 pub fn tensor_add_metal(
     tensor1: &Tensor,
     tensor2: &Tensor,
@@ -217,6 +243,18 @@ pub fn tensor_add_metal(
     execute_tensor_operation(Some(tensor1), Some(tensor2), "tensor_add", device, queue, None)
 }
 
+/// Subtracts the second tensor from the first using a Metal device.
+///
+/// # Arguments
+///
+/// * `tensor1` - A reference to the first tensor.
+/// * `tensor2` - A reference to the second tensor.
+/// * `device` - The Metal device to use.
+/// * `queue` - The Metal command queue to use.
+///
+/// # Returns
+///
+/// A `Result` containing the resulting tensor or an error message.
 pub fn tensor_subtract_metal(
     tensor1: &Tensor,
     tensor2: &Tensor,
@@ -226,6 +264,18 @@ pub fn tensor_subtract_metal(
     execute_tensor_operation(Some(tensor1), Some(tensor2), "tensor_subtract", device, queue, None)
 }
 
+/// Multiplies two tensors using a Metal device.
+///
+/// # Arguments
+///
+/// * `tensor1` - A reference to the first tensor.
+/// * `tensor2` - A reference to the second tensor.
+/// * `device` - The Metal device to use.
+/// * `queue` - The Metal command queue to use.
+///
+/// # Returns
+///
+/// A `Result` containing the resulting tensor or an error message.
 pub fn tensor_multiply_metal(
     tensor1: &Tensor,
     tensor2: &Tensor,
@@ -235,6 +285,18 @@ pub fn tensor_multiply_metal(
     execute_tensor_operation(Some(tensor1), Some(tensor2), "tensor_multiply", device, queue, None)
 }
 
+/// Divides the first tensor by the second using a Metal device.
+///
+/// # Arguments
+///
+/// * `tensor1` - A reference to the first tensor.
+/// * `tensor2` - A reference to the second tensor.
+/// * `device` - The Metal device to use.
+/// * `queue` - The Metal command queue to use.
+///
+/// # Returns
+///
+/// A `Result` containing the resulting tensor or an error message.
 pub fn tensor_divide_metal(
     tensor1: &Tensor,
     tensor2: &Tensor,
@@ -244,6 +306,18 @@ pub fn tensor_divide_metal(
     execute_tensor_operation(Some(tensor1), Some(tensor2), "tensor_divide", device, queue, None)
 }
 
+/// Raises the elements of a tensor to a power using a Metal device.
+///
+/// # Arguments
+///
+/// * `tensor` - A reference to the tensor.
+/// * `amount` - The power to raise the tensor elements to.
+/// * `device` - The Metal device to use.
+/// * `queue` - The Metal command queue to use.
+///
+/// # Returns
+///
+/// A `Result` containing the resulting tensor or an error message.
 pub fn tensor_power_metal(
     tensor: &Tensor,
     amount: f32,
@@ -253,6 +327,18 @@ pub fn tensor_power_metal(
     execute_tensor_operation(Some(tensor), None, "tensor_power", device, queue, Some(&[amount]))
 }
 
+/// Multiplies two matrices using a Metal device.
+///
+/// # Arguments
+///
+/// * `tensor1` - A reference to the first tensor.
+/// * `tensor2` - A reference to the second tensor.
+/// * `device` - The Metal device to use.
+/// * `queue` - The Metal command queue to use.
+///
+/// # Returns
+///
+/// A `Result` containing the resulting tensor or an error message.
 pub fn tensor_matmul_metal(
     tensor1: &Tensor,
     tensor2: &Tensor,
@@ -307,7 +393,7 @@ pub fn tensor_matmul_metal(
 
     let thread_group_size = metal::MTLSize { width: 256, height: 1, depth: 1 };
     let thread_group_count = metal::MTLSize {
-        width: (output_size as u64 + thread_group_size.width - 1) / thread_group_size.width,
+        width: (output_size as u64).div_ceil(thread_group_size.width),
         height: 1,
         depth: 1,
     };
@@ -321,6 +407,18 @@ pub fn tensor_matmul_metal(
     Ok(from_device_metal(&output_buffer, Shape::from(IxDyn(&[rows_a, cols_b]))))
 }
 
+/// Maps the maximum value of a tensor using a Metal device.
+///
+/// # Arguments
+///
+/// * `tensor` - A reference to the tensor.
+/// * `threshold` - The threshold value for the mapping.
+/// * `device` - The Metal device to use.
+/// * `queue` - The Metal command queue to use.
+///
+/// # Returns
+///
+/// A `Result` containing the resulting tensor or an error message.
 pub fn tensor_map_max_metal(
     tensor: &Tensor,
     threshold: f32,

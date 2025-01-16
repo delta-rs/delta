@@ -138,7 +138,7 @@ impl Optimizer for AdaGrad {
 
 #[cfg(test)]
 mod tests {
-    use ndarray::{ArrayD, IxDyn};
+    use ndarray::IxDyn;
     use crate::optimizers::assert_almost_equal;
     use super::*;
 

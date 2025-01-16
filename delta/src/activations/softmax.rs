@@ -72,7 +72,7 @@ impl Activation for SoftmaxActivation {
             let row = input.data.slice(s![b, ..]);
 
             // Find the row-wise max for numerical stability
-            let max_in_row = row.fold(std::f32::MIN, |acc, &x| acc.max(x));
+            let max_in_row = row.fold(f32::MIN, |acc, &x| acc.max(x));
 
             // Exponentiate each element minus that row-wise max
             let exps: Vec<f32> = row.iter().map(|&x| (x - max_in_row).exp()).collect();
