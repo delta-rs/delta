@@ -546,7 +546,7 @@ impl Tensor {
     ///
     /// * `noise_level` - The level of noise to add.
     pub fn add_noise(&mut self, noise_level: f32) {
-        let mut rng = rand::thread_rng();
+        let mut rng = thread_rng();
         self.data.mapv_inplace(|value| {
             let noise: f32 = rng.gen_range(-noise_level..noise_level);
             value + noise
@@ -764,7 +764,7 @@ impl Tensor {
         let mut rng = thread_rng();
 
         // Generate random values from the normal distribution
-        let data: Vec<f32> = (0..shape.size()).map(|_| normal.sample(&mut rng) as f32).collect();
+        let data: Vec<f32> = (0..shape.size()).map(|_| normal.sample(&mut rng)).collect();
 
         // Create a tensor from the generated data
         Tensor {
