@@ -99,15 +99,8 @@ impl Optimizer for SGD {
 #[cfg(test)]
 mod tests {
     use ndarray::{ArrayD, IxDyn, Shape};
-
+    use crate::optimizers::assert_almost_equal;
     use super::*;
-
-    fn assert_almost_equal(actual: &ArrayD<f32>, expected: &[f32], tolerance: f32) {
-        let actual_slice = actual.as_slice().expect("Failed to convert ArrayD to slice");
-        for (a, e) in actual_slice.iter().zip(expected.iter()) {
-            assert!((a - e).abs() < tolerance, "Expected: {:?}, Actual: {:?}", e, a);
-        }
-    }
 
     #[test]
     fn test_sgd_optimizer() {

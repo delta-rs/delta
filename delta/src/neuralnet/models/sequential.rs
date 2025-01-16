@@ -412,10 +412,8 @@ impl Sequential {
 
         std::fs::create_dir_all(parent)?;
 
-        let filename = match path.file_name() {
-            Some(name) => name,
-            None => std::ffi::OsStr::new("model.json"),
-        };
+        let filename = path.file_name()
+            .unwrap_or_else(|| std::ffi::OsStr::new("model.json"));
 
         let target_path = parent.join(filename);
         let mut file = File::create(&target_path)?;

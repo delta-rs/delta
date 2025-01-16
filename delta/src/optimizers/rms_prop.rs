@@ -128,19 +128,12 @@ impl Optimizer for RMSProp {
 #[cfg(test)]
 mod tests {
     use ndarray::{ArrayD, IxDyn, Shape};
-
+    use crate::optimizers::assert_almost_equal;
     use super::*;
 
     /// Default constants for RMSProp optimizer
     const DEFAULT_DECAY_RATE: f32 = 0.9;
     const DEFAULT_EPSILON: f32 = 1e-8;
-
-    fn assert_almost_equal(actual: &ArrayD<f32>, expected: &[f32], tolerance: f32) {
-        let actual_slice = actual.as_slice().expect("Failed to convert ArrayD to slice");
-        for (a, e) in actual_slice.iter().zip(expected.iter()) {
-            assert!((a - e).abs() < tolerance, "Expected: {:?}, Actual: {:?}", e, a);
-        }
-    }
 
     #[test]
     fn test_rmsprop_optimizer_multiple_steps() {
