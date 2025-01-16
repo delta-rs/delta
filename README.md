@@ -27,15 +27,11 @@ An open-source machine learning framework in Rust Δ.
 
 - **Fast:** Built with Rust, Δ is designed for high performance, making it ideal for compute-intensive machine learning tasks.
 
-- **Usability:** APIs are designed for simplicity, making it easy for beginners to get started while offering advanced customization options for experienced users.
+- **Usability:** APIs are designed for simplicity, making it easy for beginners to get started while providing advanced customization options for experienced users.
 
-- **Extensibility:** The modular architecture allows users to plug in custom layers, optimizers, or preprocessing pipelines tailored to their unique needs.
+- **Extensibility:** The framework is modular, allowing users to plug in custom layers, optimizers, or preprocessing pipelines tailored to their unique needs.
 
-- **Efficient and Scalable Tools:** Δ provides highly efficient and scalable tools for building and training neural networks, supporting both small-scale experiments and large-scale production systems.
-
-- **Comprehensive Features:** Offers a rich set of components, including neural network layers, activation functions, loss functions, optimizers, and robust data handling utilities.
-
-- **Open Source:** Actively maintained with a commitment to community-driven improvements and innovation.
+- **Efficient and Scalable Tools:** It provides highly efficient and scalable tools for building and training neural networks, supporting both small-scale experiments and large-scale production systems.
 
 ## Getting Help
 
