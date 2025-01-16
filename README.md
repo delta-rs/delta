@@ -25,7 +25,7 @@ An open-source machine learning framework in Rust Δ.
 
 ## Why Δ (Delta)?
 
-- **Fast:** Δ is designed to be fast, ensuring minimal overhead in model training and deployment workflows. Built with Rust, it excels in performance for compute-intensive tasks.
+- **Fast:** Built with Rust, Δ is designed for high performance, making it ideal for compute-intensive machine learning tasks.
 
 - **Usability:** APIs are designed for simplicity, making it easy for beginners to get started while offering advanced customization options for experienced users.
 
