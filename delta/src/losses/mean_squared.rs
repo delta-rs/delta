@@ -29,7 +29,7 @@
 
 use crate::common::tensor_ops::Tensor;
 use crate::devices::Device;
-use crate::losses::Loss;
+use crate::losses::{check_for_nan, Loss};
 
 /// A struct representing the Mean Squared Loss function.
 #[derive(Debug)]
@@ -70,9 +70,7 @@ impl Loss for MeanSquaredLoss {
         }
 
         // Step 2: Check for NaN values in y_true and y_pred
-        if y_true.data.iter().any(|&x| x.is_nan()) || y_pred.data.iter().any(|&x| x.is_nan()) {
-            panic!("NaN value found in inputs");
-        }
+        check_for_nan(y_true, y_pred);
 
         // Step 3: Compute the squared differences
         let squared_diff = (&y_true.data - &y_pred.data).mapv(|x| x.powi(2));

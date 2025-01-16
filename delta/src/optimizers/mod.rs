@@ -38,7 +38,7 @@ pub mod sgd;
 pub mod sgd_momentum;
 
 use std::fmt::Debug;
-
+use ndarray::ArrayD;
 pub use ada_delta::AdaDelta;
 pub use ada_grad::AdaGrad;
 pub use adam::Adam;
@@ -75,4 +75,22 @@ pub trait Optimizer: Debug {
 pub struct OptimizerConfig {
     /// The learning rate for the optimizer.
     pub learning_rate: f32,
+}
+
+/// Asserts that the elements of the actual array are almost equal to the expected values within a given tolerance.
+///
+/// # Arguments
+///
+/// * `actual` - A reference to the actual `ArrayD<f32>` array.
+/// * `expected` - A slice of expected `f32` values.
+/// * `tolerance` - The tolerance within which the values are considered almost equal.
+///
+/// # Panics
+///
+/// Panics if the conversion of `actual` to a slice fails or if any element in `actual` differs from the corresponding element in `expected` by more than `tolerance`.
+fn assert_almost_equal(actual: &ArrayD<f32>, expected: &[f32], tolerance: f32) {
+    let actual_slice = actual.as_slice().expect("Failed to convert ArrayD to slice");
+    for (a, e) in actual_slice.iter().zip(expected.iter()) {
+        assert!((a - e).abs() < tolerance, "Expected: {:?}, Actual: {:?}", e, a);
+    }
 }

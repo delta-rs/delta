@@ -46,6 +46,13 @@ mod tests {
     use crate::neuralnet::{Dense, Flatten, Sequential};
     use crate::optimizers::Adam;
 
+    fn create_sequential_model() -> Sequential {
+        Sequential::new()
+            .add(Flatten::new(Shape::from(IxDyn(&[28, 28]))))
+            .add(Dense::new(128, Some(ReluActivation::new()), true))
+            .add(Dense::new(10, None::<SoftmaxActivation>, false))
+    }
+
     #[test]
     fn test_sequential_new() {
         let model = Sequential::new();
@@ -54,19 +61,13 @@ mod tests {
 
     #[test]
     fn test_sequential_add() {
-        let model = Sequential::new()
-            .add(Flatten::new(Shape::from(IxDyn(&[28, 28]))))
-            .add(Dense::new(128, Some(ReluActivation::new()), true))
-            .add(Dense::new(10, None::<SoftmaxActivation>, false));
+        let model = create_sequential_model();
         assert_eq!(model.layers.len(), 3);
     }
 
     #[test]
     fn test_sequential_compile() {
-        let mut model = Sequential::new()
-            .add(Flatten::new(Shape::from(IxDyn(&[28, 28]))))
-            .add(Dense::new(128, Some(ReluActivation::new()), true))
-            .add(Dense::new(10, None::<SoftmaxActivation>, false));
+        let mut model = create_sequential_model();
 
         model.compile(Adam::new(0.001), MeanSquaredLoss::new());
 

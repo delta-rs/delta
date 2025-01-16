@@ -27,6 +27,15 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+/// Formats a given number with commas as a thousand separators.
+///
+/// # Arguments
+///
+/// * `num` - The number to be formatted.
+///
+/// # Returns
+///
+/// A `String` representing the formatted number with commas.
 pub fn format_with_commas(num: usize) -> String {
     let num_str = num.to_string();
     let mut formatted = String::new();

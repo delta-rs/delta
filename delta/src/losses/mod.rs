@@ -69,3 +69,19 @@ pub trait Loss: Debug {
     /// A `Tensor` containing the gradient of the loss with respect to the output tensor.
     fn calculate_loss_grad(&self, output: &Tensor, target: &Tensor) -> Tensor;
 }
+
+/// Checks for NaN values in the given tensors and panics if any are found.
+///
+/// # Arguments
+///
+/// * `y_true` - The true values tensor.
+/// * `y_pred` - The predicted values tensor.
+///
+/// # Panics
+///
+/// Panics if any NaN values are found in either `y_true` or `y_pred`.
+fn check_for_nan(y_true: &Tensor, y_pred: &Tensor) {
+    if y_true.data.iter().any(|&x| x.is_nan()) || y_pred.data.iter().any(|&x| x.is_nan()) {
+        panic!("NaN value found in inputs");
+    }
+}
