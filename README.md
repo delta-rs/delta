@@ -41,7 +41,7 @@ Are you having trouble with Delta? We want to help!
 
 - If you’d like to discuss Delta, head over to [Discord](https://discord.gg/g5HtkAzRNG) and join the conversation.
 
-- Check out our [docs](https://deltaml.org/delta/docs) on our website for guides, tips, and additional resources.
+- Check out our [docs](https://blackportal.ai/delta/docs) on our website for guides, tips, and additional resources.
 
 - If you are upgrading, read the release notes to be informed about breaking changes.
 
