@@ -254,6 +254,13 @@ impl Layer for MaxPooling2D {
         "MaxPooling2D"
     }
 
+    /// Sets the device for the layer.
+    ///
+    /// Since `MaxPooling2D` does not maintain any device-specific resources, this method is a no-op.
+    fn set_device(&mut self, _device: &crate::devices::Device) {
+        // CPU-only, no device-specific resources.
+    }
+
     /// Updates the weights of the layer using the given optimizer.
     ///
     /// # Returns
@@ -261,13 +268,6 @@ impl Layer for MaxPooling2D {
     /// Always `Ok(())` since max pooling has no weights.
     fn update_weights(&mut self, _optimizer: &mut Box<dyn Optimizer>) -> Result<(), LayerError> {
         Ok(())
-    }
-
-    /// Sets the device for the layer.
-    ///
-    /// Since `MaxPooling2D` does not maintain any device-specific resources, this method is a no-op.
-    fn set_device(&mut self, _device: &crate::devices::Device) {
-        // CPU-only, no device-specific resources.
     }
 }
 
