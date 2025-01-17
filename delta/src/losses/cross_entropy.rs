@@ -31,7 +31,7 @@ use ndarray::Dimension;
 
 use crate::common::Tensor;
 use crate::devices::Device;
-use crate::losses::Loss;
+use crate::losses::{check_for_nan, Loss};
 
 /// A struct representing the Cross-Entropy Loss function.
 #[derive(Debug)]
@@ -83,6 +83,9 @@ impl Loss for CrossEntropyLoss {
                 y_pred.shape().raw_dim()
             );
         }
+
+        // Check for NaN values in y_true and y_pred
+        check_for_nan(y_true, y_pred);
 
         // Clip predictions to avoid log(0)
         let epsilon = 1e-12;

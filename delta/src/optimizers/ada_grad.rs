@@ -138,16 +138,9 @@ impl Optimizer for AdaGrad {
 
 #[cfg(test)]
 mod tests {
-    use ndarray::{ArrayD, IxDyn};
-
+    use ndarray::IxDyn;
+    use crate::optimizers::assert_almost_equal;
     use super::*;
-
-    fn assert_almost_equal(actual: &ArrayD<f32>, expected: &[f32], tolerance: f32) {
-        let actual_slice = actual.as_slice().expect("Failed to convert ArrayD to slice");
-        for (a, e) in actual_slice.iter().zip(expected.iter()) {
-            assert!((a - e).abs() < tolerance, "Expected: {:?}, Actual: {:?}", e, a);
-        }
-    }
 
     #[test]
     fn test_adagrad_optimizer() {

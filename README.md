@@ -25,15 +25,13 @@ An open-source machine learning framework in Rust Δ.
 
 ## Why Δ (Delta)?
 
-- **Speed:** Built with Rust, Δ is designed for high performance, making it ideal for compute-intensive machine learning tasks.
+- **Fast:** Built with Rust, Δ is designed for high performance, making it ideal for compute-intensive machine learning tasks.
 
-- **Usability:** Intuitive APIs that balance simplicity for beginners and flexibility for advanced users to customize and extend functionality.
+- **Usability:** APIs are designed for simplicity, making it easy for beginners to get started while providing advanced customization options for experienced users.
 
-- **Scalability:** Provides efficient tools to build and train neural networks, handling workloads of various sizes seamlessly.
+- **Extensibility:** The framework is modular, allowing users to plug in custom layers, optimizers, or preprocessing pipelines tailored to their unique needs.
 
-- **Comprehensive Features:** Includes a rich set of components such as neural network layers, activation functions, loss functions, optimizers, and robust data handling utilities.
-
-- **Open Source:** Actively maintained with a commitment to community-driven improvements and extensibility.
+- **Efficient and Scalable Tools:** It provides highly efficient and scalable tools for building and training neural networks, supporting both small-scale experiments and large-scale production systems.
 
 ## Getting Help
 
@@ -43,13 +41,13 @@ Are you having trouble with Delta? We want to help!
 
 - If you’d like to discuss Delta, head over to [Discord](https://discord.gg/g5HtkAzRNG) and join the conversation.
 
-- Check out our [docs](https://deltaml.org/delta/docs) on our website for guides, tips, and additional resources.
+- Check out our [docs](https://blackportal.ai/delta/docs) on our website for guides, tips, and additional resources.
 
 - If you are upgrading, read the release notes to be informed about breaking changes.
 
 - Ask a question we monitor stackoverflow.com for questions tagged with `deltaml`.
 
-- Report bugs with Delta at https://github.com/delta-rs/delta/issues.
+- Report bugs with Delta at https://github.com/blackportal-ai/delta/issues.
 
 ## Reporting Issues
 
@@ -67,7 +65,7 @@ Delta uses GitHub’s integrated issue tracking system to record bugs and featur
 
 ## Contributing
 
-Before contributing, please read the [contribution](https://github.com/delta-rs/Delta/blob/master/CONTRIBUTING.md) guide for useful information how to get started with Delta as well as what should be included when submitting a contribution to the project.
+Before contributing, please read the [contribution](https://github.com/blackportal-ai/delta/blob/master/CONTRIBUTING.md) guide for useful information how to get started with Delta as well as what should be included when submitting a contribution to the project.
 
 ## Contributors
 

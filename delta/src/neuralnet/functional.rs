@@ -101,8 +101,6 @@ pub fn pad_1d(input: &Tensor, padding: usize, axis: Axis) -> Result<Tensor, Erro
 /// * Output tensor of shape (batch_size, out_channels, out_length)
 ///  
 pub fn conv1d(inputs: &Tensor, weight: &Tensor, bias: Option<&Tensor>, stride: usize, padding: usize, dilation: usize) -> Result<Tensor, CoreError> {
-
-    
     // Get input dimensions
     let raw_input_dim = inputs.shape().raw_dim().clone();
     let (batch_size, in_ch, in_len) = (raw_input_dim[0], raw_input_dim[1], raw_input_dim[2]);
@@ -194,9 +192,6 @@ pub fn conv1d_raw(input: &ArrayView<f32, Ix1>, kernel: &ArrayView<f32, Ix1>, str
     
     output
 }
-    
-
-
 
 #[cfg(test)]
 mod tests {
@@ -223,14 +218,14 @@ mod tests {
 
         let input = Tensor::new(
             vec![1.0, 2.0, 3.0, 4.0, 5.0],
-            Shape::from(IxDyn(&[1, 1, 5])), // 1 batch, 1 channel, 5 length
+            Shape::from(IxDyn(&[1, 1, 5])),
         );
         let weight = Tensor::ones(
-            Shape::from(IxDyn(&[3, 1, 2])), // 3 output channels, 1 input channel, 2 kernel size
+            Shape::from(IxDyn(&[3, 1, 2])),
             Device::default(),
         );
         let bias = Tensor::ones(
-            Shape::from(IxDyn(&[3])), // 3 output channels
+            Shape::from(IxDyn(&[3])),
             Device::default(),
         );
 
@@ -251,7 +246,7 @@ mod tests {
             vec![4.0, 6.0, 8.0, 10.0,
                  4.0, 6.0, 8.0, 10.0,
                  4.0, 6.0, 8.0, 10.0 ],
-            Shape::from(IxDyn(&[1, 3, 4])), // 1 batch, 3 output channels, 4 length
+            Shape::from(IxDyn(&[1, 3, 4])),
         ));
         
     }
@@ -270,12 +265,11 @@ mod tests {
     fn test_pad_1d() {
         let input = Tensor::new(
             vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0],
-            Shape::from(IxDyn(&[2, 2, 2])), // 1 batch, 1 channel, 5 length
+            Shape::from(IxDyn(&[2, 2, 2])),
         );
         let padding = 1;
         let axis = Axis(2);
         let expanded = F::pad_1d(&input, padding, axis).unwrap();
-        // expanded.slice_mut(s![.., 1..5]).assign(&input.data);
 
         let a = array! [[[0.0, 1.0, 2.0, 0.0],
             [ 0.0, 3.0, 4.0, 0.0]],    

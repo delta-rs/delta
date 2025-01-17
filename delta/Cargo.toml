@@ -6,10 +6,10 @@ authors = ["Marcus Cvjeticanin <mjovanc@icloud.com>", "Chase Willden <chase.will
 description = "An Open-Source Machine Learning Framework in Rust Δ"
 license = "BSD-3-Clause"
 documentation = "https://docs.rs/deltaml/latest/deltaml/"
-repository = "https://github.com/delta-rs/delta"
+repository = "https://github.com/blackportal-ai/delta"
 readme = "../README.md"
 rust-version = "1.83.0"
-homepage = "https://deltaml.org"
+homepage = "https://blackportal.ai"
 keywords = ["machine-learning", "ml", "framework"]
 
 [badges]
