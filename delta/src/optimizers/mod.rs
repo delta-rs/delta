@@ -37,16 +37,16 @@ pub mod rms_prop;
 pub mod sgd;
 pub mod sgd_momentum;
 
-use std::fmt::Debug;
-use ndarray::ArrayD;
 pub use ada_delta::AdaDelta;
 pub use ada_grad::AdaGrad;
 pub use adam::Adam;
 pub use gradient_descent::GradientDescent;
 pub use mini_batch_gd::MiniBatchGD;
+use ndarray::ArrayD;
 pub use rms_prop::RMSProp;
 pub use sgd::SGD;
 pub use sgd_momentum::SGDWithMomentum;
+use std::fmt::Debug;
 
 use crate::common::Tensor;
 use crate::devices::Device;
@@ -88,6 +88,7 @@ pub struct OptimizerConfig {
 /// # Panics
 ///
 /// Panics if the conversion of `actual` to a slice fails or if any element in `actual` differs from the corresponding element in `expected` by more than `tolerance`.
+#[allow(dead_code)]
 fn assert_almost_equal(actual: &ArrayD<f32>, expected: &[f32], tolerance: f32) {
     let actual_slice = actual.as_slice().expect("Failed to convert ArrayD to slice");
     for (a, e) in actual_slice.iter().zip(expected.iter()) {
