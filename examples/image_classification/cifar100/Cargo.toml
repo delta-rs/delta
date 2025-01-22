@@ -7,3 +7,7 @@ publish = false
 [dependencies]
 deltaml = { path = "../../../delta" }
 tokio = { workspace = true, features = ["full"] }
+
+[features]
+default = []
+metal = ["deltaml/metal"]

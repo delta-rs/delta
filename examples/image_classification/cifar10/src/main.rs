@@ -1,5 +1,4 @@
 use deltaml::activations::{ReluActivation, SoftmaxActivation};
-use deltaml::common::ndarray::{IxDyn, Shape};
 use deltaml::dataset::Cifar10Dataset;
 use deltaml::dataset::base::ImageDatasetOps;
 use deltaml::losses::MeanSquaredLoss;
@@ -10,7 +9,7 @@ use deltaml::optimizers::Adam;
 async fn main() {
     // Create a neural network
     let mut model = Sequential::new()
-        .add(Flatten::new(Shape::from(IxDyn(&[32, 32, 3])))) // CIFAR-10: 32x32x3 -> 3072
+        .add(Flatten::new(&[32, 32, 3])) // CIFAR-10: 32x32x3 -> 3072
         .add(Dense::new(128, Some(ReluActivation::new()), true)) // Input: 3072, Output: 128
         .add(Dense::new(10, Some(SoftmaxActivation::new()), false)); // Output: 10 classes
 
@@ -49,7 +48,8 @@ async fn main() {
     }
 
     // Evaluate the model
-    let accuracy = model.evaluate(&mut test_data, batch_size).expect("Failed to evaluate the model");
+    let accuracy =
+        model.evaluate(&mut test_data, batch_size).expect("Failed to evaluate the model");
     println!("Test Accuracy: {:.2}%", accuracy * 100.0);
 
     // Save the model

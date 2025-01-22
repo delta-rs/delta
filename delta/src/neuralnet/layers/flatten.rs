@@ -50,8 +50,8 @@ impl Flatten {
     /// # Returns
     ///
     /// A new instance of the flatten layer.
-    pub fn new(input_shape: Shape<IxDyn>) -> Self {
-        Self { name: "Flatten".to_string(), input_shape }
+    pub fn new(input_shape: &[usize]) -> Self {
+        Self { name: "Flatten".to_string(), input_shape: Shape::from(IxDyn(&input_shape)) }
     }
 }
 
@@ -164,7 +164,7 @@ mod tests {
     #[test]
     fn test_flatten_new() {
         let input_shape = Shape::from(IxDyn(&[28, 28]));
-        let flatten_layer = Flatten::new(input_shape.clone());
+        let flatten_layer = Flatten::new(&[28, 28]);
 
         assert_eq!(flatten_layer.name(), "Flatten");
         assert_eq!(flatten_layer.input_shape.raw_dim(), input_shape.raw_dim());
@@ -172,8 +172,7 @@ mod tests {
 
     #[test]
     fn test_flatten_output_shape() {
-        let input_shape = Shape::from(IxDyn(&[3, 4]));
-        let flatten_layer = Flatten::new(input_shape.clone());
+        let flatten_layer = Flatten::new(&[3, 4]);
 
         let output_shape = flatten_layer.output_shape().unwrap();
         assert_eq!(output_shape.raw_dim().as_array_view().to_vec(), vec![12]);
@@ -181,7 +180,7 @@ mod tests {
 
     #[test]
     fn test_flatten_param_count() {
-        let flatten_layer = Flatten::new(Shape::from(IxDyn(&[10, 10])));
+        let flatten_layer = Flatten::new(&[10, 10]);
         let (trainable, non_trainable) = flatten_layer.param_count().unwrap();
 
         assert_eq!(trainable, 0);

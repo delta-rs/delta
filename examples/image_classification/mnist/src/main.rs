@@ -1,5 +1,4 @@
 use deltaml::activations::{ReluActivation, SoftmaxActivation};
-use deltaml::common::ndarray::{IxDyn, Shape};
 use deltaml::dataset::{ImageDatasetOps, MnistDataset};
 use deltaml::losses::SparseCategoricalCrossEntropyLoss;
 use deltaml::neuralnet::{Dense, Flatten, Sequential};
@@ -11,7 +10,7 @@ async fn main() {
     let mut model = Sequential::new()
         // .add(Conv2D::new(32, 3, 1, 1, Some(Box::new(ReluActivation::new())), true)) // Conv2D layer with 32 filters, kernel size 3x3
         // .add(MaxPooling2D::new(2, 2)) // MaxPooling2D layer with pool size 2x2
-        .add(Flatten::new(Shape::from(IxDyn(&[28, 28])))) // Flatten layer
+        .add(Flatten::new(&[28, 28])) // Flatten layer
         .add(Dense::new(128, Some(ReluActivation::new()), true)) // Dense layer with 128 units
         .add(Dense::new(10, None::<SoftmaxActivation>, false)); // Output layer with 10 classes
 

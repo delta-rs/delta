@@ -31,7 +31,7 @@ pub mod layers;
 pub mod models;
 
 // used for operations on Tensors
-pub mod functional; 
+pub mod functional;
 
 pub use layers::{Dense, Flatten};
 pub use models::Sequential;
@@ -39,8 +39,6 @@ pub use models::Sequential;
 /// Putting tests here since it's using a collection of everything
 #[cfg(test)]
 mod tests {
-    use ndarray::{IxDyn, Shape};
-
     use crate::activations::{ReluActivation, SoftmaxActivation};
     use crate::losses::MeanSquaredLoss;
     use crate::neuralnet::{Dense, Flatten, Sequential};
@@ -48,7 +46,7 @@ mod tests {
 
     fn create_sequential_model() -> Sequential {
         Sequential::new()
-            .add(Flatten::new(Shape::from(IxDyn(&[28, 28]))))
+            .add(Flatten::new(&[28, 28]))
             .add(Dense::new(128, Some(ReluActivation::new()), true))
             .add(Dense::new(10, None::<SoftmaxActivation>, false))
     }
