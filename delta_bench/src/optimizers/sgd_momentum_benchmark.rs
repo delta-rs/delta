@@ -1,7 +1,7 @@
 use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use deltaml::common::Tensor;
 use deltaml::common::ndarray::{Dimension, IxDyn, Shape};
-use deltaml::optimizers::{SGDWithMomentum, Optimizer};
+use deltaml::optimizers::{Optimizer, SGDWithMomentum};
 use rand::Rng;
 
 #[allow(dead_code)]
@@ -39,7 +39,7 @@ fn benchmark_sgd_with_momentum_optimizer_large(c: &mut Criterion) {
     let gradients = Tensor::new(black_box(gradients_data.clone()), Shape::from(dims.clone()));
 
     let mut group = c.benchmark_group("SGDWithMomentumOptimizer");
-    group.measurement_time(std::time::Duration::new(10, 0));
+    group.measurement_time(std::time::Duration::new(40, 0));
     group.sample_size(40);
 
     group.bench_function("sgd_with_momentum_optimizer_large", |b| {
