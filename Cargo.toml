@@ -6,7 +6,9 @@ members = [
     "examples/image_classification/cifar10",
     "examples/image_classification/mnist",
     "examples/image_classification/imagenet_v2",
-    "examples/classical/linear_regression",
+    "examples/classical/linear_regression", 
+    "examples/classical/logistic_regression",
+
 ]
 resolver = "2"
 

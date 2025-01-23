@@ -1,5 +1,5 @@
 use deltaml::{
-    classical::{Classical, LinearRegression, calculate_loss},
+    classical::{Classical, LinearRegression, calculate_mse_loss},
     common::ndarray::{Array1, Array2},
 };
 
@@ -24,6 +24,6 @@ async fn main() {
     println!("Predictions for new data: {:?}", predictions);
 
     // Calculate accuracy or loss for the test data for demonstration
-    let test_loss = calculate_loss(&model.predict(&x_data), &y_data);
+    let test_loss = calculate_mse_loss(&model.predict(&x_data), &y_data);
     println!("Test Loss after training: {:.6}", test_loss);
 }
