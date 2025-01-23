@@ -18,6 +18,8 @@ impl Classical for LinearRegression {
         for _ in 0..epochs {
             let predictions = self.predict(x);
             let loss = calculate_loss(&predictions, y);
+            // Using Batch Gradient Descent here, we might want the user to have the option
+            // to change optimizer such as SGD, Adam etc
             let gradients = gradient_descent(x, y, &self.weights, self.bias);
 
             self.weights = &self.weights - &(gradients.0 * learning_rate);
