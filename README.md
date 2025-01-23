@@ -10,8 +10,8 @@
 <br/>
 <br/>
 
-![build](https://img.shields.io/github/actions/workflow/status/blackportal-ai/delta/core.yml?branch=master) 
-![crates.io](https://img.shields.io/crates/v/deltaml.svg) 
+![build](https://img.shields.io/github/actions/workflow/status/blackportal-ai/delta/core.yml?branch=master)
+![crates.io](https://img.shields.io/crates/v/deltaml.svg)
 [![documentation](https://img.shields.io/badge/docs-deltaml-blue?logo=rust)](https://docs.rs/deltaml/latest/)
 [![discord badge]](https://discord.gg/g5HtkAzRNG)
 [![x handle]][x badge]
@@ -21,7 +21,7 @@
 [x handle]: https://img.shields.io/twitter/follow/BlackPortal_AI.svg?style=social&label=Follow
 [discord badge]: https://img.shields.io/discord/1320514043424931861
 
-An open-source machine learning framework in Rust Δ. 
+An open-source machine learning framework in Rust Δ.
 
 ## Why Δ (Delta)?
 
@@ -79,6 +79,7 @@ being awesome contributors to this project. **We'd like to take a moment to reco
 [<img src="https://github.com/hallabro.png?size=72" alt="hallabro" width="72">](https://github.com/hallabro)
 [<img src="https://github.com/SauersML.png?size=72" alt="SauersML" width="72">](https://github.com/SauersML)
 [<img src="https://github.com/zfyre.png?size=72" alt="zfyre" width="72">](https://github.com/zfyre)
+[<img src="https://github.com/DarthB.png?size=72" alt="DarthB" width="72">](https://github.com/DarthB)
 
 ## License
 
