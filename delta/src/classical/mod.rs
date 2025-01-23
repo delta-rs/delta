@@ -29,7 +29,7 @@ pub fn calculate_loss(predictions: &Array1<f64>, actuals: &Array1<f64>) -> f64 {
 }
 
 /// Perform gradient descent and return gradients for weights and bias
-pub fn gradient_descent(
+fn gradient_descent(
     x: &Array2<f64>,
     y: &Array1<f64>,
     weights: &Array1<f64>,
