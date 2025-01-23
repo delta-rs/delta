@@ -2,7 +2,7 @@ name: machete
 
 on:
   schedule:
-    - cron: '0 8 * * *'
+    - cron: "0 8 * * *"
   workflow_dispatch:
 
 permissions:
@@ -13,61 +13,5 @@ env:
 
 jobs:
   cleanup:
-    runs-on: ubuntu-latest
-    env:
-      GH_TOKEN: ${{ secrets.DELTA_BOT_GH_TOKEN }}
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4.2.2
-        with:
-          persist-credentials: false
-
-      - name: Set up Rust
-        uses: actions-rs/toolchain@v1.0.6
-        with:
-          toolchain: stable
-
-      - name: Cache Cargo Dependencies
-        uses: actions/cache@v4.2.0
-        with:
-          path: |
-            ~/.cargo
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
-
-      - name: Install cargo-machete
-        run: cargo install cargo-machete
-
-      - name: Create Branch and Fix Unused Dependencies
-        id: cleanup_step
-        run: |
-          BRANCH_NAME="cleanup-$(date +%Y%m%d%H%M%S)"
-          git checkout -b "$BRANCH_NAME"
-          echo "Branch created: $BRANCH_NAME"
-
-          # Run cargo machete --fix and capture its exit code
-          cargo machete --fix || true
-
-          # Check if there are changes after fixing
-          if [[ -n "$(git status --porcelain)" ]]; then
-            git config --global user.name "singulon"
-            git config --global user.email "deltaml@icloud.com"
-            git add .
-            git commit -m "Fixing unused dependencies"
-            git push https://x-access-token:${{ secrets.DELTA_BOT_GH_TOKEN }}@github.com/${{ github.repository }} $BRANCH_NAME
-            echo "Changes committed and pushed to $BRANCH_NAME"
-            echo "Attempting to create a pull request..."
-          
-            # Create a pull request
-            PR_URL=$(gh pr create --base master --head $BRANCH_NAME --title "Fix unused dependencies" --body "This PR fixes unused dependencies found by cargo machete." --draft=false --label "dependencies")
-            echo "Pull request created: $PR_URL"
-          
-            # Automatically merge the pull request after it meets the requirements
-            gh pr merge "$PR_URL" --merge --delete-branch
-            echo "Pull request merged and branch deleted."
-          else
-            echo "No changes detected. No commit or push."
-          fi
+    uses: blackportal-ai/infra/.github/workflows/machete.yml@master
+    secrets: inherit
