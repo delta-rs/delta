@@ -94,6 +94,7 @@ pub trait Classical {
 /// # Returns
 ///
 /// Returns a `f64` representing the Mean Squared Error loss.
+
 pub fn calculate_mse_loss(predictions: &Array1<f64>, actuals: &Array1<f64>) -> f64 {
     let m = predictions.len() as f64;
     let diff = predictions - actuals;
