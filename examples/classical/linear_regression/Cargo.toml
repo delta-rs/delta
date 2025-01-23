@@ -7,3 +7,4 @@ publish = false
 [dependencies]
 deltaml = { path = "../../../delta" }
 tokio = { workspace = true, features = ["full"] }
+plotters = "0.3.1"
