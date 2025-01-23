@@ -65,13 +65,67 @@ pub trait Classical {
 /// # Returns
 ///
 /// Returns a `f64` representing the Mean Squared Error loss.
-pub fn calculate_loss(predictions: &Array1<f64>, actuals: &Array1<f64>) -> f64 {
+pub fn calculate_mse_loss(predictions: &Array1<f64>, actuals: &Array1<f64>) -> f64 {
     let m = predictions.len() as f64;
     let diff = predictions - actuals;
     (diff.mapv(|x| x.powi(2)).sum()) / m
 }
 
-/// Performs gradient descent to compute the gradients for weights and bias.
+/// Calculates the Cross-Entropy Loss (Log Loss) for Logistic Regression.
+///
+/// This function computes the log loss (also known as binary cross-entropy),
+/// which is a commonly used loss function for binary classification problems.
+/// It measures how well the predicted probabilities match the true labels.
+/// The log loss penalizes wrong predictions with higher confidence, and rewards
+/// correct predictions with higher confidence.
+///
+/// # Parameters:
+/// - `predictions`: A reference to an `Array1<f64>` representing the predicted
+///   probabilities for the positive class (values between 0 and 1).
+/// - `actuals`: A reference to an `Array1<f64>` representing the actual labels,
+///   where each label is either 0 or 1.
+///
+/// # Returns:
+/// A `f64` value representing the average log loss across all samples in the dataset.
+pub fn calculate_log_loss(predictions: &Array1<f64>, actuals: &Array1<f64>) -> f64 {
+    let m = predictions.len() as f64;
+    predictions
+        .iter()
+        .zip(actuals.iter())
+        .map(|(p, y)| {
+            let p = p.clamp(1e-15, 1.0 - 1e-15);
+            -(y * p.ln() + (1.0 - y) * (1.0 - p).ln())
+        })
+        .sum::<f64>()
+        / m
+}
+
+/// Calculates the accuracy of the predictions.
+///
+/// This function computes the accuracy of the model by comparing the predicted
+/// class labels (0 or 1) with the actual class labels. The accuracy is calculated
+/// as the proportion of correct predictions in the dataset.
+///
+/// The function converts the predicted probabilities into binary predictions
+/// (using a threshold of 0.5), then compares them with the actual labels to compute
+/// the accuracy.
+///
+/// # Parameters:
+/// - `predictions`: A reference to an `Array1<f64>` representing the predicted
+///   probabilities for the positive class (values between 0 and 1).
+/// - `actuals`: A reference to an `Array1<f64>` representing the true class labels,
+///   where each label is either 0 or 1.
+///
+/// # Returns:
+/// A `f64` value representing the accuracy of the predictions as a proportion
+/// of correct predictions (between 0 and 1).
+pub fn calculate_accuracy(predictions: &Array1<f64>, actuals: &Array1<f64>) -> f64 {
+    let binary_predictions: Array1<f64> = predictions.mapv(|x| if x >= 0.5 { 1.0 } else { 0.0 });
+    (binary_predictions - actuals).mapv(|x| if x == 0.0 { 1.0 } else { 0.0 }).sum() as f64
+        / actuals.len() as f64
+}
+
+/// Performs batch gradient descent to compute the gradients for weights and bias.
 ///
 /// This function calculates the gradients for updating the model parameters in a linear regression
 /// context. It computes the predictions based on the current weights and bias, then calculates
@@ -90,7 +144,7 @@ pub fn calculate_loss(predictions: &Array1<f64>, actuals: &Array1<f64>) -> f64 {
 /// Returns a tuple where:
 ///   - The first element is an `Array1<f64>` representing the gradient for the weights.
 ///   - The second element is a `f64` representing the gradient for the bias.
-fn gradient_descent(
+fn batch_gradient_descent(
     x: &Array2<f64>,
     y: &Array1<f64>,
     weights: &Array1<f64>,
@@ -146,58 +200,4 @@ fn logistic_gradient_descent(
     let grad_bias = (sigmoid_preds - y).sum() / m;
 
     (grad_weights, grad_bias)
-}
-
-/// Calculates the Cross-Entropy Loss (Log Loss) for Logistic Regression.
-///
-/// This function computes the log loss (also known as binary cross-entropy),
-/// which is a commonly used loss function for binary classification problems.
-/// It measures how well the predicted probabilities match the true labels.
-/// The log loss penalizes wrong predictions with higher confidence, and rewards
-/// correct predictions with higher confidence.
-///
-/// # Parameters:
-/// - `predictions`: A reference to an `Array1<f64>` representing the predicted
-///   probabilities for the positive class (values between 0 and 1).
-/// - `actuals`: A reference to an `Array1<f64>` representing the actual labels,
-///   where each label is either 0 or 1.
-///
-/// # Returns:
-/// A `f64` value representing the average log loss across all samples in the dataset.
-pub fn calculate_log_loss(predictions: &Array1<f64>, actuals: &Array1<f64>) -> f64 {
-    let m = predictions.len() as f64;
-    predictions
-        .iter()
-        .zip(actuals.iter())
-        .map(|(p, y)| {
-            let p = p.clamp(1e-15, 1.0 - 1e-15);
-            -(y * p.ln() + (1.0 - y) * (1.0 - p).ln())
-        })
-        .sum::<f64>()
-        / m
-}
-
-/// Calculates the accuracy of the predictions.
-///
-/// This function computes the accuracy of the model by comparing the predicted
-/// class labels (0 or 1) with the actual class labels. The accuracy is calculated
-/// as the proportion of correct predictions in the dataset.
-///
-/// The function converts the predicted probabilities into binary predictions
-/// (using a threshold of 0.5), then compares them with the actual labels to compute
-/// the accuracy.
-///
-/// # Parameters:
-/// - `predictions`: A reference to an `Array1<f64>` representing the predicted
-///   probabilities for the positive class (values between 0 and 1).
-/// - `actuals`: A reference to an `Array1<f64>` representing the true class labels,
-///   where each label is either 0 or 1.
-///
-/// # Returns:
-/// A `f64` value representing the accuracy of the predictions as a proportion
-/// of correct predictions (between 0 and 1).
-pub fn calculate_accuracy(predictions: &Array1<f64>, actuals: &Array1<f64>) -> f64 {
-    let binary_predictions: Array1<f64> = predictions.mapv(|x| if x >= 0.5 { 1.0 } else { 0.0 });
-    (binary_predictions - actuals).mapv(|x| if x == 0.0 { 1.0 } else { 0.0 }).sum() as f64
-        / actuals.len() as f64
 }
