@@ -1,5 +1,5 @@
 use deltaml::{
-    classical::{Classical, LinearRegression, calculate_mse_loss},
+    classical_ml::{Classical, LinearRegression, calculate_mse_loss},
     common::ndarray::{Array1, Array2},
 };
 
