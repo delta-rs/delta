@@ -2,12 +2,12 @@
 members = [
     "delta",
     "delta_bench",
-    "examples/image_classification/cifar100",
-    "examples/image_classification/cifar10",
-    "examples/image_classification/mnist",
-    "examples/image_classification/imagenet_v2",
-    "examples/classical/linear_regression", 
-    "examples/classical/logistic_regression",
+    "examples/deep_learning/cifar100",
+    "examples/deep_learning/cifar10",
+    "examples/deep_learning/mnist",
+    "examples/deep_learning/imagenet_v2",
+    "examples/classical_ml/linear_regression",
+    "examples/classical_ml/logistic_regression",
 
 ]
 resolver = "2"

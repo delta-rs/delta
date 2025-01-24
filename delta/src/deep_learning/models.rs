@@ -40,7 +40,7 @@ use crate::devices::Device;
 #[cfg(all(target_os = "macos", feature = "metal"))]
 use crate::devices::osx_metal;
 
-use super::dataset::ImageDatasetOps;
+use super::dataset::DatasetOps;
 use super::errors::ModelError;
 use super::layers::Layer;
 use super::losses::Loss;
@@ -141,7 +141,7 @@ impl Sequential {
     /// # Returns
     ///
     /// None
-    pub fn fit<D: ImageDatasetOps>(
+    pub fn fit<D: DatasetOps>(
         &mut self,
         train_data: &mut D,
         epochs: i32,
@@ -185,7 +185,7 @@ impl Sequential {
     /// # Returns
     ///
     /// The average loss for the epoch.
-    fn train_one_epoch<D: ImageDatasetOps>(
+    fn train_one_epoch<D: DatasetOps>(
         &mut self,
         train_data: &mut D,
         batch_size: usize,
@@ -308,7 +308,7 @@ impl Sequential {
     /// # Returns
     ///
     /// The average validation loss.
-    pub fn validate<D: ImageDatasetOps>(
+    pub fn validate<D: DatasetOps>(
         &mut self,
         validation_data: &mut D,
         batch_size: usize,
@@ -345,7 +345,7 @@ impl Sequential {
     /// # Returns
     ///
     /// The evaluation metric.
-    pub fn evaluate<D: ImageDatasetOps>(
+    pub fn evaluate<D: DatasetOps>(
         &mut self,
         test_data: &mut D,
         batch_size: usize,
@@ -504,7 +504,7 @@ impl Sequential {
     /// # Returns
     ///
     /// A result indicating success or failure.
-    fn set_device_to_dataset<D: ImageDatasetOps>(&mut self, dataset: &mut D) -> Result<(), String> {
+    fn set_device_to_dataset<D: DatasetOps>(&mut self, dataset: &mut D) -> Result<(), String> {
         dataset.to_device(self.device.clone().unwrap())
     }
 }

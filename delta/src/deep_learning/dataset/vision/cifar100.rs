@@ -40,7 +40,7 @@ use log::debug;
 use ndarray::{IxDyn, Shape};
 use tar::Archive;
 
-use crate::deep_learning::dataset::{Dataset, ImageDatasetOps};
+use crate::deep_learning::dataset::{Dataset, DatasetOps};
 use crate::deep_learning::tensor_ops::Tensor;
 use crate::devices::Device;
 use crate::get_workspace_dir;
@@ -196,7 +196,7 @@ impl Cifar100Dataset {
     }
 }
 
-impl ImageDatasetOps for Cifar100Dataset {
+impl DatasetOps for Cifar100Dataset {
     type LoadFuture = Pin<Box<dyn Future<Output = Self> + Send>>;
 
     /// Loads the training dataset for CIFAR-100.

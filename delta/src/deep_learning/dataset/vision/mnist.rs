@@ -40,7 +40,7 @@ use rand::seq::SliceRandom;
 use reqwest;
 use tokio::fs as async_fs;
 
-use crate::deep_learning::dataset::{Dataset, ImageDatasetOps};
+use crate::deep_learning::dataset::{Dataset, DatasetOps};
 use crate::deep_learning::tensor_ops::Tensor;
 use crate::get_workspace_dir;
 
@@ -239,7 +239,7 @@ impl MnistDataset {
     }
 }
 
-impl ImageDatasetOps for MnistDataset {
+impl DatasetOps for MnistDataset {
     type LoadFuture = Pin<Box<dyn Future<Output = MnistDataset> + Send>>;
 
     /// Loads the training dataset.

@@ -41,6 +41,7 @@ metal = { version = "0.30.0", optional = true }
 default = ["classical_ml"]
 classical_ml = []
 deep_learning = []
+vision = ["deep_learning"]
 metal = ["dep:metal"]
 
 [profile.dev]

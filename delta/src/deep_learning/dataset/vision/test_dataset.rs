@@ -32,7 +32,7 @@ use std::pin::Pin;
 
 use ndarray::{IxDyn, Shape, s};
 
-use crate::deep_learning::dataset::{Dataset, ImageDatasetOps};
+use crate::deep_learning::dataset::{Dataset, DatasetOps};
 use crate::deep_learning::tensor_ops::Tensor;
 
 /// A struct representing a test dataset.
@@ -102,7 +102,7 @@ impl TestDataset {
     }
 }
 
-impl ImageDatasetOps for TestDataset {
+impl DatasetOps for TestDataset {
     type LoadFuture = Pin<Box<dyn Future<Output = Self> + Send>>;
 
     /// Loads the training dataset.

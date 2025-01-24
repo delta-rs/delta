@@ -1,7 +1,7 @@
 use deltaml::{
     deep_learning::{
         activations::{ReluActivation, SoftmaxActivation},
-        dataset::{Cifar100Dataset, ImageDatasetOps},
+        dataset::{Cifar100Dataset, DatasetOps},
         layers::{Dense, Flatten},
         losses::MeanSquaredLoss,
         models::Sequential,

@@ -43,7 +43,7 @@ use reqwest;
 use tokio::fs as async_fs;
 use walkdir::WalkDir;
 
-use crate::deep_learning::dataset::{Dataset, ImageDatasetOps};
+use crate::deep_learning::dataset::{Dataset, DatasetOps};
 use crate::deep_learning::encoders::one_hot_encode;
 use crate::deep_learning::tensor_ops::Tensor;
 use crate::devices::Device;
@@ -216,7 +216,7 @@ impl ImageNetV2Dataset {
     }
 }
 
-impl ImageDatasetOps for ImageNetV2Dataset {
+impl DatasetOps for ImageNetV2Dataset {
     type LoadFuture = Pin<Box<dyn Future<Output = ImageNetV2Dataset> + Send>>;
 
     /// Loads the training dataset.
