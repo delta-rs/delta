@@ -1,7 +1,11 @@
 use criterion::{Criterion, black_box, criterion_group, criterion_main};
-use deltaml::common::Tensor;
-use deltaml::common::ndarray::{Dimension, IxDyn, Shape};
-use deltaml::optimizers::{GradientDescent, Optimizer};
+use deltaml::{
+    deep_learning::{
+        optimizers::{GradientDescent, Optimizer},
+        tensor_ops::Tensor,
+    },
+    ndarray::{Dimension, IxDyn, Shape},
+};
 use rand::Rng;
 
 #[allow(dead_code)]

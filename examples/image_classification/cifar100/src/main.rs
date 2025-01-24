@@ -1,10 +1,14 @@
-use deltaml::activations::{ReluActivation, SoftmaxActivation};
-use deltaml::common::ndarray::{IxDyn, Shape};
-use deltaml::dataset::base::ImageDatasetOps;
-use deltaml::dataset::image::Cifar100Dataset;
-use deltaml::losses::MeanSquaredLoss;
-use deltaml::neuralnet::{Dense, Flatten, Sequential};
-use deltaml::optimizers::Adam;
+use deltaml::{
+    deep_learning::{
+        activations::{ReluActivation, SoftmaxActivation},
+        dataset::{Cifar100Dataset, ImageDatasetOps},
+        layers::{Dense, Flatten},
+        losses::MeanSquaredLoss,
+        models::Sequential,
+        optimizers::Adam,
+    },
+    ndarray::{IxDyn, Shape},
+};
 
 #[tokio::main]
 async fn main() {
@@ -49,7 +53,8 @@ async fn main() {
     }
 
     // Evaluate the model
-    let accuracy = model.evaluate(&mut test_data, batch_size).expect("Failed to evaluate the model");
+    let accuracy =
+        model.evaluate(&mut test_data, batch_size).expect("Failed to evaluate the model");
     println!("Test Accuracy: {:.2}%", accuracy * 100.0);
 
     // Save the model

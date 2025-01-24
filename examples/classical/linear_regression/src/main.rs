@@ -1,6 +1,6 @@
 use deltaml::{
     classical_ml::{Classical, LinearRegression, calculate_mse_loss},
-    common::ndarray::{Array1, Array2},
+    ndarray::{Array1, Array2},
 };
 
 #[tokio::main]

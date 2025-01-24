@@ -43,6 +43,9 @@ use reqwest;
 use tokio::fs as async_fs;
 use walkdir::WalkDir;
 
+use crate::deep_learning::dataset::{Dataset, ImageDatasetOps};
+use crate::deep_learning::encoders::one_hot_encode;
+use crate::deep_learning::tensor_ops::Tensor;
 use crate::devices::Device;
 
 /// A struct representing the ImageNetV2 dataset.

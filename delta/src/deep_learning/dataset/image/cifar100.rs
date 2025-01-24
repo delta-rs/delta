@@ -40,6 +40,8 @@ use log::debug;
 use ndarray::{IxDyn, Shape};
 use tar::Archive;
 
+use crate::deep_learning::dataset::{Dataset, ImageDatasetOps};
+use crate::deep_learning::tensor_ops::Tensor;
 use crate::devices::Device;
 use crate::get_workspace_dir;
 

@@ -1,7 +1,11 @@
 use criterion::{Criterion, black_box, criterion_group, criterion_main};
-use deltaml::common::Tensor;
-use deltaml::common::ndarray::{Dimension, IxDyn, Shape};
-use deltaml::optimizers::{RMSProp, Optimizer};
+use deltaml::{
+    deep_learning::{
+        optimizers::{Optimizer, RMSProp},
+        tensor_ops::Tensor,
+    },
+    ndarray::{Dimension, IxDyn, Shape},
+};
 use rand::Rng;
 
 #[allow(dead_code)]
@@ -61,9 +65,5 @@ fn benchmark_rmsprop_optimizer_large(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(
-    benches,
-    benchmark_rmsprop_optimizer_small,
-    benchmark_rmsprop_optimizer_large
-);
+criterion_group!(benches, benchmark_rmsprop_optimizer_small, benchmark_rmsprop_optimizer_large);
 criterion_main!(benches);

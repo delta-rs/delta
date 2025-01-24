@@ -29,7 +29,7 @@
 
 use std::future::Future;
 
-use crate::devices::Device;
+use crate::{deep_learning::tensor_ops::Tensor, devices::Device};
 
 /// A struct representing a dataset.
 #[derive(Debug, Clone)]

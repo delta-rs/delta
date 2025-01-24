@@ -27,9 +27,13 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use ndarray::Dimension;
+use ndarray::{Dimension, IxDyn, Shape};
 
 use crate::devices::Device;
+
+use std::fmt::Debug;
+
+use super::{tensor_ops::Tensor, utils::check_for_nan};
 
 /// A trait representing a loss function.
 pub trait Loss: Debug {
@@ -656,7 +660,6 @@ mod tests {
     use ndarray::{IxDyn, Shape};
 
     use super::*;
-    use crate::common::Tensor;
 
     #[test]
     fn test_cross_entropy_loss() {

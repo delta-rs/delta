@@ -32,6 +32,9 @@ use std::pin::Pin;
 
 use ndarray::{IxDyn, Shape, s};
 
+use crate::deep_learning::dataset::{Dataset, ImageDatasetOps};
+use crate::deep_learning::tensor_ops::Tensor;
+
 /// A struct representing a test dataset.
 pub struct TestDataset {
     train: Option<Dataset>,

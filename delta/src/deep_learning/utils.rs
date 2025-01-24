@@ -27,6 +27,8 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+use ndarray::ArrayD;
+
 use super::tensor_ops::Tensor;
 
 /// Formats a given number with commas as a thousand separators.
@@ -62,9 +64,28 @@ pub fn format_with_commas(num: usize) -> String {
 /// # Panics
 ///
 /// Panics if any NaN values are found in either `y_true` or `y_pred`.
-fn check_for_nan(y_true: &Tensor, y_pred: &Tensor) {
+pub fn check_for_nan(y_true: &Tensor, y_pred: &Tensor) {
     if y_true.data.iter().any(|&x| x.is_nan()) || y_pred.data.iter().any(|&x| x.is_nan()) {
         panic!("NaN value found in inputs");
+    }
+}
+
+/// Asserts that the elements of the actual array are almost equal to the expected values within a given tolerance.
+///
+/// # Arguments
+///
+/// * `actual` - A reference to the actual `ArrayD<f32>` array.
+/// * `expected` - A slice of expected `f32` values.
+/// * `tolerance` - The tolerance within which the values are considered almost equal.
+///
+/// # Panics
+///
+/// Panics if the conversion of `actual` to a slice fails or if any element in `actual` differs from the corresponding element in `expected` by more than `tolerance`.
+#[allow(dead_code)]
+pub fn assert_almost_equal(actual: &ArrayD<f32>, expected: &[f32], tolerance: f32) {
+    let actual_slice = actual.as_slice().expect("Failed to convert ArrayD to slice");
+    for (a, e) in actual_slice.iter().zip(expected.iter()) {
+        assert!((a - e).abs() < tolerance, "Expected: {:?}, Actual: {:?}", e, a);
     }
 }
 

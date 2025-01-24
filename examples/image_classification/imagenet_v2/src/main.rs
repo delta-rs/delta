@@ -1,11 +1,14 @@
-use deltaml::activations::relu::ReluActivation;
-use deltaml::activations::softmax::SoftmaxActivation;
-use deltaml::common::ndarray::{IxDyn, Shape};
-use deltaml::dataset::ImageNetV2Dataset;
-use deltaml::dataset::base::ImageDatasetOps;
-use deltaml::losses::SparseCategoricalCrossEntropyLoss;
-use deltaml::neuralnet::{Dense, Flatten, Sequential};
-use deltaml::optimizers::Adam;
+use deltaml::{
+    deep_learning::{
+        activations::{ReluActivation, SoftmaxActivation},
+        dataset::{ImageDatasetOps, ImageNetV2Dataset},
+        layers::{Dense, Flatten},
+        losses::SparseCategoricalCrossEntropyLoss,
+        models::Sequential,
+        optimizers::Adam,
+    },
+    ndarray::{IxDyn, Shape},
+};
 
 #[tokio::main]
 async fn main() {

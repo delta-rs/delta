@@ -27,7 +27,38 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-use ndarray::Dimension;
+use ndarray::{Dimension, IxDyn, Shape};
+
+use crate::devices::Device;
+
+use super::{errors::OptimizerError, tensor_ops::Tensor};
+
+use std::fmt::Debug;
+
+/// A trait representing an optimizer for training neural networks.
+pub trait Optimizer: Debug {
+    /// Performs an optimization step using the given weights and gradients.
+    ///
+    /// # Arguments
+    ///
+    /// * `weights` - A mutable reference to the weights tensor.
+    /// * `gradients` - A reference to the gradients tensor.
+    fn step(&mut self, weights: &mut Tensor, gradients: &Tensor) -> Result<(), OptimizerError>;
+
+    /// Sets the device for the optimizer.
+    ///
+    /// # Arguments
+    ///
+    /// * `device` - The device to set for the optimizer.
+    fn set_device(&mut self, device: &Device);
+}
+
+/// A struct representing the configuration for an optimizer.
+#[derive(Debug)]
+pub struct OptimizerConfig {
+    /// The learning rate for the optimizer.
+    pub learning_rate: f32,
+}
 
 /// The AdaDelta optimizer struct.
 #[derive(Debug)]
@@ -242,7 +273,7 @@ impl Optimizer for AdaGrad {
 struct DebuggableScheduler(Box<dyn Fn(usize) -> f32>);
 
 impl Debug for DebuggableScheduler {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str("DebuggableScheduler")
     }
 }
@@ -782,8 +813,9 @@ impl Optimizer for SGDWithMomentum {
 
 #[cfg(test)]
 mod tests {
+    use crate::deep_learning::utils::assert_almost_equal;
+
     use super::*;
-    use crate::optimizers::assert_almost_equal;
     use ndarray::{IxDyn, Shape};
 
     /// Default constants for RMSProp optimizer

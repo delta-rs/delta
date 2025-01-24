@@ -35,9 +35,17 @@ use std::time::Instant;
 use ndarray::Dimension;
 use serde_json;
 
+use crate::deep_learning::utils::format_with_commas;
 use crate::devices::Device;
 #[cfg(all(target_os = "macos", feature = "metal"))]
 use crate::devices::osx_metal;
+
+use super::dataset::ImageDatasetOps;
+use super::errors::ModelError;
+use super::layers::Layer;
+use super::losses::Loss;
+use super::optimizers::Optimizer;
+use super::tensor_ops::Tensor;
 
 /// A sequential model that contains a list of layers, an optimizer, and a loss function.
 #[derive(Debug)]
@@ -503,8 +511,16 @@ impl Sequential {
 
 #[cfg(test)]
 mod tests {
-    use crate::optimizers::Adam;
     use ndarray::{IxDyn, Shape};
+
+    use crate::deep_learning::{
+        activations::{ReluActivation, SoftmaxActivation},
+        layers::{Dense, Flatten},
+        losses::MeanSquaredLoss,
+        optimizers::Adam,
+    };
+
+    use super::Sequential;
 
     fn create_sequential_model() -> Sequential {
         Sequential::new()

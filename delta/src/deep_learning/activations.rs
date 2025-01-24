@@ -30,7 +30,11 @@
 use std::f64::consts::PI;
 
 use libm::{erff, expf, sqrt};
-use ndarray::Ix;
+use ndarray::{Ix, IxDyn, Shape, s};
+
+use std::fmt::Debug;
+
+use super::tensor_ops::Tensor;
 
 /// A trait representing an activation function.
 pub trait Activation: Debug {
@@ -470,7 +474,7 @@ impl Activation for SoftmaxActivation {
 
 #[cfg(test)]
 mod tests {
-    use ndarray::{IxDyn, Shape};
+    use ndarray::{Array, IxDyn, Shape};
 
     use super::*;
 

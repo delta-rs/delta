@@ -1,6 +1,6 @@
 use deltaml::{
-    classical::{Classical, LogisticRegression, calculate_accuracy, calculate_log_loss},
-    common::ndarray::{Array1, Array2},
+    classical_ml::{Classical, LogisticRegression, calculate_accuracy, calculate_log_loss},
+    ndarray::{Array1, Array2},
 };
 
 #[tokio::main]

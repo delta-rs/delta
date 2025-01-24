@@ -33,6 +33,12 @@ use serde_json;
 
 use crate::devices::Device;
 
+use std::fmt::Debug;
+
+use super::{
+    activations::Activation, errors::LayerError, optimizers::Optimizer, tensor_ops::Tensor,
+};
+
 // A trait representing a neural network layer.
 pub trait Layer: Debug {
     /// Builds the layer with the given input shape.
@@ -478,10 +484,7 @@ impl Layer for Flatten {
     /// # Arguments
     ///
     /// * `optimizer` - The optimizer to use.
-    fn update_weights(
-        &mut self,
-        optimizer: &mut Box<dyn crate::optimizers::Optimizer>,
-    ) -> Result<(), LayerError> {
+    fn update_weights(&mut self, optimizer: &mut Box<dyn Optimizer>) -> Result<(), LayerError> {
         let _ = optimizer;
         // Do nothing
         Ok(())
@@ -499,8 +502,9 @@ impl Layer for Flatten {
 
 #[cfg(test)]
 mod tests {
+    use crate::deep_learning::activations::ReluActivation;
+
     use super::*;
-    use crate::activations::relu::ReluActivation;
 
     #[test]
     fn test_dense_layer() {
