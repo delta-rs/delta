@@ -2,7 +2,10 @@
 name = "deltaml"
 version = "0.1.0"
 edition = "2021"
-authors = ["Marcus Cvjeticanin <mjovanc@icloud.com>", "Chase Willden <chase.willden@gmail.com>"]
+authors = [
+    "Marcus Cvjeticanin <mjovanc@icloud.com>",
+    "Chase Willden <chase.willden@gmail.com>",
+]
 description = "An Open-Source Machine Learning Framework in Rust Δ"
 license = "BSD-3-Clause"
 documentation = "https://docs.rs/deltaml/latest/deltaml/"
@@ -35,7 +38,9 @@ rayon = "1.10.0"
 metal = { version = "0.30.0", optional = true }
 
 [features]
-default = []
+default = ["classical"]
+classical = []
+dl = []
 metal = ["dep:metal"]
 
 [profile.dev]

@@ -32,6 +32,7 @@ extern crate core;
 use std::path::PathBuf;
 
 pub mod activations;
+#[cfg(feature = "classical")]
 pub mod classical;
 pub mod common;
 pub mod dataset;
