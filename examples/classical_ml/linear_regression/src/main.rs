@@ -1,5 +1,7 @@
 use deltaml::{
-    classical_ml::{Classical, LinearRegression, calculate_mse_loss},
+    classical_ml::{
+        Classical, algorithms::LinearRegression, losses::MSE, optimizers::BatchGradientDescent,
+    },
     ndarray::{Array1, Array2},
 };
 
@@ -10,7 +12,7 @@ async fn main() {
     let y_data = Array1::from_vec(vec![2.0, 4.0, 5.0, 4.0, 5.0]);
 
     // Instantiate the model
-    let mut model = LinearRegression::new();
+    let mut model = LinearRegression::new(MSE, BatchGradientDescent);
 
     // Train the model
     let learning_rate = 0.01;
@@ -24,6 +26,6 @@ async fn main() {
     println!("Predictions for new data: {:?}", predictions);
 
     // Calculate accuracy or loss for the test data for demonstration
-    let test_loss = calculate_mse_loss(&model.predict(&x_data), &y_data);
+    let test_loss = model.calculate_loss(&model.predict(&x_data), &y_data);
     println!("Test Loss after training: {:.6}", test_loss);
 }
