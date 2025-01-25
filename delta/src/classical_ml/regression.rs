@@ -29,9 +29,7 @@
 
 use ndarray::{Array1, Array2};
 
-use crate::classical_ml::{
-    batch_gradient_descent, calculate_log_loss, calculate_mse_loss, logistic_gradient_descent,
-};
+use crate::classical_ml::{batch_gradient_descent, calculate_mse_loss};
 
 use super::Classical;
 
