@@ -29,6 +29,9 @@
 
 use std::fmt;
 
+/// A type alias for results returned by core operations.
+pub type Result<T> = std::result::Result<T, CoreError>;
+
 /// An enumeration of possible core errors.
 #[derive(Debug)]
 pub enum CoreError {
@@ -40,9 +43,6 @@ pub enum CoreError {
     Other(String),
 }
 
-/// A type alias for results returned by core operations.
-pub type Result<T> = std::result::Result<T, CoreError>;
-
 /// Errors that can occur in the Optimizer.
 #[derive(Debug)]
 pub enum OptimizerError {
@@ -52,6 +52,40 @@ pub enum OptimizerError {
     IncompatibleGradientWeightShape(Vec<usize>, Vec<usize>),
     /// Error when epsilon is not set or is invalid.
     InvalidEpsilon(String),
+}
+
+/// An enumeration of possible errors that can occur in a model.
+#[derive(Debug)]
+pub enum ModelError {
+    /// Error indicating that the optimizer is missing.
+    MissingOptimizer,
+    /// Error indicating that the loss function is missing.
+    MissingLossFunction,
+    /// Error related to the dataset, with a message describing the issue.
+    DatasetError(String),
+    /// Error that occurs during training, with a message describing the issue.
+    TrainingError(String),
+    /// Error related to a specific layer in the model.
+    LayerError(LayerError),
+    /// Error related to a device, with a message describing the issue.
+    DeviceError(String),
+}
+
+/// Errors that can occur in the Dense layer.
+#[derive(Debug)]
+pub enum LayerError {
+    /// Error when weights are not initialized.
+    UninitializedWeights,
+    /// Error when bias is not initialized.
+    UninitializedBias,
+    /// Error when input is not set for backward pass.
+    UninitializedInput,
+    /// Error when input is not set.
+    MissingInput,
+    /// Error when the input shape is invalid.
+    InvalidInputShape,
+    /// Error when an optimizer error occurs.
+    OptimizerError(OptimizerError),
 }
 
 impl fmt::Display for OptimizerError {
@@ -73,25 +107,6 @@ impl fmt::Display for OptimizerError {
             OptimizerError::InvalidEpsilon(s) => write!(f, "{}", s),
         }
     }
-}
-
-impl std::error::Error for OptimizerError {}
-
-/// An enumeration of possible errors that can occur in a model.
-#[derive(Debug)]
-pub enum ModelError {
-    /// Error indicating that the optimizer is missing.
-    MissingOptimizer,
-    /// Error indicating that the loss function is missing.
-    MissingLossFunction,
-    /// Error related to the dataset, with a message describing the issue.
-    DatasetError(String),
-    /// Error that occurs during training, with a message describing the issue.
-    TrainingError(String),
-    /// Error related to a specific layer in the model.
-    LayerError(LayerError),
-    /// Error related to a device, with a message describing the issue.
-    DeviceError(String),
 }
 
 impl fmt::Display for ModelError {
@@ -118,25 +133,6 @@ impl fmt::Display for ModelError {
     }
 }
 
-impl std::error::Error for ModelError {}
-
-/// Errors that can occur in the Dense layer.
-#[derive(Debug)]
-pub enum LayerError {
-    /// Error when weights are not initialized.
-    UninitializedWeights,
-    /// Error when bias is not initialized.
-    UninitializedBias,
-    /// Error when input is not set for backward pass.
-    UninitializedInput,
-    /// Error when input is not set.
-    MissingInput,
-    /// Error when the input shape is invalid.
-    InvalidInputShape,
-    /// Error when an optimizer error occurs.
-    OptimizerError(OptimizerError),
-}
-
 impl fmt::Display for LayerError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -151,3 +147,5 @@ impl fmt::Display for LayerError {
 }
 
 impl std::error::Error for LayerError {}
+impl std::error::Error for OptimizerError {}
+impl std::error::Error for ModelError {}
