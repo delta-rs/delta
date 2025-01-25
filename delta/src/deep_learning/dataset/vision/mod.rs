@@ -27,31 +27,17 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-extern crate core;
+pub mod cifar10;
+pub mod cifar100;
+pub mod imagenet_v2;
+pub mod mnist;
+pub mod test_dataset;
+// pub mod custom;
 
-use std::path::PathBuf;
+pub use cifar10::Cifar10Dataset;
+pub use cifar100::Cifar100Dataset;
+pub use imagenet_v2::ImageNetV2Dataset;
+pub use mnist::MnistDataset;
+pub use test_dataset::TestDataset;
 
-#[cfg(feature = "classical_ml")]
-pub mod classical_ml;
-#[cfg(feature = "deep_learning")]
-pub mod deep_learning;
-
-pub mod devices;
-
-// Re-exports for convenience
-pub mod ndarray {
-    pub use ndarray::*;
-}
-
-/// Returns the path to the workspace directory.
-///
-/// # Returns
-///
-/// A `PathBuf` representing the path to the workspace directory.
-pub fn get_workspace_dir() -> PathBuf {
-    // Add a default for flamegraph's to work
-    let path = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-    let mut path = PathBuf::from(path);
-    path.pop();
-    path
-}
+// pub use custom::CustomImageDataset;

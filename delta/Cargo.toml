@@ -38,9 +38,10 @@ rayon = "1.10.0"
 metal = { version = "0.30.0", optional = true }
 
 [features]
-default = ["classical"]
-classical = []
-dl = []
+default = ["classical_ml"]
+classical_ml = []
+deep_learning = []
+vision = ["deep_learning"]
 metal = ["dep:metal"]
 
 [profile.dev]

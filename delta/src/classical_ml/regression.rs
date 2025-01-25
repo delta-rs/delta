@@ -27,31 +27,38 @@
 //! OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-extern crate core;
+use ndarray::{Array1, Array2};
 
-use std::path::PathBuf;
+use crate::classical_ml::{batch_gradient_descent, calculate_mse_loss};
 
-#[cfg(feature = "classical_ml")]
-pub mod classical_ml;
-#[cfg(feature = "deep_learning")]
-pub mod deep_learning;
+use super::Classical;
 
-pub mod devices;
-
-// Re-exports for convenience
-pub mod ndarray {
-    pub use ndarray::*;
+pub struct LinearRegression {
+    weights: Array1<f64>,
+    bias: f64,
 }
 
-/// Returns the path to the workspace directory.
-///
-/// # Returns
-///
-/// A `PathBuf` representing the path to the workspace directory.
-pub fn get_workspace_dir() -> PathBuf {
-    // Add a default for flamegraph's to work
-    let path = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-    let mut path = PathBuf::from(path);
-    path.pop();
-    path
+impl Classical for LinearRegression {
+    fn new() -> Self {
+        LinearRegression { weights: Array1::zeros(1), bias: 0.0 }
+    }
+
+    fn fit(&mut self, x: &Array2<f64>, y: &Array1<f64>, learning_rate: f64, epochs: usize) {
+        for _ in 0..epochs {
+            let predictions = self.predict(x);
+            let loss = calculate_mse_loss(&predictions, y);
+            // Using Batch Gradient Descent here, we might want the user to have the option
+            // to change optimizer such as SGD, Adam etc
+            let gradients = batch_gradient_descent(x, y, &self.weights, self.bias);
+
+            self.weights = &self.weights - &(gradients.0 * learning_rate);
+            self.bias -= gradients.1 * learning_rate;
+
+            println!("Loss: {}", loss);
+        }
+    }
+
+    fn predict(&self, x: &Array2<f64>) -> Array1<f64> {
+        x.dot(&self.weights) + self.bias
+    }
 }
