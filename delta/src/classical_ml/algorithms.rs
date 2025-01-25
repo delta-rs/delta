@@ -42,10 +42,16 @@ where
     optimizer: O,
 }
 
-// pub struct LogisticRegression {
-//     weights: Array1<f64>,
-//     bias: f64,
-// }
+pub struct LogisticRegression<T, L, O>
+where
+    L: Loss<T>,
+    O: Optimizer<T>,
+{
+    weights: Array1<T>,
+    bias: T,
+    loss_function: L,
+    optimizer: O,
+}
 
 impl<T, L, O> LinearRegression<T, L, O>
 where
@@ -71,7 +77,7 @@ where
     fn fit(&mut self, x: &Array2<T>, y: &Array1<T>, learning_rate: T, epochs: usize) {
         for _ in 0..epochs {
             let predictions = self.predict(x);
-            let loss = self.calculate_loss(&predictions, y);
+            let _loss = self.calculate_loss(&predictions, y);
             // println!("Epoch {}: Loss = {:?}", epoch, loss);
 
             // Compute gradients
@@ -95,26 +101,62 @@ where
     }
 }
 
-// impl Classical for LogisticRegression {
-//     fn new() -> Self {
-//         LogisticRegression { weights: Array1::zeros(1), bias: 0.0 }
-//     }
+impl<T, L, O> LogisticRegression<T, L, O>
+where
+    T: num_traits::Float + ndarray::ScalarOperand,
+    L: Loss<T>,
+    O: Optimizer<T>,
+{
+    pub fn calculate_loss(&self, predictions: &Array1<T>, actuals: &Array1<T>) -> T {
+        self.loss_function.calculate(predictions, actuals)
+    }
 
-//     fn fit(&mut self, x: &Array2<f64>, y: &Array1<f64>, learning_rate: f64, epochs: usize) {
-//         for _ in 0..epochs {
-//             let predictions = self.predict(x);
-//             let loss = calculate_log_loss(&predictions, y);
-//             let gradients = logistic_gradient_descent(x, y, &self.weights, self.bias);
+    fn sigmoid(&self, linear_output: Array1<T>) -> Array1<T> {
+        linear_output.mapv(|x| T::one() / (T::one() + (-x).exp()))
+    }
 
-//             self.weights = &self.weights - &(gradients.0 * learning_rate);
-//             self.bias -= gradients.1 * learning_rate;
+    fn predict_linear(&self, x: &Array2<T>) -> Array1<T> {
+        x.dot(&self.weights) + self.bias
+    }
+}
 
-//             println!("Loss: {}", loss);
-//         }
-//     }
+impl<T, L, O> Classical<T, L, O> for LogisticRegression<T, L, O>
+where
+    T: num_traits::Float + ndarray::ScalarOperand,
+    L: Loss<T>,
+    O: Optimizer<T>,
+{
+    fn new(loss_function: L, optimizer: O) -> Self {
+        LogisticRegression { weights: Array1::zeros(1), bias: T::zero(), loss_function, optimizer }
+    }
 
-//     fn predict(&self, x: &Array2<f64>) -> Array1<f64> {
-//         let linear_output = x.dot(&self.weights) + self.bias;
-//         linear_output.mapv(|x| 1.0 / (1.0 + (-x).exp()))
-//     }
-// }
+    fn fit(&mut self, x: &Array2<T>, y: &Array1<T>, learning_rate: T, epochs: usize) {
+        for _ in 0..epochs {
+            // Compute predictions using sigmoid
+            let linear_output = self.predict_linear(x);
+            let predictions = self.sigmoid(linear_output);
+
+            // Calculate loss
+            let _loss = self.calculate_loss(&predictions, y);
+
+            // Compute gradients
+            let errors = &predictions - y;
+            let gradients = x.t().dot(&errors) / T::from(y.len()).unwrap();
+            let bias_gradient = errors.sum() / T::from(y.len()).unwrap();
+
+            // Update weights and bias using the optimizer
+            self.optimizer.update(
+                &mut self.weights,
+                &mut self.bias,
+                &gradients,
+                bias_gradient,
+                learning_rate,
+            );
+        }
+    }
+
+    fn predict(&self, x: &Array2<T>) -> Array1<T> {
+        let linear_output = self.predict_linear(x);
+        self.sigmoid(linear_output)
+    }
+}
