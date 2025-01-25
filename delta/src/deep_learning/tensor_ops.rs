@@ -132,7 +132,6 @@ impl Tensor {
                 tensor_add_metal(self, other, device, queue)
                     .expect("Failed to perform addition on Metal device")
             }
-            _ => panic!("Unsupported device for tensor addition."),
         }
     }
 
@@ -249,7 +248,6 @@ impl Tensor {
                 queue,
             )
             .expect("Failed to perform matrix multiplication on Metal device"),
-            _ => panic!("Unsupported device for matrix multiplication."),
         }
     }
 
@@ -355,7 +353,6 @@ impl Tensor {
             #[cfg(all(target_os = "macos", feature = "metal"))]
             Device::Metal { device, queue } => tensor_power_metal(self, amount, device, queue)
                 .expect("Failed to perform power operation on Metal device"),
-            _ => panic!("Unsupported device for tensor power operation."),
         }
     }
 
@@ -441,7 +438,6 @@ impl Tensor {
             #[cfg(all(target_os = "macos", feature = "metal"))]
             Device::Metal { device, queue } => tensor_divide_metal(self, other, device, queue)
                 .expect("Failed to perform division on Metal device"),
-            _ => panic!("Unsupported device for tensor division."),
         }
     }
 
@@ -474,7 +470,6 @@ impl Tensor {
             #[cfg(all(target_os = "macos", feature = "metal"))]
             Device::Metal { device, queue } => tensor_map_max_metal(self, threshold, device, queue)
                 .expect("Failed to perform map_max operation on Metal device"),
-            _ => panic!("Unsupported device for tensor map_max operation."),
         }
     }
 
@@ -838,7 +833,6 @@ impl Tensor {
                 queue,
             )
             .expect("Failed to perform subtraction on Metal device"),
-            _ => panic!("Unsupported device for tensor subtraction."),
         }
     }
 
