@@ -29,7 +29,7 @@
 
 use ndarray::{Array1, Array2};
 
-use super::{Classical, losses::Loss, optimizers::Optimizer};
+use super::{Algorithm, losses::Loss, optimizers::Optimizer};
 
 pub struct LinearRegression<T, L, O>
 where
@@ -64,7 +64,7 @@ where
     }
 }
 
-impl<T, L, O> Classical<T, L, O> for LinearRegression<T, L, O>
+impl<T, L, O> Algorithm<T, L, O> for LinearRegression<T, L, O>
 where
     T: num_traits::Float + ndarray::ScalarOperand,
     L: Loss<T>,
@@ -120,7 +120,7 @@ where
     }
 }
 
-impl<T, L, O> Classical<T, L, O> for LogisticRegression<T, L, O>
+impl<T, L, O> Algorithm<T, L, O> for LogisticRegression<T, L, O>
 where
     T: num_traits::Float + ndarray::ScalarOperand,
     L: Loss<T>,

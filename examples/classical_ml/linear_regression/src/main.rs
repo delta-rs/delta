@@ -1,6 +1,6 @@
 use deltaml::{
     classical_ml::{
-        Classical, algorithms::LinearRegression, losses::MSE, optimizers::BatchGradientDescent,
+        Algorithm, algorithms::LinearRegression, losses::MSE, optimizers::BatchGradientDescent,
     },
     ndarray::{Array1, Array2},
 };

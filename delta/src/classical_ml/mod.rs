@@ -41,7 +41,7 @@ use ndarray::{Array1, Array2};
 ///
 /// This trait outlines the basic methods that all classical ML models should implement,
 /// providing a uniform way to instantiate, train, and use models for predictions.
-pub trait Classical<T, L, O>
+pub trait Algorithm<T, L, O>
 where
     T: Float,
     L: Loss<T>,

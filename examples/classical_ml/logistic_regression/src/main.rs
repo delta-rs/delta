@@ -1,6 +1,6 @@
 use deltaml::{
     classical_ml::{
-        Classical, algorithms::LogisticRegression, losses::CrossEntropy,
+        Algorithm, algorithms::LogisticRegression, losses::CrossEntropy,
         optimizers::LogisticGradientDescent,
     },
     ndarray::{Array1, Array2},
