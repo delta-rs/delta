@@ -32,8 +32,8 @@ pub mod clustering;
 pub mod dimensionality_reduction;
 pub mod regression;
 
-pub use classification::LinearRegression;
 pub use classification::LogisticRegression;
+pub use regression::LinearRegression;
 
 use ndarray::{Array1, Array2};
 

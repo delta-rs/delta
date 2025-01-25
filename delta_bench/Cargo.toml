@@ -12,41 +12,6 @@ rand = "0.8.5"
 # We need to specify this for every single benchmark we want to run
 # This is a bit annoying, but it's the only way to get the benchmarks to run
 [[bench]]
-name = "adam_benchmark"
-harness = false
-path = "src/optimizers/adam_benchmark.rs"
-
-[[bench]]
 name = "ada_delta_benchmark"
 harness = false
 path = "src/optimizers/ada_delta_benchmark.rs"
-
-[[bench]]
-name = "ada_grad_benchmark"
-harness = false
-path = "src/optimizers/ada_grad_benchmark.rs"
-
-[[bench]]
-name = "gradient_descent_benchmark"
-harness = false
-path = "src/optimizers/gradient_descent_benchmark.rs"
-
-[[bench]]
-name = "mini_batch_gd_benchmark"
-harness = false
-path = "src/optimizers/mini_batch_gd_benchmark.rs"
-
-[[bench]]
-name = "rms_prop_benchmark"
-harness = false
-path = "src/optimizers/rms_prop_benchmark.rs"
-
-[[bench]]
-name = "sgd_benchmark"
-harness = false
-path = "src/optimizers/sgd_benchmark.rs"
-
-[[bench]]
-name = "sgd_momentum_benchmark"
-harness = false
-path = "src/optimizers/sgd_momentum_benchmark.rs"
