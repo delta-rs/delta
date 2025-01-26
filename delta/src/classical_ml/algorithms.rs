@@ -161,3 +161,74 @@ where
         self.sigmoid(linear_output)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use ndarray::{Array1, Array2};
+    use num_traits::Float;
+
+    use crate::classical_ml::{
+        Algorithm,
+        algorithms::{LinearRegression, LogisticRegression},
+        losses::{CrossEntropy, MSE},
+        optimizers::{BatchGradientDescent, LogisticGradientDescent},
+    };
+
+    #[test]
+    fn test_linear_regression_fit_predict() {
+        let x_data = Array2::from_shape_vec((4, 1), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+        let y_data = Array1::from_vec(vec![2.0, 4.0, 6.0, 8.0]);
+
+        let mut model = LinearRegression::new(MSE, BatchGradientDescent);
+
+        let learning_rate = 0.1;
+        let epochs = 1000;
+        model.fit(&x_data, &y_data, learning_rate, epochs);
+
+        let new_data = Array2::from_shape_vec((2, 1), vec![5.0, 6.0]).unwrap();
+        let predictions = model.predict(&new_data);
+
+        assert!((predictions[0] - 10.0).abs() < 1e-2);
+        assert!((predictions[1] - 12.0).abs() < 1e-2);
+    }
+
+    #[test]
+    fn test_linear_regression_calculate_loss() {
+        let predictions = Array1::from_vec(vec![2.0, 4.0, 6.0, 8.0]);
+        let actuals = Array1::from_vec(vec![2.0, 4.0, 6.0, 8.0]);
+
+        let model = LinearRegression::new(MSE, BatchGradientDescent);
+
+        let loss = model.calculate_loss(&predictions, &actuals);
+        assert!(loss.abs() < 1e-6, "Loss should be close to 0, got: {}", loss);
+    }
+
+    #[test]
+    fn test_logistic_regression_fit_predict() {
+        let x_data = Array2::from_shape_vec((4, 1), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+        let y_data = Array1::from_vec(vec![0.0, 0.0, 1.0, 1.0]);
+
+        let mut model = LogisticRegression::new(CrossEntropy, LogisticGradientDescent);
+
+        let learning_rate = 0.1;
+        let epochs = 1000;
+        model.fit(&x_data, &y_data, learning_rate, epochs);
+
+        let new_data = Array2::from_shape_vec((2, 1), vec![1.5, 3.5]).unwrap();
+        let predictions = model.predict(&new_data);
+
+        assert!(predictions[0] >= 0.0 && predictions[0] <= 1.0);
+        assert!(predictions[1] >= 0.0 && predictions[1] <= 1.0);
+    }
+
+    #[test]
+    fn test_logistic_regression_calculate_loss() {
+        let predictions = Array1::from_vec(vec![0.1, 0.2, 0.7, 0.9]);
+        let actuals = Array1::from_vec(vec![0.0, 0.0, 1.0, 1.0]);
+
+        let model = LogisticRegression::new(CrossEntropy, LogisticGradientDescent);
+
+        let loss = model.calculate_loss(&predictions, &actuals);
+        assert!(loss > 0.0, "Loss should be positive, got: {}", loss);
+    }
+}
