@@ -111,6 +111,7 @@ where
         self.loss_function.calculate(predictions, actuals)
     }
 
+    // TODO: we should create generics for Activation
     fn sigmoid(&self, linear_output: Array1<T>) -> Array1<T> {
         linear_output.mapv(|x| T::one() / (T::one() + (-x).exp()))
     }
