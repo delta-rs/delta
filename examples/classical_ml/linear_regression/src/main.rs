@@ -1,7 +1,5 @@
 use deltaml::{
-    classical_ml::{
-        Algorithm, algorithms::LinearRegression, losses::MSE, optimizers::BatchGradientDescent,
-    },
+    classical_ml::{Algorithm, algorithms::LinearRegression, losses::MSE},
     ndarray::{Array1, Array2},
 };
 
@@ -12,7 +10,7 @@ async fn main() {
     let y_data = Array1::from_vec(vec![2.0, 4.0, 5.0, 4.0, 5.0]);
 
     // Instantiate the model
-    let mut model = LinearRegression::new(MSE, BatchGradientDescent);
+    let mut model = LinearRegression::new(MSE);
 
     // Train the model
     let learning_rate = 0.01;

@@ -1,8 +1,5 @@
 use deltaml::{
-    classical_ml::{
-        Algorithm, algorithms::LogisticRegression, losses::CrossEntropy,
-        optimizers::LogisticGradientDescent,
-    },
+    classical_ml::{Algorithm, algorithms::LogisticRegression, losses::CrossEntropy},
     ndarray::{Array1, Array2},
 };
 
@@ -13,7 +10,7 @@ async fn main() {
     let y_data = Array1::from_vec(vec![0.0, 0.0, 1.0, 1.0, 1.0]);
 
     // Instantiate the model
-    let mut model = LogisticRegression::new(CrossEntropy, LogisticGradientDescent);
+    let mut model = LogisticRegression::new(CrossEntropy);
 
     // Train the model
     let learning_rate = 0.01;

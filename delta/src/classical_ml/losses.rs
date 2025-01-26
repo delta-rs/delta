@@ -29,7 +29,7 @@
 
 use std::iter::Sum;
 
-use ndarray::Array1;
+use ndarray::{Array1, ScalarOperand};
 use num_traits::Float;
 
 /// A struct representing the Mean Squared Error (MSE) loss function.
@@ -79,7 +79,7 @@ where
 
 impl<T> Loss<T> for CrossEntropy
 where
-    T: num_traits::Float + ndarray::ScalarOperand + Sum,
+    T: Float + ScalarOperand + Sum,
 {
     /// Calculates the Cross-Entropy loss.
     ///
