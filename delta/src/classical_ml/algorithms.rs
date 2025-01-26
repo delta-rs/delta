@@ -32,7 +32,7 @@ use std::ops::SubAssign;
 use ndarray::{Array1, Array2, ScalarOperand};
 use num_traits::Float;
 
-use super::{Algorithm, logistic_gradient_descent, losses::Loss};
+use super::{Algorithm, batch_gradient_descent, logistic_gradient_descent, losses::Loss};
 
 /// A struct for performing linear regression.
 ///
@@ -40,21 +40,6 @@ use super::{Algorithm, logistic_gradient_descent, losses::Loss};
 /// - `T`: The type of data, must implement `num_traits::Float` and `ndarray::ScalarOperand`.
 /// - `L`: The type of the loss function, must implement `Loss<T>`.
 pub struct LinearRegression<T, L>
-where
-    T: Float,
-    L: Loss<T>,
-{
-    weights: Array1<T>,
-    bias: T,
-    loss_function: L,
-}
-
-/// A struct for performing logistic regression.
-///
-/// # Generics
-/// - `T`: The type of data, must implement `num_traits::Float` and `ndarray::ScalarOperand`.
-/// - `L`: The type of the loss function, must implement `Loss<T>`.
-pub struct LogisticRegression<T, L>
 where
     T: Float,
     L: Loss<T>,
@@ -99,7 +84,7 @@ where
         LinearRegression { weights: Array1::zeros(1), bias: T::zero(), loss_function }
     }
 
-    /// Fits the model to the given data using gradient descent.
+    /// Fits the model to the given data using batch gradient descent.
     ///
     /// # Arguments
     /// - `x`: The input features as a 2D array.
@@ -111,15 +96,10 @@ where
             let predictions = self.predict(x);
             let _loss = self.calculate_loss(&predictions, y);
 
-            let errors = predictions - y;
-            let gradients = x.t().dot(&errors) / T::from(y.len()).unwrap();
+            let (grad_weights, grad_bias) = batch_gradient_descent(x, y, &self.weights, self.bias);
 
-            // Update the weights
-            self.weights = &self.weights - &(gradients * learning_rate);
-
-            // Calculate the bias gradient and update the bias
-            let bias_gradient = errors.sum() / T::from(y.len()).unwrap();
-            self.bias -= bias_gradient * learning_rate;
+            self.weights -= &(grad_weights * learning_rate);
+            self.bias -= grad_bias * learning_rate;
         }
     }
 
@@ -133,6 +113,21 @@ where
     fn predict(&self, x: &Array2<T>) -> Array1<T> {
         x.dot(&self.weights) + self.bias
     }
+}
+
+/// A struct for performing logistic regression.
+///
+/// # Generics
+/// - `T`: The type of data, must implement `num_traits::Float` and `ndarray::ScalarOperand`.
+/// - `L`: The type of the loss function, must implement `Loss<T>`.
+pub struct LogisticRegression<T, L>
+where
+    T: Float,
+    L: Loss<T>,
+{
+    weights: Array1<T>,
+    bias: T,
+    loss_function: L,
 }
 
 impl<T, L> LogisticRegression<T, L>
@@ -164,13 +159,38 @@ where
         linear_output.mapv(|x| T::one() / (T::one() + (-x).exp()))
     }
 
+    /// Predicts the output of a logistic regression model.
+    ///
+    /// This function performs the linear regression prediction by calculating the dot product
+    /// of the input features `x` and the model weights, and then adding the bias term.
+    ///
+    /// # Parameters
+    /// - `x`: A 2D array of input features (`Array2<T>`). Each row represents a feature vector for a single sample.
+    ///
+    /// # Returns
+    /// - An `Array1<T>` containing the predicted values for each sample.
     fn predict_linear(&self, x: &Array2<T>) -> Array1<T> {
         x.dot(&self.weights) + self.bias
     }
 
+    /// Calculates the accuracy of a binary classification model.
+    ///
+    /// This function compares the predicted values with the actual values, considering a threshold of 0.5
+    /// to determine binary classifications. It returns the proportion of correct predictions, where predictions
+    /// that differ from the actual values by less than `T::epsilon()` are considered correct.
+    ///
+    /// # Parameters
+    /// - `predictions`: A 1D array (`Array1<T>`) containing the model's predicted values.
+    /// - `actuals`: A 1D array (`Array1<T>`) containing the actual ground truth values.
+    ///
+    /// # Returns
+    /// - A `f64` representing the accuracy, calculated as the ratio of correct predictions to total samples.
+    ///
+    /// # Constraints
+    /// - `T` must implement `num_traits::Float` so that numerical operations like comparisons and arithmetic can be performed.
     pub fn calculate_accuracy(&self, predictions: &Array1<T>, actuals: &Array1<T>) -> f64
     where
-        T: num_traits::Float,
+        T: Float,
     {
         let binary_predictions =
             predictions.mapv(|x| if x >= T::from(0.5).unwrap() { T::one() } else { T::zero() });
@@ -188,10 +208,31 @@ where
     T: Float + ScalarOperand + SubAssign,
     L: Loss<T>,
 {
+    /// Creates a new `LogisticRegression` model.
+    ///
+    /// This constructor initializes a logistic regression model with a given loss function.
+    /// The weights are initialized to zeros, and the bias is set to `T::zero()`.
+    ///
+    /// # Parameters
+    /// - `loss_function`: The loss function to use for model training.
+    ///
+    /// # Returns
+    /// - A new `LogisticRegression` instance with initialized weights and bias.
     fn new(loss_function: L) -> Self {
         LogisticRegression { weights: Array1::zeros(1), bias: T::zero(), loss_function }
     }
 
+    /// Fits the logistic regression model to the training data using gradient descent.
+    ///
+    /// This function trains the model by iteratively updating the weights and bias to minimize
+    /// the loss function. It performs a specified number of epochs of gradient descent with
+    /// a given learning rate.
+    ///
+    /// # Parameters
+    /// - `x`: A 2D array of input features (`Array2<T>`), where each row represents a sample.
+    /// - `y`: A 1D array of target labels (`Array1<T>`) corresponding to the input samples.
+    /// - `learning_rate`: The learning rate used in gradient descent.
+    /// - `epochs`: The number of iterations (epochs) to run the gradient descent.
     fn fit(&mut self, x: &Array2<T>, y: &Array1<T>, learning_rate: T, epochs: usize) {
         for _ in 0..epochs {
             let linear_output = self.predict_linear(x);
@@ -208,6 +249,16 @@ where
         }
     }
 
+    /// Makes predictions using the logistic regression model.
+    ///
+    /// This function first calculates the linear output by applying the learned weights and bias,
+    /// and then applies the sigmoid function to obtain the predicted probabilities.
+    ///
+    /// # Parameters
+    /// - `x`: A 2D array of input features (`Array2<T>`), where each row represents a sample.
+    ///
+    /// # Returns
+    /// - A 1D array (`Array1<T>`) containing the predicted probabilities for each sample.
     fn predict(&self, x: &Array2<T>) -> Array1<T> {
         let linear_output = self.predict_linear(x);
         self.sigmoid(linear_output)
