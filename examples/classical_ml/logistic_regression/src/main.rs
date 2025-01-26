@@ -1,5 +1,5 @@
 use deltaml::{
-    classical_ml::{Classical, LogisticRegression, calculate_accuracy, calculate_log_loss},
+    classical_ml::{Algorithm, algorithms::LogisticRegression, losses::CrossEntropy},
     ndarray::{Array1, Array2},
 };
 
@@ -10,7 +10,7 @@ async fn main() {
     let y_data = Array1::from_vec(vec![0.0, 0.0, 1.0, 1.0, 1.0]);
 
     // Instantiate the model
-    let mut model = LogisticRegression::new();
+    let mut model = LogisticRegression::new(CrossEntropy);
 
     // Train the model
     let learning_rate = 0.01;
@@ -24,10 +24,10 @@ async fn main() {
     println!("Predictions for new data (probabilities): {:?}", predictions);
 
     // Calculate log loss for the test data
-    let test_loss = calculate_log_loss(&model.predict(&x_data), &y_data);
+    let test_loss = model.calculate_loss(&model.predict(&x_data), &y_data);
     println!("Test Loss after training: {:.6}", test_loss);
 
     // Calculate accuracy
-    let accuracy = calculate_accuracy(&model.predict(&x_data), &y_data);
+    let accuracy = model.calculate_accuracy(&model.predict(&x_data), &y_data);
     println!("Accuracy: {:.2}%", accuracy * 100.0);
 }

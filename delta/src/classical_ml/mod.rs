@@ -27,26 +27,30 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-pub mod classification;
-pub mod clustering;
-pub mod dimensionality_reduction;
-pub mod regression;
+pub mod algorithms;
+pub mod losses;
 
-pub use classification::LogisticRegression;
-pub use regression::LinearRegression;
+use std::ops::SubAssign;
 
-use ndarray::{Array1, Array2};
+use losses::Loss;
+use num_traits::Float;
+
+use ndarray::{Array1, Array2, ScalarOperand};
 
 /// Defines a common interface for classical machine learning models.
 ///
 /// This trait outlines the basic methods that all classical ML models should implement,
 /// providing a uniform way to instantiate, train, and use models for predictions.
-pub trait Classical {
+pub trait Algorithm<T, L>
+where
+    T: Float,
+    L: Loss<T>,
+{
     /// Creates and returns a new instance of the model.
     ///
     /// This method should initialize the model with default parameters or learnable parameters
     /// set to initial values. The `Sized` constraint ensures that `Self` has a known size at compile time.
-    fn new() -> Self
+    fn new(loss_function: L) -> Self
     where
         Self: Sized;
 
@@ -64,7 +68,7 @@ pub trait Classical {
     /// * `learning_rate` - A `f64` specifying how much to adjust the model's parameters with
     ///   each iteration.
     /// * `epochs` - A `usize` indicating the number of training iterations.
-    fn fit(&mut self, x: &Array2<f64>, y: &Array1<f64>, learning_rate: f64, epochs: usize);
+    fn fit(&mut self, x: &Array2<T>, y: &Array1<T>, learning_rate: T, epochs: usize);
 
     /// Makes predictions using the trained model.
     ///
@@ -78,81 +82,7 @@ pub trait Classical {
     ///
     /// Returns an `Array1<f64>` where each element is the model's prediction for the corresponding
     /// input sample.
-    fn predict(&self, x: &Array2<f64>) -> Array1<f64>;
-}
-
-/// Calculates the Mean Squared Error (MSE) loss between predictions and actual values.
-///
-/// This function computes the average of the squared differences between predicted
-/// and actual values, which is a common measure of model performance in regression tasks.
-///
-/// # Arguments
-///
-/// * `predictions` - An `Array1<f64>` containing the predicted values from the model.
-/// * `actuals` - An `Array1<f64>` containing the true or actual values.
-///
-/// # Returns
-///
-/// Returns a `f64` representing the Mean Squared Error loss.
-
-pub fn calculate_mse_loss(predictions: &Array1<f64>, actuals: &Array1<f64>) -> f64 {
-    let m = predictions.len() as f64;
-    let diff = predictions - actuals;
-    (diff.mapv(|x| x.powi(2)).sum()) / m
-}
-
-/// Calculates the Cross-Entropy Loss (Log Loss) for Logistic Regression.
-///
-/// This function computes the log loss (also known as binary cross-entropy),
-/// which is a commonly used loss function for binary classification problems.
-/// It measures how well the predicted probabilities match the true labels.
-/// The log loss penalizes wrong predictions with higher confidence, and rewards
-/// correct predictions with higher confidence.
-///
-/// # Parameters:
-/// - `predictions`: A reference to an `Array1<f64>` representing the predicted
-///   probabilities for the positive class (values between 0 and 1).
-/// - `actuals`: A reference to an `Array1<f64>` representing the actual labels,
-///   where each label is either 0 or 1.
-///
-/// # Returns:
-/// A `f64` value representing the average log loss across all samples in the dataset.
-pub fn calculate_log_loss(predictions: &Array1<f64>, actuals: &Array1<f64>) -> f64 {
-    let m = predictions.len() as f64;
-    predictions
-        .iter()
-        .zip(actuals.iter())
-        .map(|(p, y)| {
-            let p = p.clamp(1e-15, 1.0 - 1e-15);
-            -(y * p.ln() + (1.0 - y) * (1.0 - p).ln())
-        })
-        .sum::<f64>()
-        / m
-}
-
-/// Calculates the accuracy of the predictions.
-///
-/// This function computes the accuracy of the model by comparing the predicted
-/// class labels (0 or 1) with the actual class labels. The accuracy is calculated
-/// as the proportion of correct predictions in the dataset.
-///
-/// The function converts the predicted probabilities into binary predictions
-/// (using a threshold of 0.5), then compares them with the actual labels to compute
-/// the accuracy.
-///
-/// # Parameters:
-/// - `predictions`: A reference to an `Array1<f64>` representing the predicted
-///   probabilities for the positive class (values between 0 and 1).
-/// - `actuals`: A reference to an `Array1<f64>` representing the true class labels,
-///   where each label is either 0 or 1.
-///
-/// # Returns:
-/// A `f64` value representing the accuracy of the predictions as a proportion
-/// of correct predictions (between 0 and 1).
-pub fn calculate_accuracy(predictions: &Array1<f64>, actuals: &Array1<f64>) -> f64 {
-    let binary_predictions: Array1<f64> = predictions.mapv(|x| if x >= 0.5 { 1.0 } else { 0.0 });
-    (binary_predictions - actuals).mapv(|x| if x == 0.0 { 1.0 } else { 0.0 }).sum() as f64
-        / actuals.len() as f64
+    fn predict(&self, x: &Array2<T>) -> Array1<T>;
 }
 
 /// Performs batch gradient descent to compute the gradients for weights and bias.
@@ -174,14 +104,17 @@ pub fn calculate_accuracy(predictions: &Array1<f64>, actuals: &Array1<f64>) -> f
 /// Returns a tuple where:
 ///   - The first element is an `Array1<f64>` representing the gradient for the weights.
 ///   - The second element is a `f64` representing the gradient for the bias.
-fn batch_gradient_descent(
-    x: &Array2<f64>,
-    y: &Array1<f64>,
-    weights: &Array1<f64>,
-    bias: f64,
-) -> (Array1<f64>, f64) {
+fn batch_gradient_descent<T>(
+    x: &Array2<T>,
+    y: &Array1<T>,
+    weights: &Array1<T>,
+    bias: T,
+) -> (Array1<T>, T)
+where
+    T: Float + ScalarOperand + SubAssign,
+{
     let predictions = x.dot(weights) + bias;
-    let m = x.shape()[0] as f64;
+    let m = T::from(x.shape()[0]).unwrap();
 
     let grad_weights = x.t().dot(&(predictions.clone() - y)) / m;
     let grad_bias = (predictions - y).sum() / m;
@@ -213,19 +146,20 @@ fn batch_gradient_descent(
 /// A tuple `(grad_weights, grad_bias)` where:
 /// - `grad_weights`: An `Array1<f64>` representing the gradients of the weights.
 /// - `grad_bias`: A `f64` value representing the gradient of the bias term.
-fn logistic_gradient_descent(
-    x: &Array2<f64>,
-    y: &Array1<f64>,
-    weights: &Array1<f64>,
-    bias: f64,
-) -> (Array1<f64>, f64) {
+fn logistic_gradient_descent<T>(
+    x: &Array2<T>,
+    y: &Array1<T>,
+    weights: &Array1<T>,
+    bias: T,
+) -> (Array1<T>, T)
+where
+    T: Float + ScalarOperand,
+{
     let predictions = x.dot(weights) + bias;
-    let m = x.shape()[0] as f64;
+    let m = T::from(x.shape()[0]).unwrap();
 
-    // Sigmoid function applied to predictions
-    let sigmoid_preds = predictions.mapv(|x| 1.0 / (1.0 + (-x).exp()));
+    let sigmoid_preds = predictions.mapv(|x| T::one() / (T::one() + (-x).exp()));
 
-    // Gradients for weights and bias
     let grad_weights = x.t().dot(&(sigmoid_preds.clone() - y)) / m;
     let grad_bias = (sigmoid_preds - y).sum() / m;
 
