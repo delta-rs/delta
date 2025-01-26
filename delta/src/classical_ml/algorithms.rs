@@ -84,7 +84,7 @@ where
 
 impl<T, L> Algorithm<T, L> for LinearRegression<T, L>
 where
-    T: Float + ScalarOperand,
+    T: Float + ScalarOperand + SubAssign,
     L: Loss<T>,
 {
     /// Creates a new `LinearRegression` instance with the given loss function and optimizer.
@@ -112,8 +112,14 @@ where
             let _loss = self.calculate_loss(&predictions, y);
 
             let errors = predictions - y;
-            // let gradients = x.t().dot(&errors) / T::from(y.len()).unwrap();
+            let gradients = x.t().dot(&errors) / T::from(y.len()).unwrap();
+
+            // Update the weights
+            self.weights = &self.weights - &(gradients * learning_rate);
+
+            // Calculate the bias gradient and update the bias
             let bias_gradient = errors.sum() / T::from(y.len()).unwrap();
+            self.bias -= bias_gradient * learning_rate;
         }
     }
 
@@ -197,7 +203,6 @@ where
             let (grad_weights, grad_bias) =
                 logistic_gradient_descent(x, y, &self.weights, self.bias);
 
-            // Update weights and bias
             self.weights -= &(grad_weights * learning_rate);
             self.bias -= grad_bias * learning_rate;
         }
