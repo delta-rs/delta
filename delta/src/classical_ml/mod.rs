@@ -86,9 +86,3 @@ where
     /// input sample.
     fn predict(&self, x: &Array2<T>) -> Array1<T>;
 }
-
-pub fn calculate_accuracy(predictions: &Array1<f64>, actuals: &Array1<f64>) -> f64 {
-    let binary_predictions: Array1<f64> = predictions.mapv(|x| if x >= 0.5 { 1.0 } else { 0.0 });
-    (binary_predictions - actuals).mapv(|x| if x == 0.0 { 1.0 } else { 0.0 }).sum() as f64
-        / actuals.len() as f64
-}

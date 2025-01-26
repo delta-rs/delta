@@ -31,6 +31,6 @@ async fn main() {
     println!("Test Loss after training: {:.6}", test_loss);
 
     // Calculate accuracy
-    // let accuracy = calculate_accuracy(&model.predict(&x_data), &y_data);
-    // println!("Accuracy: {:.2}%", accuracy * 100.0);
+    let accuracy = model.calculate_accuracy(&model.predict(&x_data), &y_data);
+    println!("Accuracy: {:.2}%", accuracy * 100.0);
 }
