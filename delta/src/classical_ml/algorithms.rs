@@ -30,7 +30,7 @@
 use std::ops::SubAssign;
 
 use ndarray::{Array1, Array2, ScalarOperand};
-use num_traits::Float;
+use num_traits::{Float, FromPrimitive};
 
 use super::{Algorithm, batch_gradient_descent, logistic_gradient_descent, losses::Loss};
 
@@ -262,6 +262,113 @@ where
     fn predict(&self, x: &Array2<T>) -> Array1<T> {
         let linear_output = self.predict_linear(x);
         self.sigmoid(linear_output)
+    }
+}
+
+enum TreeNode<T> {
+    Internal { feature: usize, threshold: T, left: Box<TreeNode<T>>, right: Box<TreeNode<T>> },
+    Leaf { prediction: T },
+}
+
+/// A struct for performing Decision Tree classification.
+///
+/// # Generics
+/// - `T`: The type of data, must implement `num_traits::Float` and `ndarray::ScalarOperand`.
+/// - `L`: The type of the loss function, must implement `Loss<T>`.
+pub struct DecisionTree<T, L>
+where
+    T: Float,
+    L: Loss<T> + Clone,
+{
+    max_depth: usize,
+    loss_function: L,
+    tree: Option<TreeNode<T>>,
+}
+
+impl<T, L> DecisionTree<T, L>
+where
+    T: Float + FromPrimitive,
+    L: Loss<T> + Clone,
+{
+    /// Creates a new `DecisionTree` instance.
+    ///
+    /// # Arguments
+    /// - `max_depth`: The maximum depth of the tree.
+    /// - `loss_function`: The loss function to use.
+    ///
+    /// # Returns
+    /// A new instance of `DecisionTree`.
+    pub fn new(max_depth: usize, loss_function: L) -> Self {
+        DecisionTree { max_depth, loss_function, tree: None }
+    }
+
+    /// Recursively splits the data based on the best feature and threshold.
+    fn build_tree(&mut self, x: &Array2<T>, y: &Array1<T>, depth: usize) {
+        if depth >= self.max_depth || x.shape()[0] <= 1 {
+            // Create a leaf node
+            let prediction = y.mean().unwrap();
+            self.tree = Some(TreeNode::Leaf { prediction });
+            return;
+        }
+
+        // Find the best feature and threshold
+        let (best_feature, best_threshold) = self.find_best_split(x, y);
+
+        // Split the data
+        let (left_x, left_y, right_x, right_y) =
+            self.split_data(x, y, best_feature, best_threshold);
+
+        // Recursively build the left and right subtrees
+        let mut left_tree = Box::new(DecisionTree::new(self.max_depth, self.loss_function.clone()));
+        left_tree.build_tree(&left_x, &left_y, depth + 1);
+
+        let mut right_tree =
+            Box::new(DecisionTree::new(self.max_depth, self.loss_function.clone()));
+        right_tree.build_tree(&right_x, &right_y, depth + 1);
+
+        self.tree = Some(TreeNode::Internal {
+            feature: best_feature,
+            threshold: best_threshold,
+            left: Box::new(left_tree.tree.take().unwrap()),
+            right: Box::new(right_tree.tree.take().unwrap()),
+        });
+    }
+
+    fn find_best_split(&self, x: &Array2<T>, y: &Array1<T>) -> (usize, T) {
+        // Implement logic to find the best feature and threshold based on a splitting criterion
+        // For simplicity, this is a placeholder.
+        (0, T::zero())
+    }
+
+    fn split_data(
+        &self,
+        x: &Array2<T>,
+        y: &Array1<T>,
+        feature: usize,
+        threshold: T,
+    ) -> (Array2<T>, Array1<T>, Array2<T>, Array1<T>) {
+        // Implement logic to split the data based on a feature and threshold
+        // For simplicity, this is a placeholder.
+        (x.clone(), y.clone(), x.clone(), y.clone())
+    }
+}
+
+impl<T, L> Algorithm<T, L> for DecisionTree<T, L>
+where
+    T: Float + FromPrimitive,
+    L: Loss<T> + Clone,
+{
+    fn new(loss_function: L) -> Self {
+        DecisionTree { max_depth: 10, loss_function, tree: None }
+    }
+
+    fn fit(&mut self, x: &Array2<T>, y: &Array1<T>, _learning_rate: T, _epochs: usize) {
+        self.build_tree(x, y, 0);
+    }
+
+    fn predict(&self, x: &Array2<T>) -> Array1<T> {
+        // Implement the prediction logic by traversing the tree
+        Array1::zeros(x.shape()[0]) // Placeholder
     }
 }
 
