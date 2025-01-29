@@ -415,8 +415,7 @@ where
         let mut best_loss = f64::MAX;// Replace this with the loss of parent node
         let mut best_threshold_idx = 0_usize;
         let mut best_feature_idx = 0_usize;
-        let mut lft_tmp: f64 = -1.0;
-        let mut rgt_tmp: f64 = -1.0;
+        
         let data_y_ref = self.data_y.as_ref().unwrap();
         let data_x_ref = self.data_x.as_ref().unwrap();
         
@@ -669,7 +668,7 @@ mod tests {
 
     #[test]
     fn test_iris_data_loading() {
-        let (train, valid) = linfa_datasets::iris()
+        let (train, _) = linfa_datasets::iris()
                                 .split_with_ratio(0.8);
 
         println!("X =  {:?}", train.records());
