@@ -60,6 +60,8 @@ pub enum OptimizerError {
     InvalidGradient(String),
     /// Error when weight contains invalid values (NaN or Inf).
     InvalidWeight(String),
+    /// Error when shapes don't match
+    ShapeMismatch(String),
 }
 
 /// An enumeration of possible errors that can occur in a model.
@@ -117,6 +119,7 @@ impl fmt::Display for OptimizerError {
             OptimizerError::InvalidWeightDecay(s) => write!(f, "{}", s),
             OptimizerError::InvalidGradient(s) => write!(f, "{}", s),
             OptimizerError::InvalidWeight(s) => write!(f, "{}", s),
+            OptimizerError::ShapeMismatch(s) => write!(f, "Shape mismatch: {}", s),
         }
     }
 }
