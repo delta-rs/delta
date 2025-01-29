@@ -70,7 +70,7 @@ where
     }
 
     /// Sets the device to use for the model.
-    fn use_optimized_device(&mut self) {
+    pub fn use_optimized_device(&mut self) {
         self.device = Device::default();
 
         #[cfg(all(target_os = "macos", feature = "metal"))]
@@ -101,7 +101,7 @@ where
         LinearRegression {
             weights: Array1::zeros(1),
             bias: T::zero(), loss_function,
-            device: device.unwrap_or(Device::default())
+            device: device.unwrap_or_default()
         }
     }
 
@@ -225,7 +225,7 @@ where
     }
 
     /// Sets the device to use for the model.
-    fn use_optimized_device(&mut self) {
+    pub fn use_optimized_device(&mut self) {
         self.device = Device::default();
 
         #[cfg(all(target_os = "macos", feature = "metal"))]
@@ -258,7 +258,7 @@ where
         LogisticRegression {
             weights: Array1::zeros(1),
             bias: T::zero(), loss_function,
-            device: device.unwrap_or(Device::default())
+            device: device.unwrap_or_default()
         }
     }
 

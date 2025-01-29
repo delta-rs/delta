@@ -71,7 +71,7 @@ where
     /// # Returns
     ///
     /// Returns a value of type `T`, representing the calculated MSE.
-    fn calculate(&self, predictions: &Array1<T>, actuals: &Array1<T>, device: &Device) -> T {
+    fn calculate(&self, predictions: &Array1<T>, actuals: &Array1<T>, _device: &Device) -> T {
         let m = T::from(predictions.len()).unwrap();
         let diff = predictions - actuals;
         (diff.mapv(|x| x.powi(2)).sum()) / m
@@ -96,7 +96,7 @@ where
     /// # Returns
     ///
     /// Returns a value of type `T`, representing the calculated Cross-Entropy loss.
-    fn calculate(&self, predictions: &Array1<T>, actuals: &Array1<T>, device: &Device) -> T {
+    fn calculate(&self, predictions: &Array1<T>, actuals: &Array1<T>, _device: &Device) -> T {
         let m = T::from(predictions.len()).unwrap();
         let epsilon = T::from(1e-15).unwrap();
 
