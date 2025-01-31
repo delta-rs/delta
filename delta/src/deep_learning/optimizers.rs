@@ -1827,7 +1827,7 @@ mod tests {
         optimizer.step(&mut weights, &gradients).unwrap();
 
         let expected = 0.899; // 0.999 - 0.1
-        assert_almost_equal(&weights.data, &vec![expected], 1e-6);
+        assert_almost_equal(&weights.data, &[expected], 1e-6);
     }
 
     #[test]
