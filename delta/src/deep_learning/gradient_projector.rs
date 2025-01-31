@@ -355,3 +355,84 @@ impl GradientProjector {
         ))
     }
 }
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    /*
+    // Constructor Tests
+    test_new_with_valid_parameters
+    test_new_with_zero_rank_returns_error
+    test_new_with_negative_scale
+    test_new_with_zero_update_proj_gap
+
+    // Projection Type Tests
+    test_standard_projection_tall_matrix
+    test_standard_projection_wide_matrix
+    test_reverse_standard_projection_tall_matrix
+    test_reverse_standard_projection_wide_matrix
+    test_left_projection
+    test_right_projection
+    test_full_projection_returns_error
+
+    // Shape Tests
+    test_left_projection_rank_exceeds_input_dim
+    test_right_projection_rank_exceeds_output_dim
+    test_projection_with_empty_tensor
+    test_projection_with_single_element_tensor
+    test_projection_with_rank_equal_to_dimension
+
+    // Orthogonal Matrix Tests
+    test_ortho_matrix_initialization
+    test_ortho_matrix_update_frequency
+    test_ortho_matrix_persistence_between_iterations
+    test_ortho_matrix_different_seeds
+
+    // Seed Generation Tests
+    test_next_seed_deterministic
+    test_next_seed_with_different_adv_values
+    test_next_seed_sequence_uniqueness
+
+    // Device Tests
+    test_projection_same_device
+    test_projection_different_device_error
+
+    // Numerical Stability Tests
+    test_projection_with_large_values
+    test_projection_with_small_values
+    test_projection_with_mixed_magnitude_values
+    test_projection_numerical_precision
+
+    // Error Handling Tests
+    test_uninitialized_matrix_error
+    test_invalid_projection_type_error
+    test_incompatible_shape_error
+    test_device_mismatch_error
+    test_invalid_rank_error
+
+    // Edge Cases
+    test_projection_with_rank_one
+    test_projection_with_max_rank
+    test_projection_with_square_matrix
+    test_projection_with_tall_skinny_matrix
+    test_projection_with_short_wide_matrix
+
+    // Memory Tests
+    test_memory_usage_large_matrices
+    test_memory_leak_multiple_projections
+    test_memory_cleanup_after_error
+
+    // Performance Tests
+    test_projection_performance_large_matrix
+    test_update_frequency_impact
+    test_seed_generation_performance
+
+    // Integration Tests
+    test_multiple_projections_same_tensor
+    test_projections_different_tensors
+    test_projection_chain
+    test_projection_with_gradient_descent
+    */
+}
